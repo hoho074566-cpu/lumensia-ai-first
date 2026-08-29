@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "purpose": "Explicitly preserve unknown/undetermined areas so runtime or future development does not silently invent definitive Canon.",
+  "items": [
+    {
+      "id": "emily_true_ceiling_and_past",
+      "subject": "emily",
+      "status": "unknown",
+      "note": "Restricted records support at least a mature-Master + 8-circle composite assessment, but Emily's true upper limit, origin, and full past remain unconfirmed."
+    },
+    {
+      "id": "full_continent_and_neighbor_states",
+      "subject": "world_geography",
+      "status": "incomplete",
+      "note": "Known imperial regions, Dominus, frontier and sea zones do not constitute a complete map/list of every state on the continent."
+    },
+    {
+      "id": "dominus_internal_politics",
+      "subject": "dominus",
+      "status": "incomplete",
+      "note": "Basic theocratic hierarchy and relation with Lumensia are known; detailed internal factions and politics are not fully established."
+    },
+    {
+      "id": "spirit_kings_individuals",
+      "subject": "spirit_realm",
+      "status": "incomplete",
+      "note": "Fire/water/wind/earth Spirit Kings and their broad cosmological role exist, but individual names and precise current conditions are not fully established in the migrated Canon."
+    },
+    {
+      "id": "lily_actual_current_intent",
+      "subject": "lily_lumina",
+      "status": "unknown",
+      "note": "Religious belief, imperial secret writings, magic-tower models, and direct truth must remain distinct. Lily's actual current intent is not confirmed."
+    },
+    {
+      "id": "authority_numeric_grade",
+      "subject": "authority_system",
+      "status": "resolved_negative",
+      "note": "There is no confirmed official numeric grade system for Authorities. Comparative power depends on the law involved, user realm, soul strength, mastery, conditions, and costs. Do not invent an S/SSS-style Authority grade ladder."
+    }
+  ]
+}
