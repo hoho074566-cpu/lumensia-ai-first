@@ -124,8 +124,8 @@ function expressionUrl(key, expression) {
 
 function dialogueHtml(beat) {
   const key = beat.speaker_key;
-  const name = CHARACTER_NAMES[key] || key || 'NPC';
-  const url = expressionUrl(key, beat.expression || 'default');
+  const name = CHARACTER_NAMES[key] || beat.speaker_name || key || 'NPC';
+  const url = key ? expressionUrl(key, beat.expression || 'default') : '';
   return `<section class="dialogue-card">
     ${url ? `<img class="portrait" src="${escapeHtml(url)}" alt="${escapeHtml(name)}" loading="lazy" onerror="this.hidden=true">` : ''}
     <div class="dialogue-body">
@@ -167,7 +167,6 @@ function render() {
   }
 
   story.innerHTML = chunks.join('');
-  requestAnimationFrame(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
 }
 
 function showError(message = '') {
