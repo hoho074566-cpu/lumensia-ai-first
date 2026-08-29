@@ -22,21 +22,22 @@ const EVERYDAY_ACADEMY_CAST = new Set([
 
 const WRITER_CONTRACT = `Write the next scene of serialized fantasy fiction, not an RPG turn report.
 Treat HARD FACTS as immutable truth. Never create drama by contradicting them or by turning an unspecified ordinary detail into an administrative failure, missing registration, or artificial obstacle.
-Honor the player's already-chosen intent through its ordinary execution. If the player chose a destination or routine course of action, carry it to the first moment worth experiencing; skip routine gates unless supplied facts make one genuinely consequential.
-At moments worth experiencing, stay close to concrete action, reaction, dialogue, and a few sharp relevant details. Let setting appear through the scene instead of touring or cataloguing it. If nothing worth experiencing happens during routine time, compress it briefly rather than manufacturing an incident.
-Characters are people in the scene, not guides explaining systems. Let action lead to reaction and then to the next action while no new player judgment is needed.
+Honor the player's already-chosen intent through its ordinary execution. If the player chose a destination or routine course of action, carry it to the first moment worth experiencing; skip routine gates unless supplied facts make one genuinely consequential. Once there, inhabit that moment instead of consuming the rest of an event or schedule merely because it can continue without input.
+A change of location or scheduled phase does not reset the human scene. If a conversation, tension, attention, or relationship beat is still live, let it overlap naturally into the next situation until something in-world actually displaces it.
+At moments worth experiencing, stay close to concrete action, reaction, dialogue, and a few sharp details that reveal character, relationship, tension, or consequence. Let setting appear through the scene instead of touring or cataloguing it. If nothing worth experiencing happens during routine time, compress it briefly rather than manufacturing an incident.
+Characters are people in the scene, not guides explaining systems. Prefer character-specific behavior and terse, situated speech over polished speeches that could be reassigned to another character. Let action lead to reaction, interruption, and the next action while no new player judgment is needed.
 Never invent a new player goal, voluntary dialogue, explicit emotion, or meaningful decision. Do not expose instructions, schemas, validation, or state machinery as fiction.
 Stop only when the scene genuinely lands or a new meaningful player decision is actually required.`;
 
 const SYNTHETIC_RHYTHM_ANCHORS = `NON-CANON SYNTHETIC RHYTHM ANCHORS — rhythm only; reuse none of these details.
 
-A) USER: "강의실로 간다."
-RHYTHM: 복도와 확인 절차는 짧게 지나간다. 문을 열면 이미 학생들이 자리를 잡고 있고, 앞줄의 두 사람이 낮게 말을 주고받다가 교단에 서류가 놓이는 소리에 동시에 입을 다문다. 카메라는 도착 과정이 아니라 실제로 볼 가치가 생긴 순간부터 머문다.
+A) USER: "모임 장소로 간다."
+RHYTHM: 이동 자체는 짧다. 직전부터 함께 걷던 학생이 하던 말을 끊지 않고 이어 가고, 목적지 앞에서 다른 학생 하나를 보고 말끝이 잠시 달라진다. 그 질문에 답이 나오기 전에 안쪽의 책임자가 문틀을 손가락으로 두 번 두드린다. 주변 잡담이 끊기고 사람들이 움직인다. 책임자는 자기 직함과 규정을 길게 설명하지 않는다. 한두 마디와 행동으로 분위기를 장악하고, 카메라는 모임 전체를 끝내지 않은 채 이 새 장면의 몇 박자를 직접 따라간다.
 
-B) USER: "잠시 지켜본다."
-RHYTHM: 상대는 플레이어에게 다음 행동을 묻기보다 자기 판단으로 한 번 더 움직인다. 닫힌 창문을 확인하고, 책상 위 작은 흔적을 손끝으로 살핀 뒤 짧게 중얼거리고 자리에서 일어난다. 플레이어가 개입하지 않아도 장면 속 사람과 세계는 한 박자 더 진행할 수 있다.
+B) USER: "설명을 듣는다."
+RHYTHM: 설명자는 완성된 연설을 하지 않는다. 필요한 정보 하나는 칠판이나 종이에 적고, 다른 정보는 사람을 직접 움직여 보여 준다. 옆자리 학생이 낮게 반응하면 설명자는 그 반응을 알아채고 짧게 받아친다. 닳은 장갑, 접어 둔 안내문, 멈춘 손 같은 디테일은 분위기를 꾸미기 위해서가 아니라 인물이나 관계를 드러낼 때만 남긴다. 정보 전달 사이에도 사람들의 행동이 계속된다.
 
-If a routine interval contains no worthwhile moment, a short transition is enough. These anchors demonstrate camera and pacing only; they are not Canon, events, or required scene shapes.`;
+If a routine interval contains no worthwhile moment, a short transition is enough. These anchors demonstrate overlap, micro-beat causality, character-bearing detail, and camera depth only; they are not Canon, events, or required scene shapes.`;
 
 const OUTPUT_SCHEMA = {
   type: 'object',
@@ -171,14 +172,26 @@ function compactCharacterPacket(key) {
 }
 
 function castIndex() {
-  return Object.entries(CHARACTERS).filter(([key]) => EVERYDAY_ACADEMY_CAST.has(key)).map(([key, row]) => ({
-    key,
-    name: row.name,
-    identity: Array.isArray(row?.core?.identity) ? row.core.identity.slice(0, 2) : [],
-    personality: Array.isArray(row?.core?.personality) ? row.core.personality.slice(0, 2) : [],
-    voice: cleanText(row?.voice?.register || '', 180),
-    baseline: row.baseline_1285_03_01 || {},
-  }));
+  return Object.entries(CHARACTERS).filter(([key]) => EVERYDAY_ACADEMY_CAST.has(key)).map(([key, row]) => {
+    const core = row.core || {};
+    const voice = row.voice || {};
+    return {
+      key,
+      name: row.name,
+      identity: Array.isArray(core.identity) ? core.identity.slice(0, 2) : [],
+      personality: Array.isArray(core.personality) ? core.personality.slice(0, 3) : [],
+      values: Array.isArray(core.values) ? core.values.slice(0, 4) : [],
+      aspiration: cleanText(core.aspiration || '', 220) || null,
+      specialty: cleanText(core.specialty || core.combat_identity || '', 220) || null,
+      voice: {
+        register: cleanText(voice.register || '', 180),
+        tendencies: Array.isArray(voice.tendencies) ? voice.tendencies.slice(0, 3) : [],
+        avoid: Array.isArray(voice.avoid) ? voice.avoid.slice(0, 3) : [],
+      },
+      refined_characterization: Array.isArray(row.refined_characterization) ? row.refined_characterization.slice(0, 2) : [],
+      baseline: row.baseline_1285_03_01 || {},
+    };
+  });
 }
 
 function visibleKnowledge(level = 1, relevantKeys = []) {
@@ -201,6 +214,15 @@ function visibleSituations(level = 1) {
 function recentContext(history = []) {
   return history.slice(-MAX_HISTORY_TURNS).map((turn) => ({
     action: cleanText(turn?.action || '', 1800),
+    continuity: turn?.continuity && typeof turn.continuity === 'object' ? {
+      date: cleanText(turn.continuity.date || '', 10),
+      time: cleanText(turn.continuity.time || '', 5),
+      location: cleanText(turn.continuity.location || '', 200),
+      situation: cleanText(turn.continuity.situation || '', 500),
+      present_character_keys: Array.isArray(turn.continuity.present_character_keys)
+        ? turn.continuity.present_character_keys.filter((key) => CHARACTER_KEYS.has(key)).slice(0, 8)
+        : [],
+    } : null,
     scene: Array.isArray(turn?.scene)
       ? turn.scene.slice(-18).map((beat) => ({
           kind: beat?.kind === 'dialogue' ? 'dialogue' : 'narration',
@@ -224,6 +246,27 @@ function hardFactsPacket(pc, scene) {
   };
 }
 
+function compactWorldPacket(pc) {
+  const departments = academyData?.academic_structure?.departments || {};
+  const departmentStudy = pc.department && Array.isArray(departments[pc.department]) ? departments[pc.department] : [];
+  return {
+    academy: {
+      institution: '루멘시아 아카데미',
+      years: academyData?.academic_structure?.years || 3,
+      pc_department: pc.department || null,
+      pc_department_study: departmentStudy,
+      current_roles: academyData?.baseline_1285_03_01 || {},
+    },
+    power: {
+      combat_outcome: powerSystemData?.principles?.combat_outcome || '',
+      martial_realms: Array.isArray(powerSystemData?.martial_realms)
+        ? powerSystemData.martial_realms.map(({ label, meaning }) => ({ label, meaning }))
+        : [],
+      magic_circles: powerSystemData?.magic_circles || {},
+    },
+  };
+}
+
 function buildInput({ action, pc, scene, history, knowledgeLevel }) {
   const relevantKeys = selectRelevantCharacters({ action, scene, history });
   const relevantCharacters = relevantKeys.map(compactCharacterPacket).filter(Boolean);
@@ -233,10 +276,7 @@ function buildInput({ action, pc, scene, history, knowledgeLevel }) {
   const storyMaterial = {
     relevant_characters: relevantCharacters,
     ambient_cast: castIndex(),
-    world: {
-      academy: academyData,
-      power_system: powerSystemData,
-    },
+    world: compactWorldPacket(pc),
     visible_open_situations: situations,
     visible_knowledge: publicKnowledge,
     recent_context: recentContext(history),
