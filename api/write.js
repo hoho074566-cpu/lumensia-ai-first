@@ -15,6 +15,10 @@ const EXPRESSIONS = new Set([
 ]);
 const MAX_ACTION_CHARS = 12000;
 const MAX_HISTORY_TURNS = 8;
+const EVERYDAY_ACADEMY_CAST = new Set([
+  'anastasia','isabel','lucia','elena','artemis','sera','sia','lillia',
+  'lena','emily','laris','mirabelle','serena','chloe','aria','elise',
+]);
 
 const WRITER_CONTRACT = `Write the next scene of serialized fantasy fiction, not an RPG turn report.
 Stay within the supplied facts and the player's chosen intent, while NPCs, time, and the world move naturally.
@@ -38,9 +42,10 @@ const OUTPUT_SCHEMA = {
           kind: { type: 'string', enum: ['narration', 'dialogue'] },
           text: { type: 'string', minLength: 1, maxLength: 2600 },
           speaker_key: { anyOf: [{ type: 'string', maxLength: 64 }, { type: 'null' }] },
+          speaker_name: { anyOf: [{ type: 'string', maxLength: 80 }, { type: 'null' }] },
           expression: { anyOf: [{ type: 'string', enum: [...EXPRESSIONS] }, { type: 'null' }] },
         },
-        required: ['kind', 'text', 'speaker_key', 'expression'],
+        required: ['kind', 'text', 'speaker_key', 'speaker_name', 'expression'],
       },
     },
     continuity: {
@@ -98,7 +103,7 @@ function safePc(raw = {}) {
 function safeScene(raw = {}) {
   return {
     date: /^\d{4}-\d{2}-\d{2}$/.test(String(raw.date || '')) ? String(raw.date) : scenarioData.start.date,
-    time: /^\d{2}:\d{2}$/.test(String(raw.time || '')) ? String(raw.time) : scenarioData.start.time,
+    time: /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(raw.time || '')) ? String(raw.time) : scenarioData.start.time,
     location: cleanText(raw.location || scenarioData.start.location, 200),
     situation: cleanText(raw.situation || scenarioData.start.situation, 500),
     presentCharacterKeys: Array.isArray(raw.presentCharacterKeys)
@@ -136,8 +141,8 @@ function selectRelevantCharacters({ action, scene, history }) {
   scene.presentCharacterKeys.forEach(add);
   recentSpeakerKeys(history).forEach(add);
 
-  // One factual retrieval anchor for the entrance-ceremony opening.
-  // It does not require Emily to speak and does not prescribe scene order.
+  // A single factual retrieval anchor for the academy entrance-ceremony opening.
+  // This does not require Emily to speak or prescribe scene order.
   if (!keys.length && scene.location.includes('대강당')) add('emily');
   return keys;
 }
@@ -156,7 +161,7 @@ function compactCharacterPacket(key) {
 }
 
 function castIndex() {
-  return Object.entries(CHARACTERS).map(([key, row]) => ({
+  return Object.entries(CHARACTERS).filter(([key]) => EVERYDAY_ACADEMY_CAST.has(key)).map(([key, row]) => ({
     key,
     name: row.name,
     identity: Array.isArray(row?.core?.identity) ? row.core.identity.slice(0, 2) : [],
@@ -190,6 +195,7 @@ function recentContext(history = []) {
       ? turn.scene.slice(-18).map((beat) => ({
           kind: beat?.kind === 'dialogue' ? 'dialogue' : 'narration',
           speaker_key: CHARACTER_KEYS.has(beat?.speaker_key) ? beat.speaker_key : null,
+          speaker_name: cleanText(beat?.speaker_name || '', 80) || null,
           text: cleanText(beat?.text || '', 1200),
         }))
       : [],
@@ -246,15 +252,18 @@ function validateTurn(turn, pc, fallbackScene) {
     const text = cleanText(beat?.text, 2600).trim();
     if (!text) throw new Error('빈 scene beat가 반환되었습니다.');
     if (kind === 'dialogue') {
-      if (!CHARACTER_KEYS.has(beat?.speaker_key)) throw new Error(`등록되지 않은 dialogue speaker_key: ${beat?.speaker_key || '(없음)'}`);
+      const registeredKey = CHARACTER_KEYS.has(beat?.speaker_key) ? beat.speaker_key : null;
+      const speakerName = cleanText(beat?.speaker_name || '', 80).trim() || null;
+      if (!registeredKey && !speakerName) throw new Error('dialogue에는 등록 speaker_key 또는 표시용 speaker_name이 필요합니다.');
       return {
         kind,
         text,
-        speaker_key: beat.speaker_key,
-        expression: EXPRESSIONS.has(beat?.expression) ? beat.expression : 'default',
+        speaker_key: registeredKey,
+        speaker_name: registeredKey ? null : speakerName,
+        expression: registeredKey && EXPRESSIONS.has(beat?.expression) ? beat.expression : (registeredKey ? 'default' : null),
       };
     }
-    return { kind, text, speaker_key: null, expression: null };
+    return { kind, text, speaker_key: null, speaker_name: null, expression: null };
   });
 
   if (pc.name !== 'Aaa' && scene.some((beat) => /\bAaa\b/.test(beat.text))) {
@@ -264,7 +273,7 @@ function validateTurn(turn, pc, fallbackScene) {
   const raw = turn.continuity || {};
   const continuity = {
     date: /^\d{4}-\d{2}-\d{2}$/.test(String(raw.date || '')) ? String(raw.date) : fallbackScene.date,
-    time: /^\d{2}:\d{2}$/.test(String(raw.time || '')) ? String(raw.time) : fallbackScene.time,
+    time: /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(raw.time || '')) ? String(raw.time) : fallbackScene.time,
     location: cleanText(raw.location || fallbackScene.location, 200),
     situation: cleanText(raw.situation || fallbackScene.situation, 500),
     present_character_keys: Array.isArray(raw.present_character_keys)
