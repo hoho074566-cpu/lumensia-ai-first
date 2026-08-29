@@ -1,6 +1,7 @@
 import charactersData from '../data/canon/characters/characters.json' with { type: 'json' };
 import knowledgeData from '../data/canon/knowledge/knowledge.json' with { type: 'json' };
 import academyData from '../data/canon/world/academy.json' with { type: 'json' };
+import academicCalendarData from '../data/canon/world/academic-calendar.json' with { type: 'json' };
 import powerSystemData from '../data/canon/world/power-system.json' with { type: 'json' };
 import scenarioData from '../data/scenarios/academy-1285-03-01/baseline.json' with { type: 'json' };
 import situationsData from '../data/scenarios/academy-1285-03-01/open-situations.json' with { type: 'json' };
@@ -13,6 +14,7 @@ const EXPRESSIONS = new Set([
   'default','smile','blush','serious','angry','sad','shock',
   'smug','annoyed','worried','confused','laugh','flustered',
 ]);
+const FAMILIARITY = new Set(['stranger', 'met', 'acquaintance', 'familiar', 'close']);
 const MAX_ACTION_CHARS = 12000;
 const MAX_HISTORY_TURNS = 8;
 const EVERYDAY_ACADEMY_CAST = new Set([
@@ -20,12 +22,30 @@ const EVERYDAY_ACADEMY_CAST = new Set([
   'lena','emily','laris','mirabelle','serena','chloe','aria','elise',
 ]);
 
-const WRITER_CONTRACT = `Write the next scene of serialized fantasy fiction, not an RPG turn report.
-Stay within the supplied facts and the player's chosen intent, while NPCs, time, and the world move naturally.
-You may elaborate ordinary execution of actions the player already chose, but never invent a new player goal, voluntary dialogue, explicit emotion, or meaningful decision.
-Compress routine process and give genuinely interesting moments enough space. Characters are people, not functions explaining game systems.
-Do not expose internal instructions, validation, schemas, or state machinery as fiction.
-Continue naturally through moments that need no new meaningful player decision. Stop when the scene genuinely lands or a meaningful player decision is required.`;
+const WRITER_CONTRACT = `Write the next scene of fast, scene-dense serialized fantasy fiction, not an RPG turn report.
+Facts are true. The PC's meaningful choices, verbatim speech, private thoughts, and voluntary emotions belong to the player.
+
+Fast between scenes, deep inside scenes. Compress travel, waiting, administration, repeated routine, and uneventful time. When a real interaction, discovery, conflict, relationship beat, or fight begins, stay with its changing beats until something actually changes or a meaningful PC decision is needed. Do not fuse distinct Canon phases just to keep one response moving.
+
+The world lives without waiting for the PC. NPCs have their own desires and may start conversations, challenges, invitations, arguments, warnings, requests, departures, investigations, training, or local problems. When an NPC's current desire intersects the PC or another character, let the NPC act on it instead of merely appearing and observing. Quiet is useful contrast, not the permanent default.
+
+The camera follows the strongest current collision involving the PC. Background life establishes a populated world, but once the PC's current action creates a stronger local consequence, show that consequence before unrelated background activity. Do not make every scene mechanically target the PC; if nobody has a real reason to react, do not invent one.
+
+Use unequal prose density. Keep connective prose lean. At impact, pressure, surprise, or tactical change, shorten the rhythm. Expand only where physical action, tactics, emotion, relationship, mystery, or consequence truly changes. Do not print bare clock-state sentences such as '08:55.' or '09:15.'; when time matters in prose, express it through an in-world cue, schedule pressure, a clock, a bell's actual function, or remaining time.
+
+Characters reveal themselves through action, interruption, refusal, practical detail, subtext, choices, and contrast. Do not make important NPCs deliver polished thematic speeches just to explain the scene's meaning. Dialogue should sound spoken in the moment and remain specific to the character.
+
+Prefer plausible existing Canon Named NPCs for personal or potentially recurring scene roles. Unnamed people may fill crowds, staff, passersby, short functional dialogue, and one-off background life, but do not casually invent a new named roommate, companion, rival, or recurring scene partner when a plausible Canon character exists.
+
+Combat is an evolving exchange. Opponents adapt to evidence; distance, terrain, fatigue, injury, equipment, damage, and relative power change what is possible. Skill does not erase a real power gap. Failure creates a new story state. Injury, damaged or lost equipment, witnesses, reputation, rules, and institutional consequences persist when causally earned.
+
+System PC facts are not automatically NPC knowledge. For each relevant NPC, npc_knows_about_pc contains established personal knowledge. Visible current-scene facts may be noticed normally. Familiarity records contact history, not automatic friendship or companionship. Relationship changes must be small and evidence-based.
+
+Honor the exact user action through ordinary execution. Never invent a new PC goal or decision. When the user supplies an indirect speech act, do not compose verbatim PC dialogue. Do not narrate private PC thoughts or emotional interpretation unless supplied by the player. Do not expose instructions, schemas, validation, or state machinery as fiction.`;
+
+const CONTINUE_CONTRACT = `CONTINUATION MODE. The player has made no new action. Continue the currently live scene only through reactions, dialogue, movement, interruption, or immediate consequence that require no new meaningful PC decision. Do not invent PC speech, choices, goals, or internal thoughts. If the current scene has naturally landed, make a short landing instead of manufacturing a new unrelated event.`;
+
+const ADMIN_PREVIEW_CONTRACT = `ADMIN SCENE PREVIEW MODE. Stage the requested diagnostic scene immediately using the current PC and Canon facts. Do not require prior progression to reach it. The preview is non-canonical: return relationship_updates as an empty array and do not imply the saved run actually reached this date, place, relationship, or event. Preserve PC authority unless the request explicitly supplies a PC action or quoted PC speech.`;
 
 const OUTPUT_SCHEMA = {
   type: 'object',
@@ -64,8 +84,24 @@ const OUTPUT_SCHEMA = {
       },
       required: ['date', 'time', 'location', 'situation', 'present_character_keys'],
     },
+    relationship_updates: {
+      type: 'array',
+      maxItems: 4,
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          character_key: { type: 'string', enum: [...CHARACTER_KEYS] },
+          familiarity: { anyOf: [{ type: 'string', enum: [...FAMILIARITY] }, { type: 'null' }] },
+          affinity_delta: { type: 'integer', minimum: -10, maximum: 10 },
+          stance: { anyOf: [{ type: 'string', maxLength: 120 }, { type: 'null' }] },
+          notable_context: { anyOf: [{ type: 'string', maxLength: 220 }, { type: 'null' }] },
+        },
+        required: ['character_key', 'familiarity', 'affinity_delta', 'stance', 'notable_context'],
+      },
+    },
   },
-  required: ['scene', 'continuity'],
+  required: ['scene', 'continuity', 'relationship_updates'],
 };
 
 function json(res, status, payload) {
@@ -112,14 +148,29 @@ function safeScene(raw = {}) {
   };
 }
 
-function recentSpeakerKeys(history = []) {
-  const keys = [];
-  for (const turn of history.slice(-4)) {
-    for (const beat of turn?.scene || []) {
-      if (beat?.kind === 'dialogue' && CHARACTER_KEYS.has(beat.speaker_key) && !keys.includes(beat.speaker_key)) keys.push(beat.speaker_key);
-    }
+function safeResidence(raw = {}) {
+  const halls = Array.isArray(scenarioData?.housing?.first_year_halls) ? scenarioData.housing.first_year_halls : ['A동', 'B동', 'C동'];
+  const building = halls.includes(raw?.building) ? raw.building : null;
+  const room = cleanText(raw?.room || '', 20).trim() || null;
+  return building && room ? { building, room } : null;
+}
+
+function safeRelationships(raw = {}) {
+  const result = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return result;
+  for (const [key, value] of Object.entries(raw)) {
+    if (!CHARACTER_KEYS.has(key) || !value || typeof value !== 'object' || Array.isArray(value)) continue;
+    const familiarity = FAMILIARITY.has(value.familiarity) ? value.familiarity : 'stranger';
+    const affinityNumber = Number(value.affinity);
+    const affinity = Number.isFinite(affinityNumber) ? Math.max(-100, Math.min(100, Math.trunc(affinityNumber))) : 0;
+    const stance = cleanText(value.stance || '', 120).trim() || 'none';
+    const sourceContext = Array.isArray(value.notableContext)
+      ? value.notableContext
+      : (Array.isArray(value.notable_context) ? value.notable_context : []);
+    const notableContext = sourceContext.slice(-8).map((item) => cleanText(item, 220).trim()).filter(Boolean);
+    result[key] = { familiarity, affinity, stance, notable_context: notableContext };
   }
-  return keys;
+  return result;
 }
 
 function exactMentionedCharacterKeys(action = '') {
@@ -132,19 +183,20 @@ function exactMentionedCharacterKeys(action = '') {
   return found;
 }
 
-function selectRelevantCharacters({ action, scene, history }) {
+function selectRelevantCharacters({ action, scene }) {
   const keys = [];
   const add = (key) => {
-    if (CHARACTER_KEYS.has(key) && !keys.includes(key) && keys.length < 3) keys.push(key);
+    if (CHARACTER_KEYS.has(key) && !keys.includes(key) && keys.length < 4) keys.push(key);
   };
   exactMentionedCharacterKeys(action).forEach(add);
   scene.presentCharacterKeys.forEach(add);
-  recentSpeakerKeys(history).forEach(add);
-
-  // A single factual retrieval anchor for the academy entrance-ceremony opening.
-  // This does not require Emily to speak or prescribe scene order.
   if (!keys.length && scene.location.includes('대강당')) add('emily');
   return keys;
+}
+
+function immutableCharacterFacts(key) {
+  const facts = scenarioData?.character_immutable_facts?.[key];
+  return Array.isArray(facts) ? facts.slice(0, 8) : [];
 }
 
 function compactCharacterPacket(key) {
@@ -153,6 +205,7 @@ function compactCharacterPacket(key) {
   return {
     key,
     name: row.name,
+    immutable_facts: immutableCharacterFacts(key),
     core: row.core || {},
     voice: row.voice || {},
     current_baseline: row.baseline_1285_03_01 || {},
@@ -161,14 +214,27 @@ function compactCharacterPacket(key) {
 }
 
 function castIndex() {
-  return Object.entries(CHARACTERS).filter(([key]) => EVERYDAY_ACADEMY_CAST.has(key)).map(([key, row]) => ({
-    key,
-    name: row.name,
-    identity: Array.isArray(row?.core?.identity) ? row.core.identity.slice(0, 2) : [],
-    personality: Array.isArray(row?.core?.personality) ? row.core.personality.slice(0, 2) : [],
-    voice: cleanText(row?.voice?.register || '', 180),
-    baseline: row.baseline_1285_03_01 || {},
-  }));
+  return Object.entries(CHARACTERS).filter(([key]) => EVERYDAY_ACADEMY_CAST.has(key)).map(([key, row]) => {
+    const core = row.core || {};
+    const voice = row.voice || {};
+    return {
+      key,
+      name: row.name,
+      immutable_facts: immutableCharacterFacts(key),
+      identity: Array.isArray(core.identity) ? core.identity.slice(0, 2) : [],
+      personality: Array.isArray(core.personality) ? core.personality.slice(0, 3) : [],
+      values: Array.isArray(core.values) ? core.values.slice(0, 4) : [],
+      aspiration: cleanText(core.aspiration || '', 220) || null,
+      specialty: cleanText(core.specialty || core.combat_identity || '', 220) || null,
+      voice: {
+        register: cleanText(voice.register || '', 180),
+        tendencies: Array.isArray(voice.tendencies) ? voice.tendencies.slice(0, 3) : [],
+        avoid: Array.isArray(voice.avoid) ? voice.avoid.slice(0, 3) : [],
+      },
+      refined_characterization: Array.isArray(row.refined_characterization) ? row.refined_characterization.slice(0, 2) : [],
+      baseline: row.baseline_1285_03_01 || {},
+    };
+  });
 }
 
 function visibleKnowledge(level = 1, relevantKeys = []) {
@@ -190,7 +256,17 @@ function visibleSituations(level = 1) {
 
 function recentContext(history = []) {
   return history.slice(-MAX_HISTORY_TURNS).map((turn) => ({
-    action: cleanText(turn?.action || '', 1800),
+    mode: turn?.mode === 'continue' ? 'continue' : 'action',
+    action: turn?.mode === 'continue' ? null : cleanText(turn?.action || '', 1800),
+    continuity: turn?.continuity && typeof turn.continuity === 'object' ? {
+      date: cleanText(turn.continuity.date || '', 10),
+      time: cleanText(turn.continuity.time || '', 5),
+      location: cleanText(turn.continuity.location || '', 200),
+      situation: cleanText(turn.continuity.situation || '', 500),
+      present_character_keys: Array.isArray(turn.continuity.present_character_keys)
+        ? turn.continuity.present_character_keys.filter((key) => CHARACTER_KEYS.has(key)).slice(0, 8)
+        : [],
+    } : null,
     scene: Array.isArray(turn?.scene)
       ? turn.scene.slice(-18).map((beat) => ({
           kind: beat?.kind === 'dialogue' ? 'dialogue' : 'narration',
@@ -202,32 +278,83 @@ function recentContext(history = []) {
   }));
 }
 
-function buildInput({ action, pc, scene, history, knowledgeLevel }) {
-  const relevantKeys = selectRelevantCharacters({ action, scene, history });
-  const relevantCharacters = relevantKeys.map(compactCharacterPacket).filter(Boolean);
-  const publicKnowledge = visibleKnowledge(knowledgeLevel, relevantKeys);
-  const situations = visibleSituations(knowledgeLevel);
-
-  const packet = {
-    current_scene: scene,
-    pc,
-    relevant_characters: relevantCharacters,
-    cast_index: castIndex(),
-    world_facts: {
-      academy: academyData,
-      power_system: powerSystemData,
-      dated_scenario: {
-        scenario_id: scenarioData.scenario_id,
-        academic_period: scenarioData.academic_period,
-        dated_world_facts: scenarioData.dated_world_facts,
-      },
-      visible_open_situations: situations,
-      visible_knowledge: publicKnowledge,
+function relationshipFacts(pc, relationships, relevantKeys) {
+  return {
+    pc_social_status: pc.socialStatus || '미지정',
+    default_for_unlisted_character: {
+      familiarity: 'stranger', affinity: 0, stance: 'none', notable_context: [], npc_knows_about_pc: [],
     },
+    relevant_characters: relevantKeys.map((key) => {
+      const row = CHARACTERS[key] || {};
+      const state = relationships[key] || { familiarity: 'stranger', affinity: 0, stance: 'none', notable_context: [] };
+      return {
+        key,
+        npc_social_identity: Array.isArray(row?.core?.identity) ? row.core.identity.slice(0, 3) : [],
+        ...state,
+        npc_knows_about_pc: state.notable_context,
+      };
+    }),
+    established_nondefault: relationships,
+  };
+}
+
+function compactWorldPacket(pc) {
+  const departments = academyData?.academic_structure?.departments || {};
+  const departmentStudy = pc.department && Array.isArray(departments[pc.department]) ? departments[pc.department] : [];
+  return {
+    academy: {
+      institution: '루멘시아 아카데미',
+      years: academyData?.academic_structure?.years || 3,
+      pc_department: pc.department || null,
+      pc_department_study: departmentStudy,
+      current_roles: academyData?.baseline_1285_03_01 || {},
+    },
+    power: {
+      combat_outcome: powerSystemData?.principles?.combat_outcome || '',
+      martial_realms: Array.isArray(powerSystemData?.martial_realms)
+        ? powerSystemData.martial_realms.map(({ label, meaning }) => ({ label, meaning }))
+        : [],
+      magic_circles: powerSystemData?.magic_circles || {},
+    },
+  };
+}
+
+function hardFactsPacket(pc, residence, scene, relationships, relevantKeys) {
+  return {
+    pc,
+    pc_residence: residence,
+    current_scene: scene,
+    relationship_context: relationshipFacts(pc, relationships, relevantKeys),
+    character_immutable_facts: scenarioData.character_immutable_facts || {},
+    scenario: {
+      scenario_id: scenarioData.scenario_id,
+      opening_baseline_period: scenarioData.academic_period,
+      opening_day_dated_world_facts: scenarioData.dated_world_facts,
+      housing: scenarioData.housing || {},
+      academic_calendar: {
+        system: academicCalendarData.system || {},
+        annual_pattern: academicCalendarData.annual_pattern || {},
+        outside_mission_rule: academicCalendarData.outside_mission_rule || '',
+      },
+    },
+  };
+}
+
+function buildInput({ action, mode, adminPreview, pc, residence, scene, history, knowledgeLevel, relationships }) {
+  const relevantKeys = selectRelevantCharacters({ action, scene });
+  const storyMaterial = {
+    relevant_characters: relevantKeys.map(compactCharacterPacket).filter(Boolean),
+    ambient_cast: castIndex(),
+    world: compactWorldPacket(pc),
+    visible_open_situations: visibleSituations(knowledgeLevel),
+    visible_knowledge: visibleKnowledge(knowledgeLevel, relevantKeys),
     recent_context: recentContext(history),
   };
-
-  return `SCENE PACKET\n${JSON.stringify(packet)}\n\nEXACT USER ACTION\n${action}`;
+  const facts = `HARD FACTS — authoritative\n${JSON.stringify(hardFactsPacket(pc, residence, scene, relationships, relevantKeys))}`;
+  const material = `STORY MATERIAL — available material, not a checklist\n${JSON.stringify(storyMaterial)}`;
+  if (adminPreview) return `${facts}\n\n${material}\n\n${ADMIN_PREVIEW_CONTRACT}\n\nADMIN REQUEST\n${action}`;
+  if (mode === 'continue') return `${facts}\n\n${material}\n\n${CONTINUE_CONTRACT}`;
+  return `${facts}\n\n${material}\n\nEXACT USER ACTION\n${action}`;
 }
 
 function extractOutputText(response) {
@@ -242,7 +369,7 @@ function extractOutputText(response) {
   return '';
 }
 
-function validateTurn(turn, pc, fallbackScene) {
+function validateTurn(turn, pc, fallbackScene, adminPreview) {
   if (!turn || typeof turn !== 'object' || !Array.isArray(turn.scene) || !turn.scene.length) {
     throw new Error('Writer가 유효한 scene을 반환하지 않았습니다.');
   }
@@ -255,6 +382,7 @@ function validateTurn(turn, pc, fallbackScene) {
       const registeredKey = CHARACTER_KEYS.has(beat?.speaker_key) ? beat.speaker_key : null;
       const speakerName = cleanText(beat?.speaker_name || '', 80).trim() || null;
       if (!registeredKey && !speakerName) throw new Error('dialogue에는 등록 speaker_key 또는 표시용 speaker_name이 필요합니다.');
+      if (!registeredKey && speakerName === pc.name) throw new Error('Writer가 PC의 발화문을 대신 작성했습니다.');
       return {
         kind,
         text,
@@ -281,7 +409,17 @@ function validateTurn(turn, pc, fallbackScene) {
       : [],
   };
 
-  return { scene, continuity };
+  const relationshipUpdates = adminPreview ? [] : (Array.isArray(turn.relationship_updates)
+    ? turn.relationship_updates.slice(0, 4).map((update) => ({
+        character_key: CHARACTER_KEYS.has(update?.character_key) ? update.character_key : null,
+        familiarity: FAMILIARITY.has(update?.familiarity) ? update.familiarity : null,
+        affinity_delta: Math.max(-10, Math.min(10, Math.trunc(Number(update?.affinity_delta) || 0))),
+        stance: cleanText(update?.stance || '', 120).trim() || null,
+        notable_context: cleanText(update?.notable_context || '', 220).trim() || null,
+      })).filter((update) => update.character_key)
+    : []);
+
+  return { scene, continuity, relationship_updates: relationshipUpdates };
 }
 
 export default async function handler(req, res) {
@@ -295,15 +433,19 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const mode = body.mode === 'continue' ? 'continue' : 'action';
+    const adminPreview = body.adminScenePreview === true;
     const action = typeof body.action === 'string' ? body.action : '';
-    if (!action.trim()) return json(res, 400, { error: '행동 입력이 비어 있습니다.' });
+    if (mode !== 'continue' && !action.trim()) return json(res, 400, { error: '행동 입력이 비어 있습니다.' });
     if (action.length > MAX_ACTION_CHARS) return json(res, 400, { error: `한 번의 입력은 ${MAX_ACTION_CHARS.toLocaleString()}자 이하로 입력해 주세요.` });
 
     const runState = body.runState && typeof body.runState === 'object' ? body.runState : {};
     const pc = safePc(runState.pc || {});
+    const residence = safeResidence(runState.residence || {});
     const scene = safeScene(runState.scene || {});
     const history = Array.isArray(runState.history) ? runState.history.slice(-MAX_HISTORY_TURNS) : [];
     const knowledgeLevel = Math.max(1, Math.min(5, Number(runState.knowledgeLevel) || 1));
+    const relationships = safeRelationships(runState.relationships || {});
 
     const apiResponse = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -315,7 +457,7 @@ export default async function handler(req, res) {
         model: process.env.OPENAI_MODEL || 'gpt-5.6-terra',
         store: false,
         instructions: WRITER_CONTRACT,
-        input: buildInput({ action, pc, scene, history, knowledgeLevel }),
+        input: buildInput({ action, mode, adminPreview, pc, residence, scene, history, knowledgeLevel, relationships }),
         reasoning: { effort: 'medium' },
         max_output_tokens: 5600,
         text: {
@@ -349,9 +491,11 @@ export default async function handler(req, res) {
     try { parsed = JSON.parse(outputText); }
     catch { throw new Error('Writer structured output을 JSON으로 해석하지 못했습니다.'); }
 
-    const turn = validateTurn(parsed, pc, scene);
+    const turn = validateTurn(parsed, pc, scene, adminPreview);
     return json(res, 200, {
       turn,
+      mode,
+      admin_preview: adminPreview,
       model: response?.model || process.env.OPENAI_MODEL || 'gpt-5.6-terra',
       request_id: response?.id || null,
       usage: response?.usage || null,
