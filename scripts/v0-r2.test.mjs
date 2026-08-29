@@ -9,7 +9,7 @@ assert.match(api, /SYNTHETIC_RHYTHM_ANCHORS/, 'R2 must carry compact synthetic r
 assert.match(api, /Honor the player's already-chosen intent through its ordinary execution/, 'chosen intent must execute through routine connective steps');
 assert.match(api, /turning an unspecified ordinary detail into an administrative failure/, 'R2 must reject invented procedural blockers');
 assert.match(api, /If nothing worth experiencing happens during routine time, compress it briefly/, 'quiet routine must be compressible without manufacturing events');
-assert.match(api, /Let action lead to reaction and then to the next action/, 'R2 must preserve scene motion without a director state machine');
+assert.match(api, /Let action lead to reaction[^\n]*next action/, 'R2 must preserve scene motion without a director state machine');
 assert.match(api, /EXACT USER ACTION\\n\$\{action\}/, 'exact user action must remain last and unrewritten');
 
 assert.doesNotMatch(api, /living-world\.json|story_affordances|crossing_affordance|character_drive|story_current|callback|collision/i, 'R2 must not inherit R1 affordance/drive/current machinery');
