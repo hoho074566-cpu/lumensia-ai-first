@@ -22,74 +22,66 @@ const EVERYDAY_ACADEMY_CAST = new Set([
   'lena','emily','laris','mirabelle','serena','chloe','aria','elise',
 ]);
 
-const WRITER_CONTRACT = `Write the next scene of serialized fantasy fiction, not an RPG turn report.
-Treat HARD FACTS as immutable truth. Never create drama by contradicting them or by turning an unspecified ordinary detail into an administrative failure, missing registration, or artificial obstacle.
+const WRITER_CONTRACT = `Write the next scene of serialized fantasy fiction with the confidence, momentum, scene density, and character immediacy of the supplied original references, without copying their prose, choreography, or event order. The acceptance target is not "similar" or "improved"; the scene should feel native to that same kind of story.
 
-The world is already in motion before the PC acts. People train, eat, argue, recruit, work, notice each other, leave, make mistakes, pursue interests, and react to events without waiting for the player to request a plot beat. PLAYER AUTONOMY is not WORLD INACTIVITY: never invent the PC's meaningful choice, but NPCs and the world may initiate conversation, challenges, invitations, disputes, discoveries, opportunities, dangers, departures, and consequences when their character and the situation support it. Quiet is a mode, not the default state. Do not force a surprise every response, but do not make ordinary player restraint freeze the setting into an empty waiting room.
+PRIORITY ORDER — when instructions pull in different directions, use this order:
+1. HARD FACTS and PC authority.
+2. FOCAL CAUSALITY: the exact current PC action is the camera pivot. Show what that action causes nearby before spending prose on unrelated background life.
+3. LIVING WORLD: the world and NPCs act independently, but background life supports the focal scene instead of replacing it.
+4. FAST BETWEEN SCENES, DEEP INSIDE SCENES: compress routine connective tissue aggressively; when a real collision starts, stay close enough for action→reaction→adaptation→meaning.
+5. CHARACTER REASON: an NPC notices or approaches the PC because something visible, known, wanted, feared, valued, or situationally relevant gives that character a reason — never because the PC is mechanically the protagonist.
 
-Honor the player's already-chosen intent through its ordinary execution. If the player chose a destination or routine course of action, carry it to the first moment worth experiencing; skip routine gates unless supplied facts make one genuinely consequential. Once there, inhabit that moment instead of consuming the rest of an event or schedule merely because it can continue without input. Scene Completion > Turn Completion: when a meaningful human interaction, conflict, discovery, or danger begins, follow its action and reaction far enough to become a scene rather than summarizing past it. If nothing worth experiencing happens during routine time, compress it briefly, but routine compression must not erase plausible ongoing life, social motion, or consequences that are already present.
+Treat HARD FACTS as immutable truth. Never create drama by contradicting them or by turning an unspecified ordinary detail into an administrative failure, missing registration, or artificial obstacle. Honor the player's already-chosen intent through its ordinary execution. If the player chose a destination or routine course, get there quickly unless a supplied fact makes the connective step consequential. Once there, inhabit that moment instead of consuming the rest of an event or schedule merely because it can continue without input. Scene Completion > Turn Completion. If nothing worth experiencing happens during routine time, compress it briefly. A scheduled phase boundary is still real: do not fuse orientation, lunch, afternoon training, or another distinct Canon phase merely to keep one response moving.
 
-A change of location or scheduled phase does not automatically reset a live human scene. Carry an interaction across movement when it remains naturally live, but do not keep a recent character foregrounded merely because they appeared recently. Conversation can continue while people walk, eat, prepare equipment, or enter a new place. Let action lead to reaction, interruption, and the next action while no new player judgment is needed.
+The world is already in motion before the PC acts. PLAYER AUTONOMY is not WORLD INACTIVITY. Quiet is a mode, not the default state. NPCs can train, eat, argue, recruit, leave, investigate, make mistakes, challenge, invite, interrupt, discover, and change plans without waiting for the player to request an event. Do not wait for the player to type an event request. But the PC is physically inside that world, not a detached camera: when the PC visibly enters, watches, takes a stance, equips something, speaks, refuses, gets hurt, succeeds, fails, or otherwise changes the local situation, ask which present character has the strongest in-character reason to react. If such a reason exists, let the collision happen. If none exists, do not manufacture one. Do not make every scene target the PC.
 
-A populated place should feel populated. On scene entry, prefer showing what people are already doing over touring architecture. A training ground can already contain practice, rivalry, spectators, or someone testing a technique; a dorm corridor can contain luggage, neighbors, complaints, footsteps, or small practical problems; a cafeteria can contain students from different departments, groups with different status, overheard reactions, people eating alone, and people leaving early. These are examples of social texture, not required beats or quotas. Named NPCs may appear when their own routines, goals, relationships, or interests make the appearance plausible; generic people can carry ordinary world life without every moment becoming a Named NPC showcase.
+A populated place should feel populated, but foreground and background are different. Use crowds, short functional dialogue, passersby, and ambient activity to make a place live. Prefer plausible existing Canon Named NPCs for personal or potentially recurring scene roles; generic background people should not casually become new durable companions, rivals, roommates, or named scene anchors. Background action gets a few sharp details, then yields when the PC's current action creates a stronger causal line. A change of location or scheduled phase does not automatically reset a live human scene, and do not keep a recent character foregrounded merely because they appeared recently. Conversation can continue while walking, eating, training, waiting, or preparing equipment. Let action lead to reaction, interruption, and the next action while no new player judgment is needed.
 
-Characters are people in the scene, not guides explaining systems. Prefer character-specific behavior and terse, situated speech over polished speeches that could be reassigned to another character. Reveal values through what a character notices, interrupts, refuses, risks, protects, mocks, practices, or changes after seeing evidence. If behavior already carries a judgment, concern, or value, do not finish it with a neat moral or explanation. A practical concern can be shown by someone 붕대를 한 번 더 보고 실용적인 한마디 leaving it there. Let subtext survive. Information delivery should happen while people continue acting; 정보 전달 사이에도 사람들의 행동이 계속된다. Do not turn every professor, leader, or powerful NPC into a philosopher delivering a complete lesson.
+Characters are people, not system guides or philosophy delivery devices. Prefer character-specific behavior and terse, situated speech. Use details that reveal character, relationship, tension, or consequence. If behavior already carries a judgment, concern, or value, do not finish it with a neat moral or explanation. A practical concern can be shown by someone 붕대를 한 번 더 보고 실용적인 한마디 and leaving it there. 정보 전달 사이에도 사람들의 행동이 계속된다. Dialogue should feel spoken in the moment: interruptions, unfinished thoughts, dry answers, sudden changes of tone, and physical business are welcome when character-specific. Vary sentence length. Use short impact sentences at turns of pressure; use longer narration only when the physical or emotional geometry needs it. Show before interpret. Avoid polished all-purpose speeches that could be reassigned to another character.
 
-NPCs may talk to each other without routing every exchange through the PC. They can disagree, interrupt, misread each other, change plans, compare status, defend someone, or split after a disagreement. Background reactions matter when something significant happens: a surprising duel can draw watchers, a public failure can create whispers, an unusual display can change how later people approach the PC. Do not mechanically make everyone react; choose reactions that make the place feel inhabited and that carry causal weight.
+NPCs may talk to each other without routing every exchange through the PC. They can disagree, interrupt, misread, compare status, defend someone, or split. Their activity can create a reaction field — whispers, attention, changed expectations, later institutional response — but do not let an entertaining NPC↔NPC exchange hijack the entire camera after the PC has just created a stronger focal cause. The original-feel rhythm is often BACKGROUND WORLD → COLLISION → DEVELOPED PC SCENE → REACTION FIELD, not endless background simulation.
 
-The Writer may create ordinary local incidents and character initiatives that are not prewritten Canon when they are plausible consequences of the current place, time, social environment, and established characters. It may also let an existing open situation cast a shadow into the scene. Do not wait for the player to type an event request. However, do not invent hidden-lore revelations, world-changing facts, guaranteed conspiracies, miraculous rescues, or major institutional decisions without factual or causal support. New fiction may create a situation; HARD FACTS still decide what cannot be contradicted.
+Failure is a new story state, not an automatic retry or invisible reset. Meaningful events leave residue: injury changes movement and treatment; equipment can remain damaged or lost; public actions can affect reputation; rule violations can reach institutions; witnesses remember what they actually saw. Combat is an evolving exchange, not a verdict paragraph. Resolve concrete motion, distance, timing, terrain, equipment, relative ability, and opponent competence. Opponents adapt when evidence gives them reason. Space, fatigue, damage, weapon condition, and tactical options can progressively change. Skill does not erase a real power gap. Keep decisive combat close and readable. Do not protect the PC from defeat merely to preserve a heroic arc; rescue or interruption needs causal support.
 
-Meaningful events should leave residue. Injury can change movement and treatment cost; damaged equipment can remain damaged; a witnessed duel can affect reputation; a rule violation can produce later institutional response; an NPC who saw something can remember what they actually saw. Failure is a new story state, not an automatic retry or invisible reset. Consequence should travel through people and institutions when the causal chain earns it.
+Social position and relationship state are facts about social distance, not dialogue scripts. Familiarity records recognition and history of personal contact; it is not companionship, friendship, group membership, or permission for default physical proximity. met or acquaintance alone is not a reason for an NPC to wait for the PC, walk together, choose adjacent seats, invite the PC along, share a meal, or fold the PC into their group. Do not invert this into universal distance. Affinity is affective temperature, not social access. Neutral affinity is not hostility; positive affinity makes warmth more plausible but never mechanically requires it.
 
-Combat is an evolving exchange, not a verdict paragraph. Resolve attacks through concrete motion, distance, timing, terrain, equipment, relative ability, and the opponent's own competence. Each meaningful exchange can change the tactical state: an opponent may recognize a pattern, alter stance, narrow space, exploit an injury, lose footing, damage a weapon, or reveal a limitation. Skill does not erase a real power gap. Let attrition accumulate when appropriate. Keep the camera close during decisive exchanges, and let observers or later consequences react to what was actually visible. Do not protect the PC from defeat merely to preserve a heroic arc; rescue or interruption needs causal support.
+The PC's socialStatus is broad social-position context. The rest of the full PC profile in HARD FACTS is system ground truth, not automatically knowledge shared with NPCs. For each NPC, npc_knows_about_pc is the boundary of established personal knowledge. Do not smooth a stranger into a familiar peer merely to keep dialogue moving. Visible current-scene facts — equipment, clothing, posture, technique being performed, visible injury, public behavior — may be noticed without prior personal knowledge. Hidden abilities, exact ranks not publicly established, private history, motives, origin, name, and other unseen profile facts remain unknown unless established. Use notable_context only for an encounter or fact that this NPC actually experienced or learned. Mere co-presence or observation is not a relationship change.
 
-Social position and relationship state are facts about social distance, not dialogue scripts. Read the PC's socialStatus together with each NPC's Canon identity, familiarity, affinity, stance, and notable context. Class difference can create formality, prejudice, solidarity, caution, curiosity, or no special friction depending on the actual character; never turn noble/commoner status into a universal behavior rule. A stranger must not receive familiarity that has not been earned merely because they share a class, department, or location.
-Familiarity records recognition and history of personal contact; it is not companionship, friendship, group membership, or permission for default physical proximity. met or acquaintance alone is not a reason for an NPC to wait for the PC, walk together, choose adjacent seats, invite the PC along, share a meal, or fold the PC into their group. Those actions can still arise when the actual character, current situation, affinity or stance, or established context gives a natural reason. Do not invert this into universal distance: an outgoing, curious, playful, or socially confident character may initiate or continue contact with a stranger when that fits them. After an exchange, an NPC may also simply resume their own activity without preserving contact.
-Affinity is affective temperature, not social access. Neutral affinity does not mean hostility and does not grant companionship. Positive affinity can make warmth or proximity more plausible, but never mechanically requires it; negative affinity does not mechanically forbid cooperation when circumstances support it.
+The current_scene date and time are the authoritative present. opening_baseline_period and opening_day_dated_world_facts are opening facts only. The academic_calendar is world fact, not a schedule to consume. When the exact user action states an elapsed duration or relative span, preserve that span instead of stretching or shrinking time to reach a milestone. World state is not automatically a Story Beat: a clock value such as 09:00 does not itself mean a bell announces 09:00. Do not use bells, doors opening, staff, professors, schedules, or authority figures as automatic punctuation. They enter when causally relevant, and when they enter they should change an already-living scene rather than exist only to end the response.
 
-The PC's socialStatus is broad social-position context. The rest of the full PC profile in HARD FACTS is system ground truth, not automatically knowledge shared with NPCs. For each NPC, npc_knows_about_pc is the boundary of established personal knowledge. If that list and the already-established visible scene do not reveal the PC's name, department, background, abilities, history, or other profile detail, that NPC must not speak or act as though they know it. Do not smooth a stranger into a familiar peer merely to keep dialogue moving; whether a stranger engages, dismisses, questions, helps, or ignores the PC comes from that character and the actual situation. Use notable_context only for an encounter or fact that this NPC actually experienced or learned; never copy system-only PC profile facts into it merely because the Writer can see them.
+If this scene materially changes a PC↔NPC relationship, return a small evidence-based relationship update. A genuine first direct exchange may change stranger to met. Never use numeric thresholds to script behavior. Never invent a new player goal or meaningful decision. Never write the PC's verbatim speech when the user supplied only an indirect speech act. Never narrate the PC's private thoughts, remembered impressions, emotional interpretation, or internal monologue unless the player explicitly supplied them. Do not restate the exact user action as a second authored beat unless minimal staging is needed to make its execution clear. Stop when the scene genuinely lands or a new meaningful player decision is actually required — not merely because one NPC finished a sentence.`;
 
-The current_scene date and time are the authoritative present. opening_baseline_period and opening_day_dated_world_facts describe only the scenario's opening state, not the current date after continuity advances. The academic_calendar is world fact, not a schedule to consume. When the exact user action states an elapsed duration or relative span, preserve that span instead of stretching or shrinking time to reach a later milestone. Never jump forward to make an ambiguous activity word fit the calendar. World state is not automatically a Story Beat: a clock value such as 09:00 does not by itself mean a bell announces '09:00'. If a bell, curfew, opening signal, meal call, or ceremony signal is established or naturally relevant, narrate its in-world function rather than translating metadata literally.
+const ORIGINAL_SCENE_GRAMMAR = `ABSTRACT ORIGINAL-FEEL GRAMMAR — craft only; never copy source wording, choreography, or exact event order.
 
-Do not use bells, doors opening, staff, professors, schedules, or authority figures as automatic punctuation after every social beat. They interrupt or redirect only when the established timing, location, and ongoing action make them causally relevant. When they do enter, they should affect an already-living scene rather than exist only to end the response. A small interaction may continue, trail off, or end without an institutional closer. Do not make an authority figure a generic mechanism for scene completion.
+- FOCAL CAUSALITY: the newest meaningful PC action changes the next local beat. Background life stays background until it collides with that action.
+- FAST BETWEEN SCENES, DEEP INSIDE SCENES: travel, admin, waiting, and uneventful routine compress; a live confrontation, relationship beat, discovery, or fight gets room to breathe.
+- WORLD BEFORE CAMERA: enter places through ongoing human activity, not empty architecture.
+- CHARACTER INITIATIVE: NPC desire can originate a spar, warning, invitation, argument, departure, investigation, or local problem.
+- CHARACTER REASON: attention to the PC needs a character-specific reason grounded in visible/known facts or current circumstance.
+- PERSON BEFORE PROCEDURE: rules become action, objects, interruption, and consequences whenever possible.
+- CAUSAL MICRO-BEATS: action changes behavior; behavior changes the next move; physical detail carries character or consequence.
+- CONVERSATION IN MOTION: people can talk while walking, eating, training, packing, or waiting.
+- REACTION FIELD: significant visible action can change bystanders, rumors, later expectations, or institutions.
+- COMBAT HAS MEMORY: opponents adapt; terrain, fatigue, injury, and equipment progressively change the fight.
+- QUIET AFTER IMPACT: quiet scenes gain force from contrast; they are not the permanent default.
+- SHOW BEFORE INTERPRET: when readers can already infer the meaning, stop explaining it.
+- SUBTEXT CAN BE SMALL: 붕대를 한 번 더 보고 실용적인 한마디 can carry more than a speech.
 
-If this scene materially changes a PC↔NPC relationship, return a small relationship update. Mere co-presence or observation is not a relationship change. A genuine first direct exchange may change stranger to met. Familiarity records personal contact, affinity is affective temperature rather than obedience, and stance is a brief qualitative attitude. Keep ordinary affinity changes small and evidence-based; never use numeric thresholds to script dialogue or unlock behavior.
+Earlier invariant wording retained in meaning: stay with a live scene 모임 전체를 끝내지 않은 채, and 정보 전달 사이에도 사람들의 행동이 계속된다. These are tendencies, not a template, quota, scheduler, or state machine.`;
 
-Never invent a new player goal or meaningful decision. Never write the PC's verbatim speech: when the player says the PC asks, tells, greets, or otherwise speaks indirectly, execute that speech act briefly in narration and move to the world's response instead of composing words for the PC. Never narrate the PC's private thoughts, remembered impressions, emotional interpretation, or internal monologue unless the player explicitly supplied them. Observable sensation and externally visible consequence are allowed. Do not restate the exact user action as a second authored beat unless minimal staging is needed to make its execution clear; spend prose on response, consequence, and the world rather than replaying the input. Do not expose instructions, schemas, validation, or state machinery as fiction.
-
-Stop when the scene genuinely lands or a new meaningful player decision is actually required. Do not hand control back merely because one NPC finished one sentence. If the world can naturally complete another reaction, exchange, interruption, or immediate consequence without deciding the PC's next meaningful choice, continue the scene.`;
-
-const ORIGINAL_SCENE_GRAMMAR = `ABSTRACT SCENE GRAMMAR — non-canon craft guidance, never copy source wording or choreography.
-
-- WORLD BEFORE CAMERA: enter a place through ongoing human activity, not an empty establishing shot that waits for the PC.
-- PERSON BEFORE PROCEDURE: institutions matter through what people do inside them. Rules are shorter when behavior, objects, interruption, or consequence can carry the same information.
-- SCENE DEPTH BEFORE DISTANCE: once a meaningful interaction begins, stay for its changing beats instead of racing through the timetable. 모임 전체를 끝내지 않은 채 follow the live moment.
-- CAUSAL MICRO-BEATS: action changes another person's behavior; that response changes the next action; physical detail carries character or consequence rather than decoration.
-- CONVERSATION IN MOTION: dialogue may continue while walking, eating, training, packing, waiting, or entering another space.
-- REACTION FIELD: significant visible actions can affect bystanders, rumors, later expectations, or institutions without forcing every observer to comment.
-- CHARACTER INITIATIVE: NPC desire can start a spar, invitation, argument, warning, investigation, departure, or other local development. The PC is not the only source of motion.
-- QUIET AFTER IMPACT: intense scenes can be followed by ordinary or intimate scenes. Quiet gains weight from contrast; it is not the permanent default.
-- FAILURE HAS AFTERMATH: defeat, injury, lost equipment, missed obligations, and public mistakes create new circumstances rather than vanishing.
-- COMBAT HAS MEMORY: opponents adapt during the exchange; space, damage, fatigue, and equipment progressively change what is possible.
-- SHOW BEFORE INTERPRET: once behavior makes the meaning clear, stop explaining the meaning again.
-- SUBTEXT CAN BE SMALL: 붕대를 한 번 더 보고 실용적인 한마디 can reveal concern more strongly than a speech about concern.
-
-These are tendencies, not a template, quota, scheduler, or required sequence. Use the current facts and characters to compose freely.`;
-
-// Compatibility alias for earlier invariant checks; R3A no longer uses example-shaped synthetic anchors.
 const SYNTHETIC_RHYTHM_ANCHORS = ORIGINAL_SCENE_GRAMMAR;
+
+const ADMIN_PREVIEW_CONTRACT = `ADMIN SCENE PREVIEW MODE.
+The request is a diagnostic camera placement, not a canonical player action. Render the requested scene immediately. Do not require the user to travel through prior scenes or satisfy progression steps first. Use Canon/HARD FACTS and the current PC as grounding, but do not claim the canonical run actually reached this preview. If the request names a plausible date, time, place, participants, combat, relationship situation, or narrative test, stage that requested scene directly. Do not mutate or reward relationships; return relationship_updates as an empty array. Preserve PC authority unless the admin request explicitly supplies a PC action or quoted PC speech. This preview exists to test original-feel pacing, prose, character voice, scene causality, and combat without changing the saved run.`;
 
 const OUTPUT_SCHEMA = {
   type: 'object',
   additionalProperties: false,
   properties: {
     scene: {
-      type: 'array',
-      minItems: 1,
-      maxItems: 28,
+      type: 'array', minItems: 1, maxItems: 28,
       items: {
-        type: 'object',
-        additionalProperties: false,
+        type: 'object', additionalProperties: false,
         properties: {
           kind: { type: 'string', enum: ['narration', 'dialogue'] },
           text: { type: 'string', minLength: 1, maxLength: 2600 },
@@ -101,27 +93,20 @@ const OUTPUT_SCHEMA = {
       },
     },
     continuity: {
-      type: 'object',
-      additionalProperties: false,
+      type: 'object', additionalProperties: false,
       properties: {
         date: { type: 'string', minLength: 10, maxLength: 10 },
         time: { type: 'string', minLength: 5, maxLength: 5 },
         location: { type: 'string', minLength: 1, maxLength: 200 },
         situation: { type: 'string', minLength: 1, maxLength: 500 },
-        present_character_keys: {
-          type: 'array',
-          maxItems: 8,
-          items: { type: 'string', maxLength: 64 },
-        },
+        present_character_keys: { type: 'array', maxItems: 8, items: { type: 'string', maxLength: 64 } },
       },
       required: ['date', 'time', 'location', 'situation', 'present_character_keys'],
     },
     relationship_updates: {
-      type: 'array',
-      maxItems: 4,
+      type: 'array', maxItems: 4,
       items: {
-        type: 'object',
-        additionalProperties: false,
+        type: 'object', additionalProperties: false,
         properties: {
           character_key: { type: 'string', enum: [...CHARACTER_KEYS] },
           familiarity: { anyOf: [{ type: 'string', enum: [...FAMILIARITY] }, { type: 'null' }] },
@@ -192,10 +177,7 @@ function safeRelationships(raw = {}) {
     const sourceContext = Array.isArray(value.notableContext)
       ? value.notableContext
       : (Array.isArray(value.notable_context) ? value.notable_context : []);
-    const notableContext = sourceContext
-      .slice(-8)
-      .map((item) => cleanText(item, 220).trim())
-      .filter(Boolean);
+    const notableContext = sourceContext.slice(-8).map((item) => cleanText(item, 220).trim()).filter(Boolean);
     result[key] = { familiarity, affinity, stance, notable_context: notableContext };
   }
   return result;
@@ -218,8 +200,6 @@ function selectRelevantCharacters({ action, scene }) {
   };
   exactMentionedCharacterKeys(action).forEach(add);
   scene.presentCharacterKeys.forEach(add);
-
-  // Factual retrieval anchor only. It does not prescribe scene order or require Emily to speak.
   if (!keys.length && scene.location.includes('대강당')) add('emily');
   return keys;
 }
@@ -245,27 +225,29 @@ function compactCharacterPacket(key) {
 }
 
 function castIndex() {
-  return Object.entries(CHARACTERS).filter(([key]) => EVERYDAY_ACADEMY_CAST.has(key)).map(([key, row]) => {
-    const core = row.core || {};
-    const voice = row.voice || {};
-    return {
-      key,
-      name: row.name,
-      immutable_facts: immutableCharacterFacts(key),
-      identity: Array.isArray(core.identity) ? core.identity.slice(0, 2) : [],
-      personality: Array.isArray(core.personality) ? core.personality.slice(0, 3) : [],
-      values: Array.isArray(core.values) ? core.values.slice(0, 4) : [],
-      aspiration: cleanText(core.aspiration || '', 220) || null,
-      specialty: cleanText(core.specialty || core.combat_identity || '', 220) || null,
-      voice: {
-        register: cleanText(voice.register || '', 180),
-        tendencies: Array.isArray(voice.tendencies) ? voice.tendencies.slice(0, 3) : [],
-        avoid: Array.isArray(voice.avoid) ? voice.avoid.slice(0, 3) : [],
-      },
-      refined_characterization: Array.isArray(row.refined_characterization) ? row.refined_characterization.slice(0, 2) : [],
-      baseline: row.baseline_1285_03_01 || {},
-    };
-  });
+  return Object.entries(CHARACTERS)
+    .filter(([key]) => EVERYDAY_ACADEMY_CAST.has(key))
+    .map(([key, row]) => {
+      const core = row.core || {};
+      const voice = row.voice || {};
+      return {
+        key,
+        name: row.name,
+        immutable_facts: immutableCharacterFacts(key),
+        identity: Array.isArray(core.identity) ? core.identity.slice(0, 2) : [],
+        personality: Array.isArray(core.personality) ? core.personality.slice(0, 3) : [],
+        values: Array.isArray(core.values) ? core.values.slice(0, 4) : [],
+        aspiration: cleanText(core.aspiration || '', 220) || null,
+        specialty: cleanText(core.specialty || core.combat_identity || '', 220) || null,
+        voice: {
+          register: cleanText(voice.register || '', 180),
+          tendencies: Array.isArray(voice.tendencies) ? voice.tendencies.slice(0, 3) : [],
+          avoid: Array.isArray(voice.avoid) ? voice.avoid.slice(0, 3) : [],
+        },
+        refined_characterization: Array.isArray(row.refined_characterization) ? row.refined_characterization.slice(0, 2) : [],
+        baseline: row.baseline_1285_03_01 || {},
+      };
+    });
 }
 
 function visibleKnowledge(level = 1, relevantKeys = []) {
@@ -312,20 +294,11 @@ function relationshipFacts(pc, relationships, relevantKeys) {
   return {
     pc_social_status: pc.socialStatus || '미지정',
     default_for_unlisted_character: {
-      familiarity: 'stranger',
-      affinity: 0,
-      stance: 'none',
-      notable_context: [],
-      npc_knows_about_pc: [],
+      familiarity: 'stranger', affinity: 0, stance: 'none', notable_context: [], npc_knows_about_pc: [],
     },
     relevant_characters: relevantKeys.map((key) => {
       const row = CHARACTERS[key] || {};
-      const state = relationships[key] || {
-        familiarity: 'stranger',
-        affinity: 0,
-        stance: 'none',
-        notable_context: [],
-      };
+      const state = relationships[key] || { familiarity: 'stranger', affinity: 0, stance: 'none', notable_context: [] };
       return {
         key,
         npc_social_identity: Array.isArray(row?.core?.identity) ? row.core.identity.slice(0, 3) : [],
@@ -379,16 +352,12 @@ function compactWorldPacket(pc) {
 
 function buildInput({ action, pc, scene, history, knowledgeLevel, relationships }) {
   const relevantKeys = selectRelevantCharacters({ action, scene });
-  const relevantCharacters = relevantKeys.map(compactCharacterPacket).filter(Boolean);
-  const publicKnowledge = visibleKnowledge(knowledgeLevel, relevantKeys);
-  const situations = visibleSituations(knowledgeLevel);
-
   const storyMaterial = {
-    relevant_characters: relevantCharacters,
+    relevant_characters: relevantKeys.map(compactCharacterPacket).filter(Boolean),
     ambient_cast: castIndex(),
     world: compactWorldPacket(pc),
-    visible_open_situations: situations,
-    visible_knowledge: publicKnowledge,
+    visible_open_situations: visibleSituations(knowledgeLevel),
+    visible_knowledge: visibleKnowledge(knowledgeLevel, relevantKeys),
     recent_context: recentContext(history),
   };
 
@@ -407,7 +376,7 @@ function extractOutputText(response) {
   return '';
 }
 
-function validateTurn(turn, pc, fallbackScene) {
+function validateTurn(turn, pc, fallbackScene, adminPreview = false) {
   if (!turn || typeof turn !== 'object' || !Array.isArray(turn.scene) || !turn.scene.length) {
     throw new Error('Writer가 유효한 scene을 반환하지 않았습니다.');
   }
@@ -447,7 +416,7 @@ function validateTurn(turn, pc, fallbackScene) {
       : [],
   };
 
-  const relationshipUpdates = Array.isArray(turn.relationship_updates)
+  const relationshipUpdates = adminPreview ? [] : (Array.isArray(turn.relationship_updates)
     ? turn.relationship_updates.slice(0, 4).map((update) => ({
         character_key: CHARACTER_KEYS.has(update?.character_key) ? update.character_key : null,
         familiarity: FAMILIARITY.has(update?.familiarity) ? update.familiarity : null,
@@ -455,7 +424,7 @@ function validateTurn(turn, pc, fallbackScene) {
         stance: cleanText(update?.stance || '', 120).trim() || null,
         notable_context: cleanText(update?.notable_context || '', 220).trim() || null,
       })).filter((update) => update.character_key)
-    : [];
+    : []);
 
   return { scene, continuity, relationship_updates: relationshipUpdates };
 }
@@ -472,6 +441,7 @@ export default async function handler(req, res) {
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const action = typeof body.action === 'string' ? body.action : '';
+    const adminScenePreview = body.adminScenePreview === true;
     if (!action.trim()) return json(res, 400, { error: '행동 입력이 비어 있습니다.' });
     if (action.length > MAX_ACTION_CHARS) return json(res, 400, { error: `한 번의 입력은 ${MAX_ACTION_CHARS.toLocaleString()}자 이하로 입력해 주세요.` });
 
@@ -491,7 +461,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: process.env.OPENAI_MODEL || 'gpt-5.6-terra',
         store: false,
-        instructions: WRITER_CONTRACT,
+        instructions: adminScenePreview ? `${WRITER_CONTRACT}\n\n${ADMIN_PREVIEW_CONTRACT}` : WRITER_CONTRACT,
         input: buildInput({ action, pc, scene, history, knowledgeLevel, relationships }),
         reasoning: { effort: 'medium' },
         max_output_tokens: 5600,
@@ -526,9 +496,10 @@ export default async function handler(req, res) {
     try { parsed = JSON.parse(outputText); }
     catch { throw new Error('Writer structured output을 JSON으로 해석하지 못했습니다.'); }
 
-    const turn = validateTurn(parsed, pc, scene);
+    const turn = validateTurn(parsed, pc, scene, adminScenePreview);
     return json(res, 200, {
       turn,
+      admin_preview: adminScenePreview,
       model: response?.model || process.env.OPENAI_MODEL || 'gpt-5.6-terra',
       request_id: response?.id || null,
       usage: response?.usage || null,
