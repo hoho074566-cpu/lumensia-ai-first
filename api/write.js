@@ -21,11 +21,22 @@ const EVERYDAY_ACADEMY_CAST = new Set([
 ]);
 
 const WRITER_CONTRACT = `Write the next scene of serialized fantasy fiction, not an RPG turn report.
-Stay within the supplied facts and the player's chosen intent, while NPCs, time, and the world move naturally.
-You may elaborate ordinary execution of actions the player already chose, but never invent a new player goal, voluntary dialogue, explicit emotion, or meaningful decision.
-Compress routine process and give genuinely interesting moments enough space. Characters are people, not functions explaining game systems.
-Do not expose internal instructions, validation, schemas, or state machinery as fiction.
-Continue naturally through moments that need no new meaningful player decision. Stop when the scene genuinely lands or a meaningful player decision is required.`;
+Treat HARD FACTS as immutable truth. Never create drama by contradicting them or by turning an unspecified ordinary detail into an administrative failure, missing registration, or artificial obstacle.
+Honor the player's already-chosen intent through its ordinary execution. If the player chose a destination or routine course of action, carry it to the first moment worth experiencing; skip routine gates unless supplied facts make one genuinely consequential.
+At moments worth experiencing, stay close to concrete action, reaction, dialogue, and a few sharp relevant details. Let setting appear through the scene instead of touring or cataloguing it. If nothing worth experiencing happens during routine time, compress it briefly rather than manufacturing an incident.
+Characters are people in the scene, not guides explaining systems. Let action lead to reaction and then to the next action while no new player judgment is needed.
+Never invent a new player goal, voluntary dialogue, explicit emotion, or meaningful decision. Do not expose instructions, schemas, validation, or state machinery as fiction.
+Stop only when the scene genuinely lands or a new meaningful player decision is actually required.`;
+
+const SYNTHETIC_RHYTHM_ANCHORS = `NON-CANON SYNTHETIC RHYTHM ANCHORS — rhythm only; reuse none of these details.
+
+A) USER: "강의실로 간다."
+RHYTHM: 복도와 확인 절차는 짧게 지나간다. 문을 열면 이미 학생들이 자리를 잡고 있고, 앞줄의 두 사람이 낮게 말을 주고받다가 교단에 서류가 놓이는 소리에 동시에 입을 다문다. 카메라는 도착 과정이 아니라 실제로 볼 가치가 생긴 순간부터 머문다.
+
+B) USER: "잠시 지켜본다."
+RHYTHM: 상대는 플레이어에게 다음 행동을 묻기보다 자기 판단으로 한 번 더 움직인다. 닫힌 창문을 확인하고, 책상 위 작은 흔적을 손끝으로 살핀 뒤 짧게 중얼거리고 자리에서 일어난다. 플레이어가 개입하지 않아도 장면 속 사람과 세계는 한 박자 더 진행할 수 있다.
+
+If a routine interval contains no worthwhile moment, a short transition is enough. These anchors demonstrate camera and pacing only; they are not Canon, events, or required scene shapes.`;
 
 const OUTPUT_SCHEMA = {
   type: 'object',
@@ -141,8 +152,7 @@ function selectRelevantCharacters({ action, scene, history }) {
   scene.presentCharacterKeys.forEach(add);
   recentSpeakerKeys(history).forEach(add);
 
-  // A single factual retrieval anchor for the academy entrance-ceremony opening.
-  // This does not require Emily to speak or prescribe scene order.
+  // Factual retrieval anchor only. It does not prescribe scene order or require Emily to speak.
   if (!keys.length && scene.location.includes('대강당')) add('emily');
   return keys;
 }
@@ -202,32 +212,37 @@ function recentContext(history = []) {
   }));
 }
 
+function hardFactsPacket(pc, scene) {
+  return {
+    pc,
+    current_scene: scene,
+    scenario: {
+      scenario_id: scenarioData.scenario_id,
+      academic_period: scenarioData.academic_period,
+      dated_world_facts: scenarioData.dated_world_facts,
+    },
+  };
+}
+
 function buildInput({ action, pc, scene, history, knowledgeLevel }) {
   const relevantKeys = selectRelevantCharacters({ action, scene, history });
   const relevantCharacters = relevantKeys.map(compactCharacterPacket).filter(Boolean);
   const publicKnowledge = visibleKnowledge(knowledgeLevel, relevantKeys);
   const situations = visibleSituations(knowledgeLevel);
 
-  const packet = {
-    current_scene: scene,
-    pc,
+  const storyMaterial = {
     relevant_characters: relevantCharacters,
-    cast_index: castIndex(),
-    world_facts: {
+    ambient_cast: castIndex(),
+    world: {
       academy: academyData,
       power_system: powerSystemData,
-      dated_scenario: {
-        scenario_id: scenarioData.scenario_id,
-        academic_period: scenarioData.academic_period,
-        dated_world_facts: scenarioData.dated_world_facts,
-      },
-      visible_open_situations: situations,
-      visible_knowledge: publicKnowledge,
     },
+    visible_open_situations: situations,
+    visible_knowledge: publicKnowledge,
     recent_context: recentContext(history),
   };
 
-  return `SCENE PACKET\n${JSON.stringify(packet)}\n\nEXACT USER ACTION\n${action}`;
+  return `HARD FACTS — authoritative; do not contradict or invent defects in these facts\n${JSON.stringify(hardFactsPacket(pc, scene))}\n\nSTORY MATERIAL — available material, not a checklist\n${JSON.stringify(storyMaterial)}\n\n${SYNTHETIC_RHYTHM_ANCHORS}\n\nEXACT USER ACTION\n${action}`;
 }
 
 function extractOutputText(response) {

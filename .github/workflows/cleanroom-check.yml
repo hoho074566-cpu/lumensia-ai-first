@@ -2,9 +2,9 @@ name: AI-First clean-room checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/v0-r2-original-grammar]
   pull_request:
-    branches: [main]
+    branches: [main, codex/v0-pure-ai-narrative]
 
 permissions:
   contents: read
@@ -26,3 +26,5 @@ jobs:
         run: node scripts/check.mjs
       - name: Run V0 hard-invariant checks
         run: node scripts/v0.test.mjs
+      - name: Run V0-R2 original-grammar checks
+        run: node scripts/v0-r2.test.mjs
