@@ -29,6 +29,7 @@ const importInput = el('importInput');
 let scenario = FALLBACK_SCENARIO;
 let runState = null;
 let sending = false;
+let adminPreviews = [];
 
 function loadJson(key) {
   try { return JSON.parse(localStorage.getItem(key) || 'null'); }
@@ -171,6 +172,28 @@ function beatHtml(beat) {
   return `<p class="narration">${escapeHtml(beat?.text || '')}</p>`;
 }
 
+function scenePlainText(scene = []) {
+  return (Array.isArray(scene) ? scene : []).map((beat) => {
+    const text = String(beat?.text || '').trim();
+    if (!text) return '';
+    if (beat?.kind !== 'dialogue') return text;
+    const name = CHARACTER_NAMES[beat?.speaker_key] || beat?.speaker_name || beat?.speaker_key || 'NPC';
+    return `${name}\n${text}`;
+  }).filter(Boolean).join('\n\n');
+}
+
+function copyToolHtml(kind, index) {
+  return `<div class="scene-block-tools">
+    <button type="button" class="copy-block-button" data-copy-kind="${escapeHtml(kind)}" data-copy-index="${index}" aria-label="이 장면 복사" title="복사">
+      <span class="copy-icon" aria-hidden="true"></span>
+    </button>
+  </div>`;
+}
+
+function sceneTurnHtml(scene, kind, index, extraClass = '') {
+  return `<article class="scene-turn ${escapeHtml(extraClass)}">${(scene || []).map(beatHtml).join('')}${copyToolHtml(kind, index)}</article>`;
+}
+
 function render() {
   if (!runState) {
     story.innerHTML = '<div class="empty-state">캐릭터를 생성하면 시작합니다.</div>';
@@ -188,13 +211,26 @@ function render() {
     </section>`,
   ];
 
-  for (const turn of runState.history) {
+  runState.history.forEach((turn, index) => {
     chunks.push(`<section class="player-action"><div class="player-label">${escapeHtml(runState.pc.name)}</div><div>${escapeHtml(turn.action)}</div></section>`);
-    chunks.push(`<article class="scene-turn">${(turn.scene || []).map(beatHtml).join('')}</article>`);
-  }
+    chunks.push(sceneTurnHtml(turn.scene, 'history', index));
+  });
 
   if (!runState.history.length) {
     chunks.push('<p class="start-hint">세계는 이미 움직이고 있다. 무엇을 할지는 직접 입력하면 된다.</p>');
+  }
+
+  if (adminPreviews.length) {
+    chunks.push('<section class="admin-preview-stack"><div class="admin-preview-heading">ADMIN PREVIEW · 세이브 미변경</div>');
+    adminPreviews.forEach((preview, index) => {
+      chunks.push(`<section class="admin-preview-request">
+        <div class="admin-preview-label">ADMIN</div>
+        <div>${escapeHtml(preview.request)}</div>
+        <div class="admin-preview-meta">${escapeHtml(preview.continuity?.date || '')} · ${escapeHtml(preview.continuity?.time || '')} · ${escapeHtml(preview.continuity?.location || '')}</div>
+      </section>`);
+      chunks.push(sceneTurnHtml(preview.scene, 'admin', index, 'admin-preview-turn'));
+    });
+    chunks.push('</section>');
   }
 
   story.innerHTML = chunks.join('');
@@ -213,22 +249,81 @@ function setSending(value) {
   sendButton.textContent = value ? '생성 중…' : '보내기';
 }
 
+function parseAdminRequest(raw) {
+  const text = String(raw || '');
+  const match = text.match(/^\s*admin(?:\s*[:：]\s*|\s+)([\s\S]+)$/i);
+  return match ? match[1].trim() : null;
+}
+
+function startsWithAdmin(raw) {
+  return /^\s*admin(?:\s|[:：]|$)/i.test(String(raw || ''));
+}
+
+async function writeClipboard(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const area = document.createElement('textarea');
+  area.value = text;
+  area.setAttribute('readonly', '');
+  area.style.position = 'fixed';
+  area.style.opacity = '0';
+  document.body.appendChild(area);
+  area.select();
+  const ok = document.execCommand('copy');
+  area.remove();
+  if (!ok) throw new Error('클립보드 복사에 실패했습니다.');
+}
+
+story.addEventListener('click', async (event) => {
+  const button = event.target.closest('.copy-block-button');
+  if (!button || !runState) return;
+  const index = Number(button.dataset.copyIndex);
+  const kind = button.dataset.copyKind;
+  const source = kind === 'admin' ? adminPreviews[index]?.scene : runState.history[index]?.scene;
+  const text = scenePlainText(source);
+  if (!text) return;
+  try {
+    await writeClipboard(text);
+    button.classList.add('is-copied');
+    button.title = '복사됨';
+    window.setTimeout(() => {
+      button.classList.remove('is-copied');
+      button.title = '복사';
+    }, 1200);
+  } catch (error) {
+    showError(error?.message || '복사에 실패했습니다.');
+  }
+});
+
 async function sendAction() {
   if (sending || !runState) return;
   const action = actionInput.value;
   if (!action.trim()) return;
+
+  const adminRequest = parseAdminRequest(action);
+  if (startsWithAdmin(action) && !adminRequest) {
+    showError('admin 뒤에 바로 불러올 장면을 적어 주세요. 예: admin 기사과 첫 실습에서 아르테미스가 내 자세를 평가한다');
+    return;
+  }
+
   showError('');
   setSending(true);
 
   try {
     const currentSettings = settings();
+    const normalRequestBody = JSON.stringify({ action, runState });
+    const requestBody = adminRequest
+      ? JSON.stringify({ action: adminRequest, runState, adminScenePreview: true })
+      : normalRequestBody;
     const response = await fetch('/api/write', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Lumensia-Token': currentSettings.accessToken || '',
       },
-      body: JSON.stringify({ action, runState }),
+      body: requestBody,
     });
     const raw = await response.text();
     let payload = {};
@@ -238,6 +333,20 @@ async function sendAction() {
 
     const turn = payload.turn;
     const continuity = turn.continuity;
+
+    if (adminRequest || payload.admin_preview === true) {
+      adminPreviews.push({
+        request: adminRequest || action,
+        scene: turn.scene,
+        continuity,
+        createdAt: new Date().toISOString(),
+      });
+      adminPreviews = adminPreviews.slice(-12);
+      actionInput.value = '';
+      render();
+      return;
+    }
+
     const relationshipUpdates = Array.isArray(turn.relationship_updates) ? turn.relationship_updates : [];
     runState.history.push({
       action,
@@ -277,6 +386,7 @@ pcForm.addEventListener('submit', (event) => {
   if (!pc.name) return;
   if (!Number.isFinite(pc.age) || pc.age < 1) return;
   runState = makeRunState(pc);
+  adminPreviews = [];
   saveJson(SAVE_KEY, runState);
   pcDialog.close();
   showError('');
@@ -300,6 +410,7 @@ el('newGameButton').addEventListener('click', () => {
   if (runState && !confirm('현재 V0 세이브를 지우고 새 캐릭터를 만들까요?')) return;
   localStorage.removeItem(SAVE_KEY);
   runState = null;
+  adminPreviews = [];
   render();
   openPcDialog();
 });
@@ -337,6 +448,7 @@ importInput.addEventListener('change', async () => {
     const parsed = JSON.parse(await file.text());
     if (!validateImportedRun(parsed)) throw new Error('Lumensia V0 세이브 형식이 아닙니다.');
     runState = ensureRelationshipState(parsed);
+    adminPreviews = [];
     saveJson(SAVE_KEY, runState);
     showError('');
     setSending(false);
@@ -350,6 +462,7 @@ async function boot() {
   await loadScenario();
   const saved = loadJson(SAVE_KEY);
   runState = validateImportedRun(saved) ? ensureRelationshipState(saved) : null;
+  adminPreviews = [];
   setSending(false);
   render();
   if (!runState) openPcDialog();
