@@ -2,9 +2,9 @@ name: AI-First clean-room checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/v0-pure-original-feel-core]
   pull_request:
-    branches: [main]
+    branches: [main, codex/v0-pure-ai-narrative]
 
 permissions:
   contents: read
@@ -26,3 +26,5 @@ jobs:
         run: node scripts/check.mjs
       - name: Run V0 hard-invariant checks
         run: node scripts/v0.test.mjs
+      - name: Run Pure Original Feel Core checks
+        run: node scripts/v0-pure-original-feel.test.mjs
