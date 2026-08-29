@@ -43,6 +43,6 @@ assert.match(client, /adminPreviews/, 'admin previews must remain session-only c
 assert.match(client, /data-admin-close/, 'admin preview must have a direct close control');
 assert.match(client, /data-admin-clear/, 'admin previews must have a direct clear-all control');
 assert.match(client, /copy-block-button/, 'generated scene blocks must expose copy control');
-assert.match(html, /id="continueButton"/, 'UI must expose dedicated continue button');
+assert.match(html, /id="advanceButton"[^>]*>이어 진행</, 'UI must expose dedicated 이어 진행 button');
 
 console.log('PASS V0 Pure Original Feel Core invariants');
