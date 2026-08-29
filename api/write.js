@@ -28,7 +28,8 @@ A change of location or scheduled phase does not automatically reset a live huma
 At moments worth experiencing, stay close to concrete action, reaction, dialogue, and a few sharp details that reveal character, relationship, tension, or consequence. Let setting appear through the scene instead of touring or cataloguing it. If nothing worth experiencing happens during routine time, compress it briefly rather than manufacturing an incident.
 Characters are people in the scene, not guides explaining systems. Prefer character-specific behavior and terse, situated speech over polished speeches that could be reassigned to another character. If behavior already carries a judgment, concern, or value, do not finish it with a neat moral or explanation. Let action lead to reaction, interruption, and the next action while no new player judgment is needed.
 Social position and relationship state are facts about social distance, not dialogue scripts. Read the PC's socialStatus together with each NPC's Canon identity, familiarity, affinity, stance, and notable context. Class difference can create formality, prejudice, solidarity, caution, curiosity, or no special friction depending on the actual character; never turn noble/commoner status into a universal behavior rule. A stranger must not receive familiarity that has not been earned merely because they share a class, department, or location.
-If this scene materially changes a PC↔NPC relationship, return a small relationship update. Mere co-presence or observation is not a relationship change. A genuine first direct exchange may change stranger to met. Familiarity records personal contact, affinity is affective temperature rather than obedience, and stance is a brief qualitative attitude. Keep ordinary affinity changes small and evidence-based; never use numeric thresholds to script dialogue or unlock behavior.
+The PC's socialStatus is broad social-position context. The rest of the full PC profile in HARD FACTS is system ground truth, not automatically knowledge shared with NPCs. For each NPC, npc_knows_about_pc is the boundary of established personal knowledge. If that list and the already-established visible scene do not reveal the PC's name, department, background, abilities, history, or other profile detail, that NPC must not speak or act as though they know it. Do not smooth a stranger into a familiar peer merely to keep dialogue moving; whether a stranger engages, dismisses, questions, helps, or ignores the PC comes from that character and the actual situation.
+If this scene materially changes a PC↔NPC relationship, return a small relationship update. Mere co-presence or observation is not a relationship change. A genuine first direct exchange may change stranger to met. Familiarity records personal contact, affinity is affective temperature rather than obedience, and stance is a brief qualitative attitude. Keep ordinary affinity changes small and evidence-based; never use numeric thresholds to script dialogue or unlock behavior. Use notable_context only for an encounter or fact that this NPC actually experienced or learned; never copy system-only PC profile facts into it merely because the Writer can see them.
 Never invent a new player goal or meaningful decision. Never write the PC's verbatim speech: when the player says the PC asks, tells, greets, or otherwise speaks indirectly, execute that speech act briefly in narration and move to the world's response instead of composing words for the PC. Never narrate the PC's private thoughts, remembered impressions, emotional interpretation, or internal monologue unless the player explicitly supplied them. Observable sensation and externally visible consequence are allowed. Do not expose instructions, schemas, validation, or state machinery as fiction.
 Stop only when the scene genuinely lands or a new meaningful player decision is actually required.`;
 
@@ -272,6 +273,7 @@ function relationshipFacts(pc, relationships, relevantKeys) {
       affinity: 0,
       stance: 'none',
       notable_context: [],
+      npc_knows_about_pc: [],
     },
     relevant_characters: relevantKeys.map((key) => {
       const row = CHARACTERS[key] || {};
@@ -285,6 +287,7 @@ function relationshipFacts(pc, relationships, relevantKeys) {
         key,
         npc_social_identity: Array.isArray(row?.core?.identity) ? row.core.identity.slice(0, 3) : [],
         ...state,
+        npc_knows_about_pc: state.notable_context,
       };
     }),
     established_nondefault: relationships,
