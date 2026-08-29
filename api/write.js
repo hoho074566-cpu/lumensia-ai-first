@@ -23,9 +23,9 @@ const EVERYDAY_ACADEMY_CAST = new Set([
 const WRITER_CONTRACT = `Write the next scene of serialized fantasy fiction, not an RPG turn report.
 Treat HARD FACTS as immutable truth. Never create drama by contradicting them or by turning an unspecified ordinary detail into an administrative failure, missing registration, or artificial obstacle.
 Honor the player's already-chosen intent through its ordinary execution. If the player chose a destination or routine course of action, carry it to the first moment worth experiencing; skip routine gates unless supplied facts make one genuinely consequential. Once there, inhabit that moment instead of consuming the rest of an event or schedule merely because it can continue without input.
-A change of location or scheduled phase does not reset the human scene. If a conversation, tension, attention, or relationship beat is still live, let it overlap naturally into the next situation until something in-world actually displaces it.
+A change of location or scheduled phase does not automatically reset a live human scene. Carry an interaction across the change only while it is actually still live; do not keep a recent character foregrounded merely because they appeared recently, especially after the player leaves them, chooses to be alone, or the beat has naturally ended.
 At moments worth experiencing, stay close to concrete action, reaction, dialogue, and a few sharp details that reveal character, relationship, tension, or consequence. Let setting appear through the scene instead of touring or cataloguing it. If nothing worth experiencing happens during routine time, compress it briefly rather than manufacturing an incident.
-Characters are people in the scene, not guides explaining systems. Prefer character-specific behavior and terse, situated speech over polished speeches that could be reassigned to another character. Let action lead to reaction, interruption, and the next action while no new player judgment is needed.
+Characters are people in the scene, not guides explaining systems. Prefer character-specific behavior and terse, situated speech over polished speeches that could be reassigned to another character. If behavior already carries a judgment, concern, or value, do not finish it with a neat moral or explanation. Let action lead to reaction, interruption, and the next action while no new player judgment is needed.
 Never invent a new player goal, voluntary dialogue, explicit emotion, or meaningful decision. Do not expose instructions, schemas, validation, or state machinery as fiction.
 Stop only when the scene genuinely lands or a new meaningful player decision is actually required.`;
 
@@ -35,7 +35,7 @@ A) USER: "모임 장소로 간다."
 RHYTHM: 이동 자체는 짧다. 직전부터 함께 걷던 학생이 하던 말을 끊지 않고 이어 가고, 목적지 앞에서 다른 학생 하나를 보고 말끝이 잠시 달라진다. 그 질문에 답이 나오기 전에 안쪽의 책임자가 문틀을 손가락으로 두 번 두드린다. 주변 잡담이 끊기고 사람들이 움직인다. 책임자는 자기 직함과 규정을 길게 설명하지 않는다. 한두 마디와 행동으로 분위기를 장악하고, 카메라는 모임 전체를 끝내지 않은 채 이 새 장면의 몇 박자를 직접 따라간다.
 
 B) USER: "설명을 듣는다."
-RHYTHM: 설명자는 완성된 연설을 하지 않는다. 필요한 정보 하나는 칠판이나 종이에 적고, 다른 정보는 사람을 직접 움직여 보여 준다. 옆자리 학생이 낮게 반응하면 설명자는 그 반응을 알아채고 짧게 받아친다. 닳은 장갑, 접어 둔 안내문, 멈춘 손 같은 디테일은 분위기를 꾸미기 위해서가 아니라 인물이나 관계를 드러낼 때만 남긴다. 정보 전달 사이에도 사람들의 행동이 계속된다.
+RHYTHM: 설명자는 완성된 연설을 하지 않는다. 필요한 정보 하나는 칠판이나 종이에 적고, 다른 정보는 사람을 직접 움직여 보여 준다. 옆자리 학생이 낮게 반응하면 설명자는 그 반응을 알아채고 짧게 받아친다. 누군가 걱정한다면 걱정의 의미를 설명하는 대신 붕대를 한 번 더 보고 실용적인 한마디를 남길 수 있다. 닳은 장갑, 접어 둔 안내문, 멈춘 손 같은 디테일은 분위기를 꾸미기 위해서가 아니라 인물이나 관계를 드러낼 때만 남긴다. 정보 전달 사이에도 사람들의 행동이 계속된다.
 
 If a routine interval contains no worthwhile moment, a short transition is enough. These anchors demonstrate overlap, micro-beat causality, character-bearing detail, and camera depth only; they are not Canon, events, or required scene shapes.`;
 
@@ -124,16 +124,6 @@ function safeScene(raw = {}) {
   };
 }
 
-function recentSpeakerKeys(history = []) {
-  const keys = [];
-  for (const turn of history.slice(-4)) {
-    for (const beat of turn?.scene || []) {
-      if (beat?.kind === 'dialogue' && CHARACTER_KEYS.has(beat.speaker_key) && !keys.includes(beat.speaker_key)) keys.push(beat.speaker_key);
-    }
-  }
-  return keys;
-}
-
 function exactMentionedCharacterKeys(action = '') {
   const found = [];
   const lowered = action.toLowerCase();
@@ -144,14 +134,13 @@ function exactMentionedCharacterKeys(action = '') {
   return found;
 }
 
-function selectRelevantCharacters({ action, scene, history }) {
+function selectRelevantCharacters({ action, scene }) {
   const keys = [];
   const add = (key) => {
     if (CHARACTER_KEYS.has(key) && !keys.includes(key) && keys.length < 3) keys.push(key);
   };
   exactMentionedCharacterKeys(action).forEach(add);
   scene.presentCharacterKeys.forEach(add);
-  recentSpeakerKeys(history).forEach(add);
 
   // Factual retrieval anchor only. It does not prescribe scene order or require Emily to speak.
   if (!keys.length && scene.location.includes('대강당')) add('emily');
@@ -268,7 +257,7 @@ function compactWorldPacket(pc) {
 }
 
 function buildInput({ action, pc, scene, history, knowledgeLevel }) {
-  const relevantKeys = selectRelevantCharacters({ action, scene, history });
+  const relevantKeys = selectRelevantCharacters({ action, scene });
   const relevantCharacters = relevantKeys.map(compactCharacterPacket).filter(Boolean);
   const publicKnowledge = visibleKnowledge(knowledgeLevel, relevantKeys);
   const situations = visibleSituations(knowledgeLevel);
