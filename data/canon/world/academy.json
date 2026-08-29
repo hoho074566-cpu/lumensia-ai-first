@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "institution": "루멘시아 아카데미",
+  "academic_structure": {
+    "years": 3,
+    "dormitories": "학년별 A/B/C동 독립 기숙사",
+    "year_focus": {
+      "1": "기초",
+      "2": "심화·분과·외부임무",
+      "3": "연구·실전·고난도임무·후배지도"
+    },
+    "departments": {
+      "기사과": ["무기술", "오러 운용", "전술", "제왕학"],
+      "마법과": ["원소", "소환", "고대마법", "마법진", "마법공학"],
+      "신학부": ["신성력", "치유", "축복", "제국신학", "이교도 판별"],
+      "교양학부": ["역사", "경제", "식물", "예술", "전학생 필수학점"]
+    },
+    "graduation": "3년 이수와 졸업시험 통과. 출석·태도·과제·실기·담당교수 평가와 학년말 필기·실기가 진급에 반영된다."
+  },
+  "typical_progression": {
+    "knight": {
+      "year1": "비기너→익스퍼트 하급 목표; 상위권은 입학부터 익스퍼트 하급, 수석급 익스퍼트 중급",
+      "year2": "익스퍼트 중급 평균; 익스퍼트 상급 진입 목표; 검기 훈련 시작",
+      "year3": "대부분 익스퍼트 상급; 졸업 전 익스퍼트 최상급 목표; 극소수 마스터 도전"
+    },
+    "magic": {
+      "year1": "2~3서클 시작; 4서클 기초 목표; 수석급 4~5서클 입학 가능",
+      "year2": "4서클 평균; 5서클 응용·무영창 기초",
+      "year3": "5서클 평균; 6서클 돌파 목표; 역사상 극소수 7서클 졸업"
+    }
+  },
+  "faculty_structure": {
+    "principal": "황제가 임명하며 학사·예산·인사 최종권을 가진다.",
+    "department_head": "보통 마스터 또는 7서클 이상.",
+    "senior_professor": "학년·학과 실무 핵심.",
+    "ordinary_professor_instructor": "대부분 익스퍼트 상급 또는 5서클 이상."
+  },
+  "duels": {
+    "official": "교관 감독과 지정 연병장/실습실에서 진행. 훈련용 무기와 보호마법 방어구를 사용하며 치유마법사·보조교관이 대기한다.",
+    "private": "원칙적으로 금지.",
+    "honor_duel": "쌍방합의 → 학생회 중재 → 담당교수 허가 → 공식 감독 하에 허용.",
+    "illegal_duel_penalty": "최소 1개월 근신·사회봉사에서 최대 퇴학."
+  },
+  "student_organizations": {
+    "student_council": "아카데미 최고 학생자치기구. 행사 운영, 1차 징계 심의, 명예결투 중재·감독.",
+    "blue_knights": "기사과 중심 자치 기율단체. 교내 순찰·치안·행사경호·학생분쟁 초동개입·실전모의훈련.",
+    "white_rose": "마법과 상위권 여학생 중심 비공식 사교·학술집단. 귀족 자녀가 많고 사교·인맥 영향력이 크다."
+  },
+  "admissions": {
+    "recommendation": {
+      "eligible_recommenders": ["황실 직계", "3대 핵심가문 가주", "마탑주", "아카데미 교장"],
+      "quota": "각 연 1명",
+      "rule": "최소 필기만 통과하며 실력은 추천자의 명예로 보증된다."
+    },
+    "special_talent": "정규시험으로 측정하기 어려운 희귀능력자. 교수 3명 이상 특별심의위원회의 만장일치 필요.",
+    "post_admission": "입학 뒤 공식 특혜는 없다. 추천입학생은 보증된 엘리트, 특기자는 미지의 변수로 보이는 경향이 있다."
+  },
+  "off_campus_practice": {
+    "principle": "자율 참여",
+    "E-D": "1학년 권장. 3인 이상 파티면 교수 없이 가능.",
+    "C-B": "2학년 이상 권장, 교수 감독 필수. 1학년도 상급생 추천+교수심사로 보조 참가 가능.",
+    "A+": "3학년 최우수 선별, 군 연계 특수임무 등.",
+    "rewards": "성과는 실습학점·학기말 평가·진급·장학금·스카우트에 반영. 의뢰보수는 파티분배 후 길드 10%와 아카데미 발전기금 5% 공제."
+  },
+  "baseline_1285_03_01": {
+    "principal": "emily",
+    "knight_senior_professor": "artemis",
+    "magic_senior_professor": "elena",
+    "student_council_president": "anastasia",
+    "student_council_vice_president": "lucia",
+    "white_rose_president": "lucia",
+    "white_rose_vice_president": "elise"
+  }
+}
