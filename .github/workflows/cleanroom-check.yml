@@ -2,9 +2,9 @@ name: AI-First clean-room checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/v0-r1b-original-camera]
   pull_request:
-    branches: [main]
+    branches: [main, codex/v0-r1a-living-world]
 
 permissions:
   contents: read
@@ -28,3 +28,5 @@ jobs:
         run: node scripts/v0.test.mjs
       - name: Run V0-R1A affordance checks
         run: node scripts/v0-r1a.test.mjs
+      - name: Run V0-R1B original-camera checks
+        run: node scripts/v0-r1b.test.mjs
