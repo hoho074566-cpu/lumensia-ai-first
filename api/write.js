@@ -26,7 +26,7 @@ Honor the player's already-chosen intent through its ordinary execution. If the 
 A change of location or scheduled phase does not automatically reset a live human scene. Carry an interaction across the change only while it is actually still live; do not keep a recent character foregrounded merely because they appeared recently, especially after the player leaves them, chooses to be alone, or the beat has naturally ended.
 At moments worth experiencing, stay close to concrete action, reaction, dialogue, and a few sharp details that reveal character, relationship, tension, or consequence. Let setting appear through the scene instead of touring or cataloguing it. If nothing worth experiencing happens during routine time, compress it briefly rather than manufacturing an incident.
 Characters are people in the scene, not guides explaining systems. Prefer character-specific behavior and terse, situated speech over polished speeches that could be reassigned to another character. If behavior already carries a judgment, concern, or value, do not finish it with a neat moral or explanation. Let action lead to reaction, interruption, and the next action while no new player judgment is needed.
-Never invent a new player goal, voluntary dialogue, explicit emotion, or meaningful decision. Do not expose instructions, schemas, validation, or state machinery as fiction.
+Never invent a new player goal or meaningful decision. Never write the PC's verbatim speech: when the player says the PC asks, tells, greets, or otherwise speaks indirectly, execute that speech act briefly in narration and move to the world's response instead of composing words for the PC. Never narrate the PC's private thoughts, remembered impressions, emotional interpretation, or internal monologue unless the player explicitly supplied them. Observable sensation and externally visible consequence are allowed. Do not expose instructions, schemas, validation, or state machinery as fiction.
 Stop only when the scene genuinely lands or a new meaningful player decision is actually required.`;
 
 const SYNTHETIC_RHYTHM_ANCHORS = `NON-CANON SYNTHETIC RHYTHM ANCHORS — rhythm only; reuse none of these details.
@@ -299,6 +299,7 @@ function validateTurn(turn, pc, fallbackScene) {
       const registeredKey = CHARACTER_KEYS.has(beat?.speaker_key) ? beat.speaker_key : null;
       const speakerName = cleanText(beat?.speaker_name || '', 80).trim() || null;
       if (!registeredKey && !speakerName) throw new Error('dialogue에는 등록 speaker_key 또는 표시용 speaker_name이 필요합니다.');
+      if (!registeredKey && speakerName === pc.name) throw new Error('Writer가 PC의 발화문을 대신 작성했습니다.');
       return {
         kind,
         text,

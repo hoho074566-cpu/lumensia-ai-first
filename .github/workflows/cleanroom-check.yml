@@ -2,9 +2,9 @@ name: AI-First clean-room checks
 
 on:
   push:
-    branches: [main, codex/v0-r2-original-grammar, codex/v0-r2a-scene-overlap, codex/v0-r2b-light-polish]
+    branches: [main, codex/v0-r2-original-grammar, codex/v0-r2a-scene-overlap, codex/v0-r2b-light-polish, codex/v0-r2c-pc-authority-guard]
   pull_request:
-    branches: [main, codex/v0-pure-ai-narrative, codex/v0-r2-original-grammar, codex/v0-r2a-scene-overlap]
+    branches: [main, codex/v0-pure-ai-narrative, codex/v0-r2-original-grammar, codex/v0-r2a-scene-overlap, codex/v0-r2b-light-polish]
 
 permissions:
   contents: read
@@ -32,3 +32,5 @@ jobs:
         run: node scripts/v0-r2a.test.mjs
       - name: Run V0-R2B light-polish checks
         run: node scripts/v0-r2b.test.mjs
+      - name: Run V0-R2C PC-authority checks
+        run: node scripts/v0-r2c.test.mjs
