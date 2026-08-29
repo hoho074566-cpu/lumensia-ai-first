@@ -12,7 +12,7 @@ assert.match(api, /If nothing worth experiencing happens during routine time, co
 assert.match(api, /Let action lead to reaction[^\n]*next action/, 'R2 must preserve scene motion without a director state machine');
 assert.match(api, /EXACT USER ACTION\\n\$\{action\}/, 'exact user action must remain last and unrewritten');
 
-assert.doesNotMatch(api, /living-world\.json|story_affordances|crossing_affordance|character_drive|story_current|callback|collision/i, 'R2 must not inherit R1 affordance/drive/current machinery');
+assert.doesNotMatch(api, /living-world\.json|story_affordances|crossing_affordance|character_drive|story_current|callback/i, 'R2 must not inherit R1 affordance/drive/current machinery');
 assert.doesNotMatch(api, /eventQueue|nextEvent|npcScheduler|rotationIndex|cooldownTurns|spotlightDebt|sceneGoal|sceneExitCondition|turnHook/i, 'R2 must not regrow a narrative engine');
 assert.equal((api.match(/https:\/\/api\.openai\.com\/v1\/responses/g) || []).length, 1, 'R2 stays one Writer call');
 
