@@ -14,7 +14,7 @@ assert.match(api, /store:\s*false/, 'Writer call must use store:false');
 assert.match(api, /gpt-5\.6-terra/, 'V0 baseline model should default to Terra');
 assert.match(api, /EXACT USER ACTION\\n\$\{action\}/, 'exact user action must be appended without rewrite');
 assert.match(api, /maxItems:\s*28/, 'scene schema should remain a free ordered beat stream with ample room');
-assert.match(api, /EVERYDAY_ACADEMY_CAST/, 'V0 must use a bounded everyday academy cast index instead of exposing all secret/high-tier characters by default');
+assert.match(api, /function thinCastIndex\(/, 'V0 must expose Canon cast through a deliberately thin index rather than full dossiers for every character');
 assert.match(api, /speaker_name/, 'V0 must support anonymous one-scene dialogue without inventing canonical character keys');
 assert.doesNotMatch(api, /suggested[_ -]?actions|turn-hook|scene-momentum|context-router|time-plan|event_progress|director_plan/i, 'legacy narrative-control markers must not enter V0 API');
 assert.doesNotMatch(client, /\.focus\s*\(/, 'mobile client must not steal keyboard focus automatically');
@@ -23,6 +23,6 @@ assert.doesNotMatch(html, /Suggested Actions|AUTO FLOW|CONTINUE|Event Director/i
 assert.match(html, /name="background"/, 'free PC background field required');
 assert.match(html, /name="skills"/, 'free PC skills field required');
 assert.match(html, /name="equipment"/, 'free PC equipment field required');
-assert.match(client, /JSON\.stringify\(\{ action, runState \}\)/, 'client must send current action and run state directly');
+assert.match(client, /JSON\.stringify\(\{ action, runState \}\)/, 'client must preserve a direct normal action + runState request path');
 
 console.log('PASS V0 pure narrative runtime invariants');
