@@ -16,6 +16,7 @@ assert.match(api, /let the NPC act on it instead of merely appearing and observi
 assert.match(api, /camera follows the strongest current collision involving the PC/, 'PC/world collision must guide the camera without a hook engine');
 assert.match(api, /Use unequal prose density/, 'Writer must use uneven prose density instead of uniform AI narration');
 assert.match(api, /Do not print bare clock-state sentences/, 'clock state must not leak as bare timestamp prose');
+assert.match(api, /preserve that duration exactly instead of stretching or shrinking time/, 'explicit elapsed duration must not be distorted to hit schedule milestones');
 assert.match(api, /Characters reveal themselves through action, interruption, refusal, practical detail, subtext, choices, and contrast/, 'characterization must prefer behavior over thematic speeches');
 assert.match(api, /Combat is an evolving exchange/, 'combat must remain adaptive and physical');
 assert.match(api, /Failure creates a new story state/, 'failure aftermath must persist');
