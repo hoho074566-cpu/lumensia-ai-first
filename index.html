@@ -27,8 +27,11 @@
 
   <form id="composer" class="composer">
     <label class="sr-only" for="actionInput">행동 입력</label>
-    <textarea id="actionInput" rows="3" maxlength="12000" placeholder="무엇을 할지 직접 입력한다. (Ctrl+Enter 전송)" autocomplete="off"></textarea>
-    <button id="sendButton" class="send-button" type="submit">보내기</button>
+    <textarea id="actionInput" rows="3" maxlength="12000" placeholder="무엇을 할지 직접 입력한다. admin ... 으로 즉시 장면 테스트 가능" autocomplete="off"></textarea>
+    <div class="composer-actions">
+      <button id="advanceButton" class="advance-button" type="button">이어 진행</button>
+      <button id="sendButton" class="send-button" type="submit">보내기</button>
+    </div>
   </form>
 
   <input id="importInput" type="file" accept="application/json,.json" hidden>

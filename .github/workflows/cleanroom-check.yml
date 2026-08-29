@@ -2,9 +2,9 @@ name: AI-First clean-room checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/v0-pure-original-scene-core-v2]
   pull_request:
-    branches: [main]
+    branches: [main, codex/v0-pure-ai-narrative]
 
 permissions:
   contents: read
@@ -26,3 +26,5 @@ jobs:
         run: node scripts/check.mjs
       - name: Run V0 hard-invariant checks
         run: node scripts/v0.test.mjs
+      - name: Run Minimal Original Scene Core V2 checks
+        run: node scripts/v0-pure-original-scene-v2.test.mjs
