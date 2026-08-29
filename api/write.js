@@ -271,16 +271,7 @@ function buildInput({ action, pc, scene, history, knowledgeLevel }) {
     recent_context: recentContext(history),
   };
 
-  return `HARD FACTS — authoritative; do not contradict or invent defects in these facts\
-${JSON.stringify(hardFactsPacket(pc, scene))}\
-\
-STORY MATERIAL — available material, not a checklist\
-${JSON.stringify(storyMaterial)}\
-\
-${SYNTHETIC_RHYTHM_ANCHORS}\
-\
-EXACT USER ACTION\
-${action}`;
+  return `HARD FACTS — authoritative; do not contradict or invent defects in these facts\n${JSON.stringify(hardFactsPacket(pc, scene))}\n\nSTORY MATERIAL — available material, not a checklist\n${JSON.stringify(storyMaterial)}\n\n${SYNTHETIC_RHYTHM_ANCHORS}\n\nEXACT USER ACTION\n${action}`;
 }
 
 function extractOutputText(response) {
