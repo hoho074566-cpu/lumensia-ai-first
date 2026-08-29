@@ -57,8 +57,8 @@ button.primary, .send-button { border-color: #6e5930; background: #3c3018; color
 .composer textarea { min-height: 76px; max-height: 32vh; resize: vertical; border: 1px solid #443b48; border-radius: 10px; background: #0f0e12; color: #f2ece5; padding: 11px 12px; line-height: 1.55; outline: none; }
 .composer textarea:focus { border-color: #7a6742; }
 .composer-actions { display: grid; grid-template-rows: 1fr 1fr; gap: 7px; min-width: 82px; }
-.send-button, .continue-button { min-width: 82px; }
-.continue-button { border-color: #47404c; background: #201c24; color: #d7cedb; font-weight: 700; }
+.send-button, .advance-button { min-width: 82px; }
+.advance-button { border-color: #47404c; background: #201c24; color: #d7cedb; font-weight: 700; }
 .modal { width: min(720px, calc(100% - 24px)); max-height: calc(100dvh - 28px); border: 1px solid #493f4a; border-radius: 16px; padding: 0; background: #151319; color: #eee9e1; }
 .modal.small { width: min(500px, calc(100% - 24px)); }
 .modal::backdrop { background: #000a; backdrop-filter: blur(4px); }
@@ -85,7 +85,7 @@ legend { padding: 0 5px; color: var(--gold); font-size: 12px; }
   .form-grid.two, .form-grid.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .composer { grid-template-columns: 1fr; }
   .composer-actions { grid-template-columns: 1fr 1fr; grid-template-rows: none; }
-  .send-button, .continue-button { min-height: 42px; }
+  .send-button, .advance-button { min-height: 42px; }
   body { padding-bottom: calc(184px + env(safe-area-inset-bottom)); }
   .error-box { bottom: calc(184px + env(safe-area-inset-bottom)); }
 }
