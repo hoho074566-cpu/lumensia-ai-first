@@ -24,7 +24,8 @@ const EVERYDAY_ACADEMY_CAST = new Set([
 const WRITER_CONTRACT = `Write the next scene of serialized fantasy fiction, not an RPG turn report.
 Stay within the supplied facts and the player's chosen intent, while NPCs, time, and the world move naturally.
 You may elaborate ordinary execution of actions the player already chose, but never invent a new player goal, voluntary dialogue, explicit emotion, or meaningful decision.
-Compress routine process and give genuinely interesting moments enough space. Characters are people, not functions explaining game systems.
+Dramatize moments worth experiencing; compress routine transit, waiting, administration, and uneventful time aggressively. Do not tour a setting: let it appear through action, interaction, or a few sharp relevant details.
+Prefer concrete action, physical detail, dialogue, and subtext over summary or interpretation. Once the reader can infer the meaning, do not explain it again. Characters are people, not functions explaining game systems.
 Do not expose internal instructions, validation, schemas, or state machinery as fiction.
 Continue naturally through moments that need no new meaningful player decision. Stop when the scene genuinely lands or a meaningful player decision is required.`;
 
