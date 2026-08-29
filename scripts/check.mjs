@@ -77,9 +77,17 @@ if (knowledge) {
 
 const pcRules = parseJson(join(ROOT, 'data/canon/rules/pc.json'));
 if (pcRules) {
-  const serialized = JSON.stringify(pcRules);
-  if (/Aaa TEST CHARACTER|MERCENARY V1/.test(serialized)) fail('draft Aaa test character leaked into PC Canon');
-  else pass('draft Aaa test character is not Canon');
+  try {
+    assert.ok(pcRules.character_creation);
+    assert.ok(!Object.hasOwn(pcRules, 'pc'));
+    assert.ok(!Object.hasOwn(pcRules, 'default_pc'));
+    assert.ok(!Object.hasOwn(pcRules, 'preset_pc'));
+    assert.ok(!Object.hasOwn(pcRules, 'test_character'));
+    assert.ok(Array.isArray(pcRules.character_creation.player_defined_fields));
+    pass('no draft/default/preset PC object exists in Canon');
+  } catch (error) {
+    fail(`PC Canon contains a preset/test character shape: ${error.message}`);
+  }
 }
 
 const baseline = parseJson(join(ROOT, 'data/scenarios/academy-1285-03-01/baseline.json'));
