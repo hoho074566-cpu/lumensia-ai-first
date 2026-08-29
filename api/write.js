@@ -13,6 +13,7 @@ const EXPRESSIONS = new Set([
   'default','smile','blush','serious','angry','sad','shock',
   'smug','annoyed','worried','confused','laugh','flustered',
 ]);
+const FAMILIARITY = new Set(['stranger', 'met', 'acquaintance', 'familiar', 'close']);
 const MAX_ACTION_CHARS = 12000;
 const MAX_HISTORY_TURNS = 8;
 const EVERYDAY_ACADEMY_CAST = new Set([
@@ -26,6 +27,8 @@ Honor the player's already-chosen intent through its ordinary execution. If the 
 A change of location or scheduled phase does not automatically reset a live human scene. Carry an interaction across the change only while it is actually still live; do not keep a recent character foregrounded merely because they appeared recently, especially after the player leaves them, chooses to be alone, or the beat has naturally ended.
 At moments worth experiencing, stay close to concrete action, reaction, dialogue, and a few sharp details that reveal character, relationship, tension, or consequence. Let setting appear through the scene instead of touring or cataloguing it. If nothing worth experiencing happens during routine time, compress it briefly rather than manufacturing an incident.
 Characters are people in the scene, not guides explaining systems. Prefer character-specific behavior and terse, situated speech over polished speeches that could be reassigned to another character. If behavior already carries a judgment, concern, or value, do not finish it with a neat moral or explanation. Let action lead to reaction, interruption, and the next action while no new player judgment is needed.
+Social position and relationship state are facts about social distance, not dialogue scripts. Read the PC's socialStatus together with each NPC's Canon identity, familiarity, affinity, stance, and notable context. Class difference can create formality, prejudice, solidarity, caution, curiosity, or no special friction depending on the actual character; never turn noble/commoner status into a universal behavior rule. A stranger must not receive familiarity that has not been earned merely because they share a class, department, or location.
+If this scene materially changes a PC↔NPC relationship, return a small relationship update. Mere co-presence or observation is not a relationship change. A genuine first direct exchange may change stranger to met. Familiarity records personal contact, affinity is affective temperature rather than obedience, and stance is a brief qualitative attitude. Keep ordinary affinity changes small and evidence-based; never use numeric thresholds to script dialogue or unlock behavior.
 Never invent a new player goal or meaningful decision. Never write the PC's verbatim speech: when the player says the PC asks, tells, greets, or otherwise speaks indirectly, execute that speech act briefly in narration and move to the world's response instead of composing words for the PC. Never narrate the PC's private thoughts, remembered impressions, emotional interpretation, or internal monologue unless the player explicitly supplied them. Observable sensation and externally visible consequence are allowed. Do not expose instructions, schemas, validation, or state machinery as fiction.
 Stop only when the scene genuinely lands or a new meaningful player decision is actually required.`;
 
@@ -76,8 +79,24 @@ const OUTPUT_SCHEMA = {
       },
       required: ['date', 'time', 'location', 'situation', 'present_character_keys'],
     },
+    relationship_updates: {
+      type: 'array',
+      maxItems: 4,
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          character_key: { type: 'string', enum: [...CHARACTER_KEYS] },
+          familiarity: { anyOf: [{ type: 'string', enum: [...FAMILIARITY] }, { type: 'null' }] },
+          affinity_delta: { type: 'integer', minimum: -10, maximum: 10 },
+          stance: { anyOf: [{ type: 'string', maxLength: 120 }, { type: 'null' }] },
+          notable_context: { anyOf: [{ type: 'string', maxLength: 220 }, { type: 'null' }] },
+        },
+        required: ['character_key', 'familiarity', 'affinity_delta', 'stance', 'notable_context'],
+      },
+    },
   },
-  required: ['scene', 'continuity'],
+  required: ['scene', 'continuity', 'relationship_updates'],
 };
 
 function json(res, status, payload) {
@@ -124,6 +143,27 @@ function safeScene(raw = {}) {
   };
 }
 
+function safeRelationships(raw = {}) {
+  const result = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return result;
+  for (const [key, value] of Object.entries(raw)) {
+    if (!CHARACTER_KEYS.has(key) || !value || typeof value !== 'object' || Array.isArray(value)) continue;
+    const familiarity = FAMILIARITY.has(value.familiarity) ? value.familiarity : 'stranger';
+    const affinityNumber = Number(value.affinity);
+    const affinity = Number.isFinite(affinityNumber) ? Math.max(-100, Math.min(100, Math.trunc(affinityNumber))) : 0;
+    const stance = cleanText(value.stance || '', 120).trim() || 'none';
+    const sourceContext = Array.isArray(value.notableContext)
+      ? value.notableContext
+      : (Array.isArray(value.notable_context) ? value.notable_context : []);
+    const notableContext = sourceContext
+      .slice(-8)
+      .map((item) => cleanText(item, 220).trim())
+      .filter(Boolean);
+    result[key] = { familiarity, affinity, stance, notable_context: notableContext };
+  }
+  return result;
+}
+
 function exactMentionedCharacterKeys(action = '') {
   const found = [];
   const lowered = action.toLowerCase();
@@ -153,6 +193,7 @@ function compactCharacterPacket(key) {
   return {
     key,
     name: row.name,
+    social_identity: Array.isArray(row?.core?.identity) ? row.core.identity.slice(0, 3) : [],
     core: row.core || {},
     voice: row.voice || {},
     current_baseline: row.baseline_1285_03_01 || {},
@@ -223,10 +264,38 @@ function recentContext(history = []) {
   }));
 }
 
-function hardFactsPacket(pc, scene) {
+function relationshipFacts(pc, relationships, relevantKeys) {
+  return {
+    pc_social_status: pc.socialStatus || '미지정',
+    default_for_unlisted_character: {
+      familiarity: 'stranger',
+      affinity: 0,
+      stance: 'none',
+      notable_context: [],
+    },
+    relevant_characters: relevantKeys.map((key) => {
+      const row = CHARACTERS[key] || {};
+      const state = relationships[key] || {
+        familiarity: 'stranger',
+        affinity: 0,
+        stance: 'none',
+        notable_context: [],
+      };
+      return {
+        key,
+        npc_social_identity: Array.isArray(row?.core?.identity) ? row.core.identity.slice(0, 3) : [],
+        ...state,
+      };
+    }),
+    established_nondefault: relationships,
+  };
+}
+
+function hardFactsPacket(pc, scene, relationships, relevantKeys) {
   return {
     pc,
     current_scene: scene,
+    relationship_context: relationshipFacts(pc, relationships, relevantKeys),
     scenario: {
       scenario_id: scenarioData.scenario_id,
       academic_period: scenarioData.academic_period,
@@ -256,7 +325,7 @@ function compactWorldPacket(pc) {
   };
 }
 
-function buildInput({ action, pc, scene, history, knowledgeLevel }) {
+function buildInput({ action, pc, scene, history, knowledgeLevel, relationships }) {
   const relevantKeys = selectRelevantCharacters({ action, scene });
   const relevantCharacters = relevantKeys.map(compactCharacterPacket).filter(Boolean);
   const publicKnowledge = visibleKnowledge(knowledgeLevel, relevantKeys);
@@ -271,7 +340,7 @@ function buildInput({ action, pc, scene, history, knowledgeLevel }) {
     recent_context: recentContext(history),
   };
 
-  return `HARD FACTS — authoritative; do not contradict or invent defects in these facts\n${JSON.stringify(hardFactsPacket(pc, scene))}\n\nSTORY MATERIAL — available material, not a checklist\n${JSON.stringify(storyMaterial)}\n\n${SYNTHETIC_RHYTHM_ANCHORS}\n\nEXACT USER ACTION\n${action}`;
+  return `HARD FACTS — authoritative; do not contradict or invent defects in these facts\n${JSON.stringify(hardFactsPacket(pc, scene, relationships, relevantKeys))}\n\nSTORY MATERIAL — available material, not a checklist\n${JSON.stringify(storyMaterial)}\n\n${SYNTHETIC_RHYTHM_ANCHORS}\n\nEXACT USER ACTION\n${action}`;
 }
 
 function extractOutputText(response) {
@@ -326,7 +395,17 @@ function validateTurn(turn, pc, fallbackScene) {
       : [],
   };
 
-  return { scene, continuity };
+  const relationshipUpdates = Array.isArray(turn.relationship_updates)
+    ? turn.relationship_updates.slice(0, 4).map((update) => ({
+        character_key: CHARACTER_KEYS.has(update?.character_key) ? update.character_key : null,
+        familiarity: FAMILIARITY.has(update?.familiarity) ? update.familiarity : null,
+        affinity_delta: Math.max(-10, Math.min(10, Math.trunc(Number(update?.affinity_delta) || 0))),
+        stance: cleanText(update?.stance || '', 120).trim() || null,
+        notable_context: cleanText(update?.notable_context || '', 220).trim() || null,
+      })).filter((update) => update.character_key)
+    : [];
+
+  return { scene, continuity, relationship_updates: relationshipUpdates };
 }
 
 export default async function handler(req, res) {
@@ -349,6 +428,7 @@ export default async function handler(req, res) {
     const scene = safeScene(runState.scene || {});
     const history = Array.isArray(runState.history) ? runState.history.slice(-MAX_HISTORY_TURNS) : [];
     const knowledgeLevel = Math.max(1, Math.min(5, Number(runState.knowledgeLevel) || 1));
+    const relationships = safeRelationships(runState.relationships || {});
 
     const apiResponse = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -360,7 +440,7 @@ export default async function handler(req, res) {
         model: process.env.OPENAI_MODEL || 'gpt-5.6-terra',
         store: false,
         instructions: WRITER_CONTRACT,
-        input: buildInput({ action, pc, scene, history, knowledgeLevel }),
+        input: buildInput({ action, pc, scene, history, knowledgeLevel, relationships }),
         reasoning: { effort: 'medium' },
         max_output_tokens: 5600,
         text: {

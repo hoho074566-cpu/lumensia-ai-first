@@ -2,6 +2,7 @@ import { CHARACTER_ASSETS, CHARACTER_NAMES } from '/assets/manifest.js';
 
 const SAVE_KEY = 'lumensia.ai-first.v0.save.1';
 const SETTINGS_KEY = 'lumensia.ai-first.v0.settings.1';
+const FAMILIARITY = new Set(['stranger', 'met', 'acquaintance', 'familiar', 'close']);
 const FALLBACK_SCENARIO = {
   start: {
     date: '1285-03-01',
@@ -67,6 +68,7 @@ function makeRunState(pc) {
       situation: start.situation,
       presentCharacterKeys: [],
     },
+    relationships: {},
     history: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -108,6 +110,35 @@ function readPcForm() {
 
 function validateImportedRun(value) {
   return Boolean(value && value.version === 1 && value.pc?.name && value.scene?.date && value.scene?.time && value.scene?.location && Array.isArray(value.history));
+}
+
+function ensureRelationshipState(value) {
+  if (!value || typeof value !== 'object') return value;
+  if (!value.relationships || typeof value.relationships !== 'object' || Array.isArray(value.relationships)) value.relationships = {};
+  return value;
+}
+
+function applyRelationshipUpdates(updates = []) {
+  if (!runState) return;
+  ensureRelationshipState(runState);
+  for (const update of Array.isArray(updates) ? updates.slice(0, 4) : []) {
+    const key = String(update?.character_key || '');
+    if (!key || !CHARACTER_NAMES[key]) continue;
+    const current = runState.relationships[key] && typeof runState.relationships[key] === 'object'
+      ? runState.relationships[key]
+      : { familiarity: 'stranger', affinity: 0, stance: 'none', notableContext: [] };
+    const currentAffinity = Number(current.affinity);
+    const delta = Number(update?.affinity_delta);
+    const affinity = Math.max(-100, Math.min(100,
+      (Number.isFinite(currentAffinity) ? Math.trunc(currentAffinity) : 0) + (Number.isFinite(delta) ? Math.trunc(delta) : 0),
+    ));
+    const familiarity = FAMILIARITY.has(update?.familiarity) ? update.familiarity : (FAMILIARITY.has(current.familiarity) ? current.familiarity : 'stranger');
+    const stance = String(update?.stance || '').trim().slice(0, 120) || String(current.stance || 'none').slice(0, 120);
+    const notableContext = Array.isArray(current.notableContext) ? current.notableContext.slice(-7) : [];
+    const newContext = String(update?.notable_context || '').trim().slice(0, 220);
+    if (newContext && !notableContext.includes(newContext)) notableContext.push(newContext);
+    runState.relationships[key] = { familiarity, affinity, stance, notableContext: notableContext.slice(-8) };
+  }
 }
 
 function escapeHtml(value) {
@@ -207,10 +238,12 @@ async function sendAction() {
 
     const turn = payload.turn;
     const continuity = turn.continuity;
+    const relationshipUpdates = Array.isArray(turn.relationship_updates) ? turn.relationship_updates : [];
     runState.history.push({
       action,
       scene: turn.scene,
       continuity,
+      relationshipUpdates,
       createdAt: new Date().toISOString(),
     });
     runState.history = runState.history.slice(-40);
@@ -222,6 +255,7 @@ async function sendAction() {
       situation: continuity.situation,
       presentCharacterKeys: continuity.present_character_keys || [],
     };
+    applyRelationshipUpdates(relationshipUpdates);
     runState.updatedAt = new Date().toISOString();
     saveJson(SAVE_KEY, runState);
     actionInput.value = '';
@@ -302,7 +336,7 @@ importInput.addEventListener('change', async () => {
   try {
     const parsed = JSON.parse(await file.text());
     if (!validateImportedRun(parsed)) throw new Error('Lumensia V0 세이브 형식이 아닙니다.');
-    runState = parsed;
+    runState = ensureRelationshipState(parsed);
     saveJson(SAVE_KEY, runState);
     showError('');
     setSending(false);
@@ -315,7 +349,7 @@ importInput.addEventListener('change', async () => {
 async function boot() {
   await loadScenario();
   const saved = loadJson(SAVE_KEY);
-  runState = validateImportedRun(saved) ? saved : null;
+  runState = validateImportedRun(saved) ? ensureRelationshipState(saved) : null;
   setSending(false);
   render();
   if (!runState) openPcDialog();
