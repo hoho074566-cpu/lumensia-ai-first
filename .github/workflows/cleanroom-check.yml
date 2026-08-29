@@ -2,9 +2,9 @@ name: AI-First clean-room checks
 
 on:
   push:
-    branches: [main, codex/v0-r2-original-grammar, codex/v0-r2a-scene-overlap, codex/v0-r2b-light-polish, codex/v0-r2c-pc-authority-guard, codex/v0-r2d-social-relationship-context]
+    branches: [main, codex/v0-r2-original-grammar, codex/v0-r2a-scene-overlap, codex/v0-r2b-light-polish, codex/v0-r2c-pc-authority-guard, codex/v0-r2d-social-relationship-context, codex/v0-r2e-npc-knowledge-boundary]
   pull_request:
-    branches: [main, codex/v0-pure-ai-narrative, codex/v0-r2-original-grammar, codex/v0-r2a-scene-overlap, codex/v0-r2b-light-polish, codex/v0-r2c-pc-authority-guard]
+    branches: [main, codex/v0-pure-ai-narrative, codex/v0-r2-original-grammar, codex/v0-r2a-scene-overlap, codex/v0-r2b-light-polish, codex/v0-r2c-pc-authority-guard, codex/v0-r2d-social-relationship-context]
 
 permissions:
   contents: read
@@ -36,3 +36,5 @@ jobs:
         run: node scripts/v0-r2c.test.mjs
       - name: Run V0-R2D social-relationship checks
         run: node scripts/v0-r2d.test.mjs
+      - name: Run V0-R2E NPC-knowledge checks
+        run: node scripts/v0-r2e.test.mjs
