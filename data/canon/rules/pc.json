@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "character_creation": {
+    "player_defined_fields": [
+      "name",
+      "age",
+      "gender",
+      "appearance",
+      "origin",
+      "social_status",
+      "department",
+      "admission_route",
+      "martial_realm",
+      "magic_circle",
+      "traits",
+      "authorities",
+      "starting_skills",
+      "starting_equipment",
+      "starting_gold",
+      "character_profile"
+    ],
+    "principle": "플레이어가 정한 설정은 세계관의 hard facts와 직접 모순되지 않는 범위에서 최대한 인정한다.",
+    "powerful_pc_rule": "강한 시작 설정 자체를 금지하지 않는다. 다만 세계가 그 능력의 실제 경력·대가·희귀성·사회적 반응을 무시하지 않는다."
+  },
+  "talents": {
+    "keys": {
+      "magic": "魔 — 마법 재능",
+      "martial": "武 — 무술 재능",
+      "soul": "魂 — 영혼 재능",
+      "knowledge": "智 — 지식·학습 재능"
+    },
+    "range": "1~10",
+    "meaning": "성장 속도와 잠재적 천장을 나타내며 현재 경지·현재 실력과 동일하지 않다.",
+    "growth": "일반 반복훈련만으로 수치 자체가 쉽게 오르지 않는다. 신화적 사건이나 존재 근원에 영향을 주는 특별한 변화가 예외가 될 수 있다."
+  },
+  "stats": {
+    "keys": ["신체", "마나", "지능", "신성"],
+    "grade_family": "F~SSS 계열. 세부 +/- 표기는 현재 능력의 미세 차이를 표현하는 데 사용할 수 있다.",
+    "principle": "한 축의 등급만으로 모든 행동·전투 결과를 자동 결정하지 않는다."
+  },
+  "skills": {
+    "grade_family": "F~SSS",
+    "principle": "스킬 숙련은 실제 훈련·실전·실패 분석·정확한 지도·새로운 통찰 같은 경험으로 성장한다.",
+    "difficulty_curve": "저등급은 비교적 빠르게 성장할 수 있으나 A→S부터 급격히 느려지고 SS~SSS는 단순 반복만으로 거의 상승하지 않는다.",
+    "realm_boundary": "개별 스킬 숙련과 무의 경지·마법 서클은 같은 것이 아니다. 경지 상승은 단순 누적 경험치 하나만으로 자동 확정하지 않는다."
+  },
+  "knowledge_boundary": {
+    "rule": "플레이어용 INFO에 보이는 메타 정보와 PC가 세계 안에서 실제로 아는 사실은 구분한다.",
+    "pc_profile": "PC의 고정 프로필은 세계 반응의 사실 근거가 될 수 있지만 NPC가 그 내용을 자동으로 아는 것은 아니다."
+  },
+  "migration_note": "Legacy Aaa TEST CHARACTER — MERCENARY V1은 source 자체가 실험용 DRAFT로 명시되어 있어 Canon에 이식하지 않았다. 새 PC는 각 run에서 사용자가 생성한다. 플레이어 주권에 관한 서술 규칙은 세계 Canon이 아니라 Writer contract에 둔다."
+}
