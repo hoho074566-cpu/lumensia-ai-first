@@ -24,3 +24,5 @@ jobs:
           node-version: 22.x
       - name: Run clean-room checks
         run: node scripts/check.mjs
+      - name: Run V0 hard-invariant checks
+        run: node scripts/v0.test.mjs
