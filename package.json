@@ -1,0 +1,12 @@
+{
+  "name": "lumensia-ai-first",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "test": "node scripts/check.mjs"
+  }
+}
