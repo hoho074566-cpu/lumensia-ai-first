@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 const api = readFileSync('api/write.js', 'utf8');
 
 assert.match(api, /Once there, inhabit that moment instead of consuming the rest of an event or schedule/, 'R2A must prefer scene depth over schedule completion');
-assert.match(api, /does not reset the human scene/, 'location or schedule changes must not automatically reset live human interaction');
+assert.match(api, /does not (?:automatically )?reset (?:a live )?human scene/, 'location or schedule changes must not automatically reset live human interaction');
 assert.match(api, /character-specific behavior/, 'Writer must prefer character-specific behavior over generic polished speeches');
 assert.match(api, /details that reveal character, relationship, tension, or consequence/, 'details should carry scene meaning instead of decorating prose');
 
