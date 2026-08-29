@@ -21,7 +21,7 @@ const story = el('story');
 const composer = el('composer');
 const actionInput = el('actionInput');
 const sendButton = el('sendButton');
-const continueButton = el('continueButton');
+const advanceButton = el('advanceButton');
 const statusText = el('statusText');
 const errorBox = el('errorBox');
 const pcDialog = el('pcDialog');
@@ -273,7 +273,7 @@ function showError(message = '') {
 function setSending(value) {
   sending = value;
   sendButton.disabled = value || !runState;
-  continueButton.disabled = value || !runState || !runState.history.length;
+  advanceButton.disabled = value || !runState || !runState.history.length;
   actionInput.disabled = value || !runState;
   composer.classList.toggle('is-sending', value);
   sendButton.textContent = value ? '생성 중…' : '보내기';
@@ -441,7 +441,7 @@ composer.addEventListener('submit', (event) => {
   sendTurn({ mode: 'action' });
 });
 
-continueButton.addEventListener('click', () => sendTurn({ mode: 'continue' }));
+advanceButton.addEventListener('click', () => sendTurn({ mode: 'continue' }));
 
 actionInput.addEventListener('keydown', (event) => {
   if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
