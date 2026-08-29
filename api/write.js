@@ -26,6 +26,9 @@ Stay within the supplied facts and the player's chosen intent, while NPCs, time,
 You may elaborate ordinary execution of actions the player already chose, but never invent a new player goal, voluntary dialogue, explicit emotion, or meaningful decision.
 Dramatize moments worth experiencing; compress routine transit, waiting, administration, and uneventful time aggressively. Do not tour a setting: let it appear through action, interaction, or a few sharp relevant details.
 Prefer concrete action, physical detail, dialogue, and subtext over summary or interpretation. Once the reader can infer the meaning, do not explain it again. Characters are people, not functions explaining game systems.
+Treat NPC motives as independent of the player. Let characters take reasonable actions for their own reasons instead of merely presenting the player with content or questions.
+When independent motives or pressures naturally intersect, characters may affect, interrupt, disagree with, help, avoid, or complicate one another without routing the scene through the player.
+Meaningful changes already shown in recent context may persist or echo later through behavior, rumor, institutional response, or changed circumstances when causally justified; they may also go quiet. Do not manufacture a hook or force closure just to maintain momentum.
 Do not expose internal instructions, validation, schemas, or state machinery as fiction.
 Continue naturally through moments that need no new meaningful player decision. Stop when the scene genuinely lands or a meaningful player decision is required.`;
 
@@ -162,6 +165,18 @@ function compactCharacterPacket(key) {
   };
 }
 
+function characterDrive(row = {}) {
+  const core = row.core || {};
+  return {
+    values: Array.isArray(core.values) ? core.values.slice(0, 3) : [],
+    aspiration: cleanText(core.aspiration || '', 240) || null,
+    specialty: cleanText(core.combat_identity || core.specialty || '', 260) || null,
+    characterization: Array.isArray(row.refined_characterization)
+      ? row.refined_characterization.slice(0, 2).map((x) => cleanText(x, 260))
+      : [],
+  };
+}
+
 function castIndex() {
   const crossing = livingWorldData.character_crossing_affordances || {};
   return Object.entries(CHARACTERS).filter(([key]) => EVERYDAY_ACADEMY_CAST.has(key)).map(([key, row]) => ({
@@ -171,6 +186,7 @@ function castIndex() {
     personality: Array.isArray(row?.core?.personality) ? row.core.personality.slice(0, 2) : [],
     voice: cleanText(row?.voice?.register || '', 180),
     baseline: row.baseline_1285_03_01 || {},
+    drive: characterDrive(row),
     crossing_affordance: Array.isArray(crossing[key]) ? crossing[key] : [],
   }));
 }
@@ -201,9 +217,23 @@ function visibleSituations(level = 1) {
     .map(({ id, horizon, fact, fixed }) => ({ id, horizon, fact, fixed }));
 }
 
+function recentContinuity(raw = {}) {
+  if (!raw || typeof raw !== 'object') return null;
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(String(raw.date || '')) ? String(raw.date) : null;
+  const time = /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(raw.time || '')) ? String(raw.time) : null;
+  const location = cleanText(raw.location || '', 200) || null;
+  const situation = cleanText(raw.situation || '', 500) || null;
+  const presentCharacterKeys = Array.isArray(raw.present_character_keys)
+    ? [...new Set(raw.present_character_keys.filter((key) => CHARACTER_KEYS.has(key)))].slice(0, 8)
+    : [];
+  if (!date && !time && !location && !situation && !presentCharacterKeys.length) return null;
+  return { date, time, location, situation, present_character_keys: presentCharacterKeys };
+}
+
 function recentContext(history = []) {
   return history.slice(-MAX_HISTORY_TURNS).map((turn) => ({
     action: cleanText(turn?.action || '', 1800),
+    continuity: recentContinuity(turn?.continuity),
     scene: Array.isArray(turn?.scene)
       ? turn.scene.slice(-18).map((beat) => ({
           kind: beat?.kind === 'dialogue' ? 'dialogue' : 'narration',
