@@ -32,12 +32,27 @@ button.primary, .send-button { border-color: #6e5930; background: #3c3018; color
 .start-hint { text-align: center; font-size: 13px; margin: 36px 0; }
 .player-action { margin: 34px 0 24px auto; max-width: 88%; padding: 13px 15px; border: 1px solid #4d4239; border-radius: 16px 16px 4px 16px; background: #231f1c; white-space: pre-wrap; line-height: 1.7; }
 .player-label { margin-bottom: 5px; color: #c9a96b; font-size: 11px; font-weight: 800; }
-.scene-turn { margin-bottom: 20px; }
+.scene-turn { position: relative; margin-bottom: 20px; }
 .narration { margin: 13px 1px; font: 400 16px/1.95 Georgia, "Noto Serif KR", serif; letter-spacing: -.012em; white-space: pre-wrap; color: #e8e0d8; }
 .dialogue-card { display: grid; grid-template-columns: 76px 1fr; gap: 12px; align-items: start; margin: 17px 0; padding: 12px; border: 1px solid #38323d; border-radius: 14px; background: rgba(27,24,31,.9); }
 .portrait { width: 76px; aspect-ratio: 3/4; object-fit: cover; object-position: top center; border-radius: 10px; background: #0b0a0d; }
 .speaker-name { color: var(--gold); font-weight: 800; font-size: 13px; margin: 1px 0 7px; }
 .dialogue-text { font-size: 15px; line-height: 1.82; white-space: pre-wrap; }
+.scene-block-tools { display: flex; justify-content: flex-end; align-items: center; min-height: 34px; margin: 4px 1px 8px; }
+.copy-block-button { position: relative; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 9px; background: transparent; color: #aaa4ad; opacity: .76; transition: opacity .15s ease, background .15s ease, color .15s ease; }
+.copy-block-button:hover, .copy-block-button:focus-visible { opacity: 1; background: #211e24; outline: none; }
+.copy-block-button.is-copied { color: var(--gold); opacity: 1; }
+.copy-icon { position: absolute; inset: 0; display: block; }
+.copy-icon::before, .copy-icon::after { content: ""; position: absolute; width: 13px; height: 15px; border: 2px solid currentColor; border-radius: 4px; }
+.copy-icon::before { left: 13px; top: 7px; }
+.copy-icon::after { left: 8px; top: 12px; background: #100f13; }
+.admin-preview-stack { margin: 42px 0 12px; padding-top: 16px; border-top: 1px dashed #554a5d; }
+.admin-preview-heading { margin-bottom: 16px; color: #bca8cb; font-size: 11px; font-weight: 800; letter-spacing: .08em; }
+.admin-preview-request { margin: 24px 0 14px; padding: 12px 14px; border: 1px solid #51465a; border-radius: 12px; background: rgba(40,32,47,.62); line-height: 1.65; }
+.admin-preview-label { margin-bottom: 5px; color: #c8add8; font-size: 11px; font-weight: 900; letter-spacing: .1em; }
+.admin-preview-meta { margin-top: 8px; color: #8f8498; font-size: 11px; }
+.admin-preview-turn { padding-left: 8px; border-left: 2px solid #51465a; }
+.admin-preview-turn .copy-icon::after { background: #100f13; }
 .error-box { position: fixed; left: 50%; bottom: calc(124px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 30; width: min(720px, calc(100% - 24px)); padding: 10px 13px; border: 1px solid #763e3a; border-radius: 10px; background: #331d1b; color: var(--danger); font-size: 13px; box-shadow: 0 10px 30px #0008; }
 .composer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: 1fr auto; gap: 9px; width: min(760px, 100%); margin: 0 auto; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); border: 1px solid #302a34; border-bottom: 0; border-radius: 15px 15px 0 0; background: rgba(19,17,22,.97); box-shadow: 0 -12px 35px #0007; }
 .composer textarea { min-height: 76px; max-height: 32vh; resize: vertical; border: 1px solid #443b48; border-radius: 10px; background: #0f0e12; color: #f2ece5; padding: 11px 12px; line-height: 1.55; outline: none; }
