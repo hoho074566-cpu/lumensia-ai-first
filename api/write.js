@@ -4,6 +4,7 @@ import academyData from '../data/canon/world/academy.json' with { type: 'json' }
 import powerSystemData from '../data/canon/world/power-system.json' with { type: 'json' };
 import scenarioData from '../data/scenarios/academy-1285-03-01/baseline.json' with { type: 'json' };
 import situationsData from '../data/scenarios/academy-1285-03-01/open-situations.json' with { type: 'json' };
+import livingWorldData from '../data/scenarios/academy-1285-03-01/living-world.json' with { type: 'json' };
 
 export const config = { maxDuration: 300 };
 
@@ -161,6 +162,7 @@ function compactCharacterPacket(key) {
 }
 
 function castIndex() {
+  const crossing = livingWorldData.character_crossing_affordances || {};
   return Object.entries(CHARACTERS).filter(([key]) => EVERYDAY_ACADEMY_CAST.has(key)).map(([key, row]) => ({
     key,
     name: row.name,
@@ -168,7 +170,17 @@ function castIndex() {
     personality: Array.isArray(row?.core?.personality) ? row.core.personality.slice(0, 2) : [],
     voice: cleanText(row?.voice?.register || '', 180),
     baseline: row.baseline_1285_03_01 || {},
+    crossing_affordance: Array.isArray(crossing[key]) ? crossing[key] : [],
   }));
+}
+
+function livingWorldPacket() {
+  return {
+    mode: livingWorldData.mode,
+    policy: Array.isArray(livingWorldData.policy) ? livingWorldData.policy : [],
+    period_pressures: Array.isArray(livingWorldData.period_pressures) ? livingWorldData.period_pressures : [],
+    location_affordances: livingWorldData.location_affordances || {},
+  };
 }
 
 function visibleKnowledge(level = 1, relevantKeys = []) {
@@ -213,6 +225,7 @@ function buildInput({ action, pc, scene, history, knowledgeLevel }) {
     pc,
     relevant_characters: relevantCharacters,
     cast_index: castIndex(),
+    story_affordances: livingWorldPacket(),
     world_facts: {
       academy: academyData,
       power_system: powerSystemData,

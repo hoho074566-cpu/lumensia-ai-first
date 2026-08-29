@@ -26,3 +26,5 @@ jobs:
         run: node scripts/check.mjs
       - name: Run V0 hard-invariant checks
         run: node scripts/v0.test.mjs
+      - name: Run V0-R1A affordance checks
+        run: node scripts/v0-r1a.test.mjs
