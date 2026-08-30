@@ -57,11 +57,16 @@ const OPEN_SITUATION_ALIASES = Object.freeze({
   orpheum_disappearances: ['오르페룸', '상인 실종'],
 });
 
-const KOREAN_NAME_SUFFIXES = Object.freeze([
-  '에게서', '한테서', '께서는', '으로', '이랑', '에게', '한테', '께서', '처럼', '부터', '까지', '보다',
-  '교수', '교장', '황녀', '전하', '선생', '하고', '이며', '이고', '이라', '라고', '님', '씨', '양', '군',
-  '은', '는', '이', '가', '을', '를', '와', '과', '의', '께', '도', '만', '로', '랑',
-].sort((a, b) => b.length - a.length));
+const REGISTERED_LITERAL_TOKENS = Object.freeze([...new Set([
+  ...Object.values(LOCATION_FACILITY_ALIASES).flat(),
+  ...Object.values(KNOWLEDGE_TOPIC_ALIASES).flat(),
+  ...Object.values(SOCIETY_TOPIC_ALIASES).flat(),
+  ...Object.values(OPEN_SITUATION_ALIASES).flat(),
+  ...Object.values(CHARACTERS).flatMap((character) => {
+    const fullName = String(character?.name || '').trim();
+    return [fullName, fullName.split(/\s+/)[0] || ''];
+  }),
+])].filter(Boolean).sort((a, b) => b.length - a.length));
 
 const SCHEDULE_QUERY_WORDS = ['일정', '시간표', '몇 시', '몇시', '오리엔테이션', '오티', '입학식', '집결', '정오'];
 const PUBLIC_KNOWLEDGE_VISIBILITY = 1;
@@ -72,11 +77,31 @@ function cleanText(value, max = 500) {
   return text.length > max ? text.slice(0, max) : text;
 }
 
-function includesAlias(text, word) {
+function isShadowedByLongerLiteral(value, start, end, literal) {
+  for (const candidate of REGISTERED_LITERAL_TOKENS) {
+    if (candidate.length <= literal.length) break;
+    let cursor = Math.max(0, start - candidate.length + 1);
+    while (cursor <= start) {
+      const candidateStart = value.indexOf(candidate, cursor);
+      if (candidateStart < 0 || candidateStart > start) break;
+      if (candidateStart + candidate.length >= end) return true;
+      cursor = candidateStart + 1;
+    }
+  }
+  return false;
+}
+
+function includesAlias(text, literal) {
   const value = String(text || '');
-  if (word === '릴리') return value.replaceAll('릴리아', '').includes(word);
-  if (word === '법') return literalMentionRanges(value, word).length > 0;
-  return value.includes(word);
+  let cursor = 0;
+  while (cursor <= value.length - literal.length) {
+    const start = value.indexOf(literal, cursor);
+    if (start < 0) return false;
+    const end = start + literal.length;
+    if (!isShadowedByLongerLiteral(value, start, end, literal)) return true;
+    cursor = start + Math.max(1, literal.length);
+  }
+  return false;
 }
 
 function includesAny(text, words = []) {
@@ -87,23 +112,6 @@ function isWordCharacter(value) {
   return Boolean(value && /[\p{L}\p{N}_]/u.test(value));
 }
 
-function hasNameBoundary(text, start, end) {
-  const before = text[start - 1] || '';
-  if (isWordCharacter(before)) return false;
-
-  let cursor = end;
-  if (!text[cursor] || !isWordCharacter(text[cursor])) return true;
-
-  let consumedSuffix = false;
-  while (text[cursor] && isWordCharacter(text[cursor])) {
-    const suffix = KOREAN_NAME_SUFFIXES.find((candidate) => text.startsWith(candidate, cursor));
-    if (!suffix) return false;
-    cursor += suffix.length;
-    consumedSuffix = true;
-  }
-  return consumedSuffix;
-}
-
 function literalMentionRanges(text, literal) {
   const ranges = [];
   if (!literal) return ranges;
@@ -112,7 +120,7 @@ function literalMentionRanges(text, literal) {
     const start = text.indexOf(literal, cursor);
     if (start < 0) break;
     const end = start + literal.length;
-    if (hasNameBoundary(text, start, end)) ranges.push({ start, end });
+    if (!isWordCharacter(text[start - 1] || '')) ranges.push({ start, end });
     cursor = start + Math.max(1, literal.length);
   }
   return ranges;
