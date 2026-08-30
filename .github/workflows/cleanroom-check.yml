@@ -2,9 +2,9 @@ name: AI-First clean-room checks
 
 on:
   push:
-    branches: [main, codex/canon-base-01-clean-reconciliation, codex/authoring-runtime-01]
+    branches: [main, codex/canon-base-01-clean-reconciliation, codex/authoring-runtime-01, codex/opus-prose-pace-v1]
   pull_request:
-    branches: [main, codex/v0-pure-ai-narrative, codex/canon-base-01-clean-reconciliation]
+    branches: [main, codex/v0-pure-ai-narrative, codex/canon-base-01-clean-reconciliation, codex/authoring-runtime-01]
 
 permissions:
   contents: read
