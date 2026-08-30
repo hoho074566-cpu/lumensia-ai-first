@@ -10,6 +10,7 @@ const EXPRESSIONS = new Set([
   'default','smile','blush','serious','angry','sad','shock',
   'smug','annoyed','worried','confused','laugh','flustered',
 ]);
+const TALENT_KEYS = Object.freeze(['magic', 'martial', 'soul', 'knowledge']);
 const MAX_ACTION_CHARS = 12000;
 const MAX_HISTORY_TURNS = 8;
 
@@ -77,7 +78,26 @@ function cleanList(value, maxItems = 24, maxChars = 220) {
     : [];
 }
 
-function safePc(raw = {}) {
+function boundedInteger(value, min, max, label, { nullable = false } = {}) {
+  if (nullable && (value == null || value === '')) return null;
+  const number = Number(value);
+  if (!Number.isInteger(number) || number < min || number > max) {
+    throw new Error(`${label}은 ${min}~${max} 범위의 정수여야 합니다.`);
+  }
+  return number;
+}
+
+function safeTalents(raw = {}) {
+  const source = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const talents = {};
+  for (const key of TALENT_KEYS) {
+    if (source[key] == null || source[key] === '') continue;
+    talents[key] = boundedInteger(source[key], 1, 10, `PC 재능 ${key}`);
+  }
+  return talents;
+}
+
+export function safePc(raw = {}) {
   const startingGoldNumber = Number(raw.startingGold);
   const pc = {
     name: cleanText(raw.name, 80).trim(),
@@ -91,8 +111,8 @@ function safePc(raw = {}) {
     background: cleanText(raw.background, 1400),
     characterProfile: cleanText(raw.characterProfile, 1600),
     realm: cleanText(raw.realm, 120),
-    magicCircle: raw.magicCircle == null || raw.magicCircle === '' ? null : Number(raw.magicCircle),
-    talents: raw.talents && typeof raw.talents === 'object' ? raw.talents : {},
+    magicCircle: boundedInteger(raw.magicCircle, 0, 9, 'PC 마법 써클', { nullable: true }),
+    talents: safeTalents(raw.talents),
     traits: cleanList(raw.traits, 16, 220),
     authorities: cleanList(raw.authorities, 16, 220),
     skills: cleanList(raw.skills, 24, 120),
@@ -100,7 +120,7 @@ function safePc(raw = {}) {
     startingGold: Number.isFinite(startingGoldNumber) ? Math.max(0, startingGoldNumber) : 0,
   };
   if (!pc.name) throw new Error('PC 이름이 없습니다.');
-  if (!Number.isFinite(pc.age) || pc.age < 1 || pc.age > 300) throw new Error('PC 나이가 올바르지 않습니다.');
+  if (!Number.isInteger(pc.age) || pc.age < 1 || pc.age > 300) throw new Error('PC 나이는 1~300 범위의 정수여야 합니다.');
   return pc;
 }
 

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { CHARACTER_KEYS } from '../assets/manifest.js';
+import { safePc } from '../api/write.js';
 
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 const asText = (value) => JSON.stringify(value);
@@ -89,6 +90,21 @@ assert.match(String(realmById.get('master')?.meaning || ''), /의지|개념/, 'M
 assert.match(String(realmById.get('master')?.meaning || ''), /Authority/, 'Master definition must explicitly avoid equating realm with Authority');
 assert.ok(!Object.hasOwn(calendar, 'runtime_boundary'), 'calendar data must contain facts, not Writer/runtime instruction text');
 assert.ok(!Object.hasOwn(pcRules, 'migration_note'), 'PC Canon must not contain migration notes');
+
+const validPc = safePc({
+  name: '검증자',
+  age: '20',
+  magicCircle: '9',
+  talents: { magic: '1', martial: 10, soul: 5, knowledge: 7, forged: 999 },
+  startingGold: '42',
+});
+assert.equal(validPc.age, 20, 'server PC sanitizer must normalize a valid integer age');
+assert.equal(validPc.magicCircle, 9, 'server PC sanitizer must preserve a valid 0..9 magic circle');
+assert.deepEqual(validPc.talents, { magic: 1, martial: 10, soul: 5, knowledge: 7 }, 'server PC sanitizer must retain only the four Canon talent keys at 1..10');
+assert.equal(validPc.startingGold, 42, 'server PC sanitizer must preserve valid starting gold');
+assert.throws(() => safePc({ name: '검증자', age: 20.5 }), /나이/, 'fractional age must fail closed');
+assert.throws(() => safePc({ name: '검증자', age: 20, magicCircle: 10 }), /마법 써클/, 'out-of-range magic circle must fail closed');
+assert.throws(() => safePc({ name: '검증자', age: 20, talents: { magic: 11 } }), /재능/, 'out-of-range talent must fail closed');
 
 assert.ok(!Object.hasOwn(baseline, 'character_baseline_notes'), 'dated character state must have one structured source, not duplicated free-text notes');
 assert.equal(baseline.character_state_source, 'character-state.json');
