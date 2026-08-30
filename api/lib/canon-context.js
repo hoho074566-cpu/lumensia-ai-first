@@ -154,7 +154,6 @@ export function academyCastIndex() {
           .filter((rel) => ACADEMY_PRESENCE.has(CHARACTER_STATE[rel.from]?.presence) && ACADEMY_PRESENCE.has(CHARACTER_STATE[rel.to]?.presence))
           .slice(0, 3)
           .map(({ from, to, stance }) => ({ from, to, stance })),
-        epistemic_boundary: 'Thin cast fields are system portrayal and continuity facts. They are not automatically PC knowledge, NPC-to-NPC knowledge, or facts that must be narrated; PC-facing facts are supplied separately through pc_visible_knowledge.',
       };
     });
 }
