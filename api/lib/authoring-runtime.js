@@ -44,8 +44,10 @@ function characterLore(character = {}) {
   const identity = sentenceList(core.identity || []);
   const background = sentenceList(core.background || []);
   const personality = sentenceList(core.personality || []);
+  const presentation = plainValue(character.presentation || {});
   if (identity) lines.push(`${character.name}: ${identity}`);
   else lines.push(`${character.name}`);
+  if (presentation) lines.push(`외형·가시 정보는 ${presentation}.`);
   if (background) lines.push(`배경은 ${background}`);
   if (personality) lines.push(`성격은 ${personality}`);
   if (core.aspiration) lines.push(`지향점은 ${cleanText(core.aspiration, 320)}.`);
@@ -60,7 +62,7 @@ function characterLore(character = {}) {
   if (stateText) lines.push(`현재 시점 사실: ${stateText}.`);
   if (character.dated_relationships?.length) lines.push(`현재 관계 맥락: ${plainValue(character.dated_relationships)}.`);
   if (character.group_attitudes?.length) lines.push(`집단에 대한 태도: ${plainValue(character.group_attitudes)}.`);
-  if (character.pc_visible_knowledge?.length) lines.push(`PC가 현재 알 수 있는 관련 사실: ${plainValue(character.pc_visible_knowledge)}.`);
+  if (character.pc_visible_knowledge?.length) lines.push(`현재 플레이어 캐릭터가 알 수 있는 관련 사실: ${plainValue(character.pc_visible_knowledge)}.`);
   return lines.join(' ');
 }
 
@@ -72,14 +74,36 @@ function locationLore(canon = {}) {
   }).filter(Boolean);
 }
 
+function academyCastPalette(canon = {}) {
+  const rows = Array.isArray(canon.academy_cast_index) ? canon.academy_cast_index.slice(0, 20) : [];
+  if (!rows.length) return '';
+  const lines = rows.map((row) => {
+    const state = row.current_state || {};
+    const role = [
+      state.department || '',
+      state.academy_year ? `${state.academy_year}학년` : '',
+      ...(Array.isArray(state.offices) ? state.offices : []),
+      state.office || '',
+      state.role || '',
+    ].filter(Boolean).join('·');
+    const identity = (row.identity || []).slice(0, 1).join(' ');
+    const personality = (row.personality_signals || []).slice(0, 1).join(' ');
+    const visible = cleanText(plainValue(row.presentation || {}), 150);
+    return `${row.name}(${row.key}) | ${role || state.presence || 'academy'}${identity ? ` | ${identity}` : ''}${personality ? ` | ${personality}` : ''}${visible ? ` | 외형 ${visible}` : ''}`;
+  });
+  return `CAST PALETTE — 현재 아카데미 생활권 구성원에 대한 사실 재료다. 이 목록은 현재 장면의 출석 명단이나 등장 지시가 아니다. 장소·시간·목적상 자연스러운 사람만 사용한다.\n${lines.join('\n')}`;
+}
+
 function relevantLoreModules(canon = {}) {
   const modules = [];
+  const palette = academyCastPalette(canon);
+  if (palette) modules.push(palette);
   for (const character of canon.relevant_characters || []) {
     const text = characterLore(character);
     if (text) modules.push(text);
   }
   modules.push(...locationLore(canon));
-  return modules.slice(0, 6);
+  return modules.slice(0, 8);
 }
 
 function book(name, content, reason) {
@@ -133,7 +157,7 @@ function activeKeywordBooks({ canon = {}, action = '', scene = {} }) {
 
   if ((canon.pc_visible_knowledge || []).length) {
     candidates.push(book(
-      'PC가 현재 알 수 있는 관련 세계 지식',
+      '현재 플레이어 캐릭터가 알 수 있는 관련 세계 지식',
       plainValue(canon.pc_visible_knowledge),
       'Canon knowledge retrieval이 공개·가시 사실을 선택함',
     ));
@@ -156,16 +180,17 @@ function currentRuntimeState(pc = {}, scene = {}) {
     `현재 날짜와 시각: ${cleanText(scene.date, 10)} ${cleanText(scene.time, 5)}.`,
     `현재 장소: ${cleanText(scene.location, 220)}.`,
     scene.situation ? `현재 상황: ${cleanText(scene.situation, 620)}.` : '',
-    `PC: ${cleanText(pc.name, 80)}, ${Number.isFinite(Number(pc.age)) ? `${Number(pc.age)}세` : '나이 미상'}${pc.gender ? `, ${cleanText(pc.gender, 40)}` : ''}${pc.department ? `, ${cleanText(pc.department, 80)}` : ''}.`,
-    pc.origin ? `PC 출신: ${cleanText(pc.origin, 220)}.` : '',
-    pc.socialStatus ? `PC 신분: ${cleanText(pc.socialStatus, 140)}.` : '',
-    pc.realm ? `PC 무의 경지: ${cleanText(pc.realm, 140)}.` : '',
-    pc.magicCircle != null && pc.magicCircle !== '' ? `PC 마법 써클: ${pc.magicCircle}.` : '',
-    pc.characterProfile ? `PC 성격/행동 프로필: ${cleanText(pc.characterProfile, 900)}.` : '',
-    pc.traits?.length ? `PC Trait: ${pc.traits.map((item) => cleanText(item, 220)).join(' / ')}.` : '',
-    pc.authorities?.length ? `PC Authority: ${pc.authorities.map((item) => cleanText(item, 220)).join(' / ')}.` : '',
-    pc.skills?.length ? `PC 현재 스킬: ${pc.skills.map((item) => cleanText(item, 140)).join(' / ')}.` : '',
-    pc.equipment?.length ? `PC 현재 장비: ${pc.equipment.map((item) => cleanText(item, 180)).join(' / ')}.` : '',
+    `플레이어 캐릭터 이름: ${cleanText(pc.name, 80)}.`,
+    `플레이어 캐릭터: ${Number.isFinite(Number(pc.age)) ? `${Number(pc.age)}세` : '나이 미상'}${pc.gender ? `, ${cleanText(pc.gender, 40)}` : ''}${pc.department ? `, ${cleanText(pc.department, 80)}` : ''}.`,
+    pc.origin ? `출신: ${cleanText(pc.origin, 220)}.` : '',
+    pc.socialStatus ? `신분: ${cleanText(pc.socialStatus, 140)}.` : '',
+    pc.realm ? `무의 경지: ${cleanText(pc.realm, 140)}.` : '',
+    pc.magicCircle != null && pc.magicCircle !== '' ? `마법 써클: ${pc.magicCircle}.` : '',
+    pc.characterProfile ? `성격/행동 프로필: ${cleanText(pc.characterProfile, 900)}.` : '',
+    pc.traits?.length ? `Trait: ${pc.traits.map((item) => cleanText(item, 220)).join(' / ')}.` : '',
+    pc.authorities?.length ? `Authority: ${pc.authorities.map((item) => cleanText(item, 220)).join(' / ')}.` : '',
+    pc.skills?.length ? `현재 스킬: ${pc.skills.map((item) => cleanText(item, 140)).join(' / ')}.` : '',
+    pc.equipment?.length ? `현재 장비: ${pc.equipment.map((item) => cleanText(item, 180)).join(' / ')}.` : '',
     scene.presentCharacterKeys?.length ? `현재 scene state에 확정된 등장인물 키: ${scene.presentCharacterKeys.join(', ')}.` : '',
   ];
   return lines.filter(Boolean).join('\n');
@@ -207,10 +232,10 @@ function startSetting(scene = {}, history = [], mode = 'action') {
 
 function exactUserEnvelope(mode, action) {
   if (mode === 'continue') {
-    return 'MODE: CONTINUE\n새로운 PC 행동은 없다. 바로 직전 장면에서 이미 움직이고 있던 NPC·환경·즉각적 결과만 자연스럽게 이어서, 새 PC 결정이 필요한 지점이나 장면이 착지하는 지점에서 멈춘다.';
+    return 'MODE: CONTINUE\n새로운 사용자 캐릭터 행동은 없다. 바로 직전 장면에서 이미 움직이고 있던 NPC·환경·즉각적 결과만 자연스럽게 이어서, 새 사용자 결정이 필요한 지점이나 장면이 착지하는 지점에서 멈춘다.';
   }
   if (mode === 'admin') {
-    return `MODE: ADMIN PREVIEW\n이 요청은 저장된 진행을 바꾸지 않는 진단용 장면 배치다. 요청에 명시된 PC 행동/대사만 사용할 수 있다.\nADMIN REQUEST:\n${action}`;
+    return `MODE: ADMIN PREVIEW\n이 요청은 저장된 진행을 바꾸지 않는 진단용 장면 배치다. 요청에 명시된 사용자 캐릭터 행동/대사만 사용할 수 있다.\nADMIN REQUEST:\n${action}`;
   }
   return `EXACT USER INPUT\n${action}`;
 }
@@ -240,6 +265,7 @@ export function assembleAuthoring({ action = '', pc = {}, scene = {}, history = 
       story_id: authoringData.story_id,
       start_setting_active: Boolean(start),
       relevant_lore_count: lore.length,
+      academy_cast_palette_count: Array.isArray(canon.academy_cast_index) ? canon.academy_cast_index.length : 0,
       active_keyword_books: books.map(({ name, reason }) => ({ name, reason })),
       development_example_count: Math.min(3, (authoringData.development_examples || []).length),
       mode,
