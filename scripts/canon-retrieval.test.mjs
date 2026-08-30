@@ -95,6 +95,13 @@ const magicDepartment = buildCanonContext({
   history: emptyHistory,
 });
 assert.ok(!Object.hasOwn(magicDepartment.society, 'status_and_law'), 'magic terminology must not retrieve legal Canon merely because 마법 contains 법');
+const genericMagic = buildCanonContext({
+  action: '마법 수업을 들으러 간다',
+  pc: { department: '마법과' },
+  scene: neutralScene,
+  history: emptyHistory,
+});
+assert.ok(!Object.hasOwn(genericMagic.society, 'status_and_law'), 'generic magic terminology must not retrieve legal Canon merely because 마법 contains 법');
 const lawQuestion = buildCanonContext({
   action: '이곳의 법을 확인한다',
   pc: { department: '기사과' },

@@ -57,7 +57,10 @@ const OPEN_SITUATION_ALIASES = Object.freeze({
   orpheum_disappearances: ['오르페룸', '상인 실종'],
 });
 
+const LITERAL_SHADOW_TOKENS = Object.freeze(['마법']);
+
 const REGISTERED_LITERAL_TOKENS = Object.freeze([...new Set([
+  ...LITERAL_SHADOW_TOKENS,
   ...Object.values(LOCATION_FACILITY_ALIASES).flat(),
   ...Object.values(KNOWLEDGE_TOPIC_ALIASES).flat(),
   ...Object.values(SOCIETY_TOPIC_ALIASES).flat(),
