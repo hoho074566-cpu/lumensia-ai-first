@@ -54,14 +54,15 @@ const requiredOrder = [
   'EXACT USER INPUT',
 ];
 let cursor = -1;
-for (const label of requiredOrder) {
-  const next = opening.input.indexOf(label);
+for (const [index, label] of requiredOrder.entries()) {
+  const heading = index === 0 ? `${label}\n` : `\n\n${label}\n`;
+  const next = opening.input.indexOf(heading);
   assert.ok(next > cursor, `prompt assembly order broken at ${label}`);
   cursor = next;
 }
 assert.equal(opening.diagnostics.start_setting_active, true, 'Start Setting must activate only at untouched exact start');
 assert.equal(opening.diagnostics.development_example_count, 3);
-assert.match(opening.input, /EXACT USER INPUT\n주변을 살펴본다\./, 'exact user text must survive assembly without rewrite');
+assert.match(opening.input, /\n\nEXACT USER INPUT\n주변을 살펴본다\.$/, 'exact user text must survive assembly without rewrite at the final layer');
 
 const history = [{
   action: '대강당 안을 본다.',
@@ -70,7 +71,7 @@ const history = [{
 }];
 const followup = assembleAuthoring({ action: '잠시 기다린다.', pc, scene: { ...startScene, time: '08:45', location: '루멘시아 아카데미 대강당' }, history, knowledgeLevel: 1, mode: 'action' });
 assert.equal(followup.diagnostics.start_setting_active, false, 'Start Setting must disappear after play begins');
-assert.doesNotMatch(followup.input, /START SETTING/, 'follow-up prompt must not retain opening-only layer');
+assert.doesNotMatch(followup.input, /\n\nSTART SETTING\n/, 'follow-up prompt must not retain opening-only layer');
 
 const housing = assembleAuthoring({ action: '생활동으로 가서 방 배정을 확인한다.', pc, scene: startScene, history, knowledgeLevel: 1, mode: 'action' });
 assert.ok(housing.diagnostics.active_keyword_books.length <= 3, 'turn-local keyword books must stay capped at three');
