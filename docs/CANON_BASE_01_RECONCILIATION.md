@@ -97,6 +97,25 @@ Migration history remains documentation, not model-facing Canon.
 - migration metadata returning to runtime Canon
 - dated/source metadata returning to durable character core
 
+### 10. PC creation contract aligned with the base UI/state path
+
+The Canon already allowed:
+
+- Traits
+- Authorities
+- starting gold
+- a free character profile
+
+The temporary Pure UI/server previously dropped those fields. The base form, local save, and server sanitizer now preserve them instead of shrinking Canon freedom to match a prototype UI.
+
+The Writer prose contract itself is unchanged.
+
+### 11. Basic dated-state retrieval compatibility restored
+
+After dated character state moved out of `characters.json`, the existing Pure packet would otherwise look for removed `baseline_1285_03_01` blocks.
+
+The base retrieval path now reads `character-state.json` for current dated character facts. This is compatibility plumbing only, not a new NPC selector or narrative rule.
+
 ## Intentionally NOT solved yet
 
 These are Canon/base follow-ups, not reasons to resume Writer tuning.
@@ -108,22 +127,20 @@ The asset registry has all 32 characters, but text Canon does not yet have a com
 Do **not** invent missing presentation facts from names or genre expectations.
 A later Canon pass should mine existing character assets / authoritative source material and record only supported facts.
 
-### B. PC creation contract vs current UI
+### B. Runtime Canon retrieval coverage
 
-`pc.json` allows fields such as Traits, Authorities, starting gold, and a free character profile, while the current Pure V0 UI does not expose all of them.
-
-This is a real base-contract mismatch. Resolve it before declaring PC creation complete, but do not silently delete supported PC freedom from Canon just to match the temporary UI.
-
-### C. Runtime Canon retrieval coverage
-
-Pure V0 currently imports only a subset of Canon files. Geography, society, cosmology, academic calendar, dated relationships/group attitudes, uncertainties, and PC rules are not all represented in the ordinary Writer packet.
+Pure V0 still imports only a subset of Canon files. Geography, society, cosmology, academic calendar, dated relationships/group attitudes, uncertainties, and PC rules are not all represented in the ordinary Writer packet.
 
 Do not solve this by dumping every file into every turn.
 After Canon is clean, design **relevance-based factual retrieval** with `KNOW != MENTION` and `STATE != STORY BEAT` preserved.
 
-### D. Character-state completeness / provenance
+### C. Character-state completeness / provenance
 
 The new `character-state.json` covers the currently established dated state needed for the academy start. Any missing ages, offices, locations, or presentation details must remain absent until supported by source.
+
+### D. Residence room-number assignment
+
+Canon now establishes A/B/C halls and single-room baseline, but the exact floor/room-number topology has not been source-audited. The base client therefore does not invent a deterministic room number merely to fill a field.
 
 ### E. Unknown Canon must remain unknown
 
@@ -135,7 +152,6 @@ Do not start another Original-Feel Writer experiment until:
 
 1. CANON-BASE-01 hard invariants are green.
 2. Presentation/state gaps needed for the opening benchmark are explicitly resolved or marked unknown.
-3. PC creation contract mismatch is resolved.
-4. A thin retrieval design is chosen so the Writer receives relevant facts without schedule/background flooding.
+3. A thin retrieval design is chosen so the Writer receives relevant facts without schedule/background flooding.
 
 Only then return to narrative acceptance.
