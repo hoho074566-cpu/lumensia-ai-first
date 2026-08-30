@@ -80,6 +80,12 @@ assert.match(asText(society.status_and_law?.special_crimes || {}), /황실/, 'sp
 
 assert.ok(!Object.hasOwn(power, 'source_classification'), 'runtime power Canon must not contain migration classification metadata');
 assert.ok(!Object.hasOwn(power, 'magic_record_note'), 'runtime power Canon must not contain migration reconciliation notes');
+const realmById = new Map((power.martial_realms || []).map((row) => [row.id, row]));
+assert.match(String(realmById.get('expert_high')?.meaning || ''), /외부화|검기/, 'Expert High must preserve later clarified externalized-aura meaning');
+assert.match(String(realmById.get('expert_peak')?.meaning || ''), /형태|밀도|방향/, 'Expert Peak must preserve aura-shaping precision');
+assert.match(String(realmById.get('expert_peak')?.meaning || ''), /내부.*외부|외부.*내부/, 'Expert Peak must preserve simultaneous internal/external aura control');
+assert.match(String(realmById.get('master')?.meaning || ''), /의지|개념/, 'Master must preserve will/concept carried through aura');
+assert.match(String(realmById.get('master')?.meaning || ''), /Authority/, 'Master definition must explicitly avoid equating realm with Authority');
 assert.ok(!Object.hasOwn(calendar, 'runtime_boundary'), 'calendar data must contain facts, not Writer/runtime instruction text');
 assert.ok(!Object.hasOwn(pcRules, 'migration_note'), 'PC Canon must not contain migration notes');
 
