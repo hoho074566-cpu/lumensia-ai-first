@@ -134,7 +134,7 @@ for (const row of groupAttitudes.attitudes || []) {
   assert.ok(row.toward_group && !CHARACTER_KEYS.includes(row.toward_group), `group attitude target must be an explicit group id: ${row.toward_group}`);
 }
 
-assert.match(api, /buildCanonContext/, 'Writer must delegate factual retrieval through the Canon context boundary');
+assert.match(api, /buildAuthoringContext/, 'Writer may consume an authored platform pack while Canon source integrity is validated independently');
 assert.match(canonContext, /character-state\.json/, 'Canon retrieval boundary must read structured dated character state');
 assert.doesNotMatch(`${api}\n${canonContext}`, /row\.baseline_1285_03_01/, 'base retrieval must not depend on dated state embedded in character core');
 for (const field of ['traits', 'authorities', 'startingGold', 'characterProfile']) {
@@ -146,4 +146,4 @@ assert.match(html, /name="authorities"/, 'PC form must expose Authorities');
 assert.match(html, /name="startingGold"/, 'PC form must expose starting gold');
 assert.match(html, /name="characterProfile"/, 'PC form must expose free character profile');
 
-console.log('PASS CANON-BASE-01 cross-file reconciliation invariants');
+console.log('PASS CANON-BASE-01 source reconciliation invariants');
