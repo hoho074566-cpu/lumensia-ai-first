@@ -29,6 +29,25 @@ assert.ok(characterKeys.every((key) => characters.characters[key]?.core && chara
 assert.doesNotMatch(asText(characters), /baseline_1285_03_01|source_detail/, 'dated state and migration metadata must not live in durable character core');
 assert.doesNotMatch(asText(characters.characters?.lena || {}), /실제 기원에는 별도 극비/, 'ordinary Lena core must not advertise the existence of a hidden origin');
 
+const sourceFidelity = {
+  elena: ['자유분방', '장난기', '호기심', '마법의 진리'],
+  artemis: ['낡은 대검', '진짜 기사를 양성'],
+  sera: ['냉소적', '생존', '안정되고 부유한 삶'],
+  sia: ['정령친화', '실피드', '노움', '운디네'],
+  lillia: ['정정당당', '실전경험', '속임수', '오러 제어'],
+  lena: ['마나의 총아', '귀찮', '호기심'],
+  emily: ['천진난만', '장난기', '날카로운 통찰'],
+  laris: ['정확성', '분석력', '장기전', '변칙대응'],
+  mirabelle: ['기사과 수업 청강', '대련', '자기 방식'],
+  serena: ['디스펠', '마법구조', '공격마법'],
+  chloe: ['연금술', '상업', '자유'],
+};
+for (const [key, tokens] of Object.entries(sourceFidelity)) {
+  const text = asText(characters.characters?.[key] || {});
+  for (const token of tokens) assert.match(text, new RegExp(token), `${key} durable core lost source-backed characterization: ${token}`);
+}
+assert.match(asText(characters.characters?.emily?.voice || {}), /설교/, 'Emily voice guard must explicitly resist turning values into recurring thematic speeches');
+
 for (const key of Object.keys(presentation.characters || {})) {
   assert.ok(CHARACTER_KEYS.includes(key), `presentation contains unknown character key: ${key}`);
 }
