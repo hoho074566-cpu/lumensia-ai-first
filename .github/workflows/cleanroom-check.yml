@@ -28,3 +28,5 @@ jobs:
         run: node scripts/v0.test.mjs
       - name: Run CANON-BASE-01 cross-file checks
         run: node scripts/canon-base-01.test.mjs
+      - name: Run factual Canon retrieval checks
+        run: node scripts/canon-retrieval.test.mjs
