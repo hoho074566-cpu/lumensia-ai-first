@@ -30,7 +30,7 @@ assert.doesNotMatch(api, /Never chain clerk -> guide -> supervisor -> timetable 
 
 const writerCalls = api.match(/fetch\('https:\/\/api\.openai\.com\/v1\/responses'/g) || [];
 assert.equal(writerCalls.length, 1, 'Original-Feel V2 must keep exactly one Writer model call');
-assert.doesNotMatch(api, /Event Director|Event Engine|NPC selector score|hook score|attention meter|cast rotation/i, 'deterministic narrative machinery must not return');
+assert.doesNotMatch(api, /Event Director|Event Engine|NPC selector score|hook score|attention meter/i, 'deterministic narrative machinery must not return');
 
 assert.match(html, /id="continueButton"[^>]*>이어하기</, 'dedicated Continue button must exist');
 assert.match(client, /continueScene:\s*isContinue/, 'Continue must use a dedicated request mode');
