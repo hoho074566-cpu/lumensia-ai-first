@@ -32,8 +32,12 @@ assert.doesNotMatch(AUTHORING_DATA.base_rp_template, /루멘시아|세라|릴리
 assert.match(AUTHORING_DATA.main_author_prompt, /루멘시아 아카데미/, 'Main Author Prompt must carry story identity');
 assert.match(AUTHORING_DATA.base_rp_template, /PC는 장면의 기본 카메라 앵커다/, 'PC camera anchor must remain explicit');
 assert.match(AUTHORING_DATA.base_rp_template, /작은 일은 작은 일로 끝나도 된다/, 'ordinary scenes must not auto-escalate into events');
-assert.match(AUTHORING_DATA.main_author_prompt, /입학식 전체 순서, 이동, 좌석 찾기, 장비 확인, 대기, 반복되는 시범/, 'routine school procedure must remain compressible');
-assert.ok(AUTHORING_DATA.development_examples.some((example) => /PC의 존재/.test(example.writer)), 'at least one example must demonstrate world initiative without losing PC presence');
+assert.match(AUTHORING_DATA.main_author_prompt, /ROUTINE COMPRESSES\. IMPORTANT MOMENTS EXPAND\./, 'reference-derived unequal scene density must remain explicit');
+assert.match(AUTHORING_DATA.main_author_prompt, /일정과 시각은 세계의 사실이지 장면을 강제로 이동시키는 명령이 아니다/, 'schedule facts must not force scene travel');
+assert.match(AUTHORING_DATA.main_author_prompt, /장면의 기본 카메라 앵커/, 'PC camera anchor must remain in story-specific authoring material');
+assert.ok(AUTHORING_DATA.development_examples.some((example) => /오리엔테이션 전까지/.test(example.user) && /집합 시간이 가까워져/.test(example.writer)), 'one example must demonstrate semantic completion and time compression');
+assert.ok(AUTHORING_DATA.development_examples.some((example) => /특별한 사건은 없었다/.test(example.writer)), 'one example must demonstrate quiet relationship movement without manufactured escalation');
+assert.ok(AUTHORING_DATA.development_examples.some((example) => /다음 교환/.test(example.writer)), 'one example must demonstrate evolving combat rather than isolated action ticks');
 
 const pc = {
   name: '테스트PC', age: 20, gender: '남성', department: '기사과', origin: '수도 외곽', socialStatus: '평민',
@@ -91,4 +95,4 @@ const failSoft = validateTurn({
 }, pc, startScene);
 assert.equal(failSoft.scene[0].kind, 'narration', 'missing dialogue speaker metadata must fail-soft to narration instead of failing the turn');
 
-console.log('PASS AUTHORING-RUNTIME-01 frozen architecture + assembly invariants');
+console.log('PASS AUTHORING-RUNTIME-01 frozen architecture + reference-derived prose/pace invariants');
