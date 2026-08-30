@@ -44,8 +44,10 @@ function characterLore(character = {}) {
   const identity = sentenceList(core.identity || []);
   const background = sentenceList(core.background || []);
   const personality = sentenceList(core.personality || []);
+  const presentation = plainValue(character.presentation || {});
   if (identity) lines.push(`${character.name}: ${identity}`);
   else lines.push(`${character.name}`);
+  if (presentation) lines.push(`외형·가시 정보는 ${presentation}.`);
   if (background) lines.push(`배경은 ${background}`);
   if (personality) lines.push(`성격은 ${personality}`);
   if (core.aspiration) lines.push(`지향점은 ${cleanText(core.aspiration, 320)}.`);
