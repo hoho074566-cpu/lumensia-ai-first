@@ -18,6 +18,9 @@ const characterState = readJson('data/scenarios/academy-1285-03-01/character-sta
 const openSituations = readJson('data/scenarios/academy-1285-03-01/open-situations.json');
 const relationships = readJson('data/scenarios/academy-1285-03-01/relationships.json');
 const groupAttitudes = readJson('data/scenarios/academy-1285-03-01/group-attitudes.json');
+const api = readFileSync('api/write.js', 'utf8');
+const client = readFileSync('src/client.js', 'utf8');
+const html = readFileSync('index.html', 'utf8');
 
 const characterKeys = Object.keys(characters.characters || {}).sort();
 assert.deepEqual(characterKeys, [...CHARACTER_KEYS].sort(), 'durable character core must preserve all 32 canonical keys');
@@ -65,5 +68,16 @@ for (const row of groupAttitudes.attitudes || []) {
   assert.ok(CHARACTER_KEYS.includes(row.from), `group attitude from must be a canonical person: ${row.from}`);
   assert.ok(row.toward_group && !CHARACTER_KEYS.includes(row.toward_group), `group attitude target must be an explicit group id: ${row.toward_group}`);
 }
+
+assert.match(api, /character-state\.json/, 'base Writer plumbing must read structured dated character state');
+assert.doesNotMatch(api, /row\.baseline_1285_03_01/, 'Writer plumbing must not depend on dated state embedded in character core');
+for (const field of ['traits', 'authorities', 'startingGold', 'characterProfile']) {
+  assert.match(api, new RegExp(field), `server PC sanitizer must preserve ${field}`);
+  assert.match(client, new RegExp(field), `client save state must preserve ${field}`);
+}
+assert.match(html, /name="traits"/, 'PC form must expose Traits');
+assert.match(html, /name="authorities"/, 'PC form must expose Authorities');
+assert.match(html, /name="startingGold"/, 'PC form must expose starting gold');
+assert.match(html, /name="characterProfile"/, 'PC form must expose free character profile');
 
 console.log('PASS CANON-BASE-01 cross-file reconciliation invariants');
