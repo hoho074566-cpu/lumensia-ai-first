@@ -26,6 +26,7 @@ assert.equal(lillia.current_state.department, '기사과');
 assert.match(JSON.stringify(lillia.presentation), /붉은 머리/);
 assert.match(JSON.stringify(lillia.personality_signals), /검|호기심|솔직|열정/);
 assert.ok((lillia.relationship_hints || []).some((row) => row.from === 'lillia' && row.to === 'laris'), 'thin cast should retain source-backed relationship signal');
+assert.match(String(lillia.epistemic_boundary), /not automatically PC knowledge/, 'thin cast system facts must be explicitly separated from PC knowledge');
 
 const noScheduleGravity = relevantScheduleFacts({ time: '09:15', location: '생활동' }, '짐을 정리한다');
 assert.equal(noScheduleGravity.length, 0, 'distant noon orientation must not be injected into ordinary 09:15 dorm prose context');
@@ -55,6 +56,7 @@ assert.match(String(training.academy.location_context.zones?.west || ''), /기�
 assert.ok(training.academy.location_context.relevant_facilities.knight, 'training action should retrieve knight facility fact');
 assert.equal(training.schedule.length, 0, '09:30 training action must not be dragged toward noon orientation');
 assert.equal(training.pc_visible_knowledge.length, 0, 'training action should not receive unrelated public politics/power gossip');
+assert.match(String(training.retrieval_semantics?.system_truth_not_knowledge), /do not automatically become PC or NPC knowledge/, 'scene packet must preserve the system-truth versus knowledge boundary');
 
 const guild = buildCanonContext({
   action: '모험가 길드에 가서 의뢰를 확인한다',

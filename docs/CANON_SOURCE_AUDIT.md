@@ -70,14 +70,14 @@ Legacy Canon describes her as:
 
 The first Cleanroom character core leaned much more heavily on `reason / principle / hypothesis / basics`, which is useful portrayal interpretation but does not preserve the full source personality by itself.
 
-General rule for the next character-content pass:
+General rule for future character-content work:
 
 - preserve source personality/background/interest/strength/limitation first
 - add source-supported portrayal refinement alongside it
 - refinement must not replace the source trait with a safer generic archetype
 - secrets/rumors/private knowledge must stay out of ordinary public packets and remain epistemically classified
 
-This character-content fidelity pass is still required before narrative acceptance resumes.
+CANON-BASE-01 completed this source-fidelity re-audit for the established detailed academy character cores. Remaining audit work concerns still-unverified presentation/capability facts and private-truth access classification; it is not permission to flatten source traits or infer missing facts.
 
 ## Relationship migration omissions found
 
@@ -95,12 +95,17 @@ These are relationship facts, not mandatory scene choreography.
 
 Reference logs are allowed to support stable portrayal facts only when they do not conflict with higher-authority Canon/current project decisions. Reference-specific room numbers, exact scene order, exact NPC selection, prose, dialogue, or incidental geography are not automatically Canon.
 
+## Factual retrieval boundary
+
+CANON-BASE-01 already implements thin factual retrieval in `api/lib/canon-context.js`.
+
+Character core, presentation, dated state, relationships, and group attitudes supplied for portrayal/continuity remain **system facts**. Their presence in a scene packet does not make them PC knowledge, NPC-to-NPC knowledge, or mandatory narration. PC-facing facts remain separately selected through Knowledge Canon.
+
 ## Remaining source audit
 
-Before another Writer-quality experiment:
+After CANON-BASE-01, remaining work is:
 
-1. finish source-fidelity review of the 14 detailed academy character cores
-2. audit the remaining 18 characters for source-backed presentation and durable capabilities
-3. classify any omitted private capabilities/secrets into Knowledge Canon instead of exposing them through ordinary character packets
-4. audit current-character state completeness without inventing missing ages/locations
-5. only then design thin factual retrieval
+1. audit the characters still listed as unverified in `presentation.json` for source-backed visible facts and any durable capabilities not yet migrated
+2. classify omitted private capabilities/secrets into Knowledge Canon instead of exposing them through ordinary character packets
+3. audit current-character state completeness without inventing missing ages/locations
+4. keep unresolved details explicitly unknown and preserve the existing factual retrieval boundary rather than replacing it with guessed data

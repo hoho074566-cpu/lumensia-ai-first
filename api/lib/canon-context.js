@@ -154,6 +154,7 @@ export function academyCastIndex() {
           .filter((rel) => ACADEMY_PRESENCE.has(CHARACTER_STATE[rel.from]?.presence) && ACADEMY_PRESENCE.has(CHARACTER_STATE[rel.to]?.presence))
           .slice(0, 3)
           .map(({ from, to, stance }) => ({ from, to, stance })),
+        epistemic_boundary: 'Thin cast fields are system portrayal and continuity facts. They are not automatically PC knowledge, NPC-to-NPC knowledge, or facts that must be narrated; PC-facing facts are supplied separately through pc_visible_knowledge.',
       };
     });
 }
@@ -285,6 +286,7 @@ export function buildCanonContext({ action = '', pc = {}, scene = {}, history = 
       canon_exists_but_not_selected: 'A fact omitted from this packet is not false; it is simply not currently selected for this turn.',
       know_not_mention: 'Receiving a fact does not require mentioning it in prose.',
       state_not_story_beat: 'State and schedules constrain continuity but do not prescribe a scene beat.',
+      system_truth_not_knowledge: 'Character core, dated state, presentation, and relationship facts are system facts for portrayal and continuity; they do not automatically become PC or NPC knowledge. PC-facing facts are supplied separately through pc_visible_knowledge.',
     },
   };
 }
