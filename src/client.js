@@ -17,10 +17,16 @@ const story = el('story');
 const composer = el('composer');
 const actionInput = el('actionInput');
 const sendButton = el('sendButton');
+const continueButton = el('continueButton');
 const statusText = el('statusText');
 const errorBox = el('errorBox');
 const pcDialog = el('pcDialog');
 const pcForm = el('pcForm');
+const adminDialog = el('adminDialog');
+const adminForm = el('adminForm');
+const adminRequestInput = el('adminRequestInput');
+const adminPreviewStatus = el('adminPreviewStatus');
+const adminPreviewBody = el('adminPreviewBody');
 const settingsDialog = el('settingsDialog');
 const tokenInput = el('tokenInput');
 const importInput = el('importInput');
@@ -28,6 +34,7 @@ const importInput = el('importInput');
 let scenario = FALLBACK_SCENARIO;
 let runState = null;
 let sending = false;
+let adminPreview = null;
 
 function loadJson(key) {
   try { return JSON.parse(localStorage.getItem(key) || 'null'); }
@@ -144,10 +151,33 @@ function beatHtml(beat) {
   return `<p class="narration">${escapeHtml(beat?.text || '')}</p>`;
 }
 
+function scenePlainText(scene = []) {
+  return (Array.isArray(scene) ? scene : []).map((beat) => {
+    const text = String(beat?.text || '').trim();
+    if (!text) return '';
+    if (beat?.kind !== 'dialogue') return text;
+    const name = CHARACTER_NAMES[beat?.speaker_key] || beat?.speaker_name || beat?.speaker_key || 'NPC';
+    return `${name}\n${text}`;
+  }).filter(Boolean).join('\n\n');
+}
+
+function copyButtonHtml(source, index = 0) {
+  return `<div class="scene-block-tools">
+    <button type="button" class="copy-block-button" data-copy-source="${escapeHtml(source)}" data-copy-index="${index}" aria-label="이 장면 복사" title="복사">
+      <span class="copy-icon" aria-hidden="true"></span>
+    </button>
+  </div>`;
+}
+
+function sceneTurnHtml(scene, source, index = 0, extraClass = '') {
+  return `<article class="scene-turn ${escapeHtml(extraClass)}">${(scene || []).map(beatHtml).join('')}${copyButtonHtml(source, index)}</article>`;
+}
+
 function render() {
   if (!runState) {
     story.innerHTML = '<div class="empty-state">캐릭터를 생성하면 시작합니다.</div>';
     statusText.textContent = '새 게임';
+    continueButton.disabled = true;
     return;
   }
 
@@ -161,16 +191,31 @@ function render() {
     </section>`,
   ];
 
-  for (const turn of runState.history) {
-    chunks.push(`<section class="player-action"><div class="player-label">${escapeHtml(runState.pc.name)}</div><div>${escapeHtml(turn.action)}</div></section>`);
-    chunks.push(`<article class="scene-turn">${(turn.scene || []).map(beatHtml).join('')}</article>`);
-  }
+  runState.history.forEach((turn, index) => {
+    if (turn.mode !== 'continue' && String(turn.action || '').trim()) {
+      chunks.push(`<section class="player-action"><div class="player-label">${escapeHtml(runState.pc.name)}</div><div>${escapeHtml(turn.action)}</div></section>`);
+    }
+    chunks.push(sceneTurnHtml(turn.scene, 'history', index, turn.mode === 'continue' ? 'continued-scene' : ''));
+  });
 
   if (!runState.history.length) {
     chunks.push('<p class="start-hint">세계는 이미 움직이고 있다. 무엇을 할지는 직접 입력하면 된다.</p>');
   }
 
   story.innerHTML = chunks.join('');
+  continueButton.disabled = sending || !runState || !runState.history.length;
+}
+
+function renderAdminPreview() {
+  if (!adminPreview) {
+    adminPreviewStatus.textContent = '아직 생성한 Preview가 없습니다.';
+    adminPreviewBody.innerHTML = '';
+    return;
+  }
+  const continuity = adminPreview.continuity || {};
+  const books = (adminPreview.diagnostics?.active_keyword_books || []).map((row) => row.name).join(', ');
+  adminPreviewStatus.textContent = `세이브 미변경 · ${continuity.date || ''} · ${continuity.time || ''} · ${continuity.location || ''}${books ? ` · Books: ${books}` : ''}`;
+  adminPreviewBody.innerHTML = sceneTurnHtml(adminPreview.scene, 'admin', 0, 'admin-preview-turn');
 }
 
 function showError(message = '') {
@@ -181,15 +226,68 @@ function showError(message = '') {
 function setSending(value) {
   sending = value;
   sendButton.disabled = value || !runState;
+  continueButton.disabled = value || !runState || !runState.history.length;
   actionInput.disabled = value || !runState;
   composer.classList.toggle('is-sending', value);
   sendButton.textContent = value ? '생성 중…' : '보내기';
+  continueButton.textContent = value ? '…' : '이어하기';
+  el('adminPreviewButton').disabled = value || !runState;
 }
 
-async function sendAction() {
+async function writeClipboard(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const area = document.createElement('textarea');
+  area.value = text;
+  area.setAttribute('readonly', '');
+  area.style.position = 'fixed';
+  area.style.opacity = '0';
+  document.body.appendChild(area);
+  area.select();
+  const ok = document.execCommand('copy');
+  area.remove();
+  if (!ok) throw new Error('클립보드 복사에 실패했습니다.');
+}
+
+async function handleCopyClick(button) {
+  if (!button || !runState) return;
+  const source = button.dataset.copySource;
+  const index = Number(button.dataset.copyIndex || 0);
+  const scene = source === 'admin' ? adminPreview?.scene : runState.history[index]?.scene;
+  const text = scenePlainText(scene);
+  if (!text) return;
+  try {
+    await writeClipboard(text);
+    button.classList.add('is-copied');
+    button.title = '복사됨';
+    window.setTimeout(() => {
+      button.classList.remove('is-copied');
+      button.title = '복사';
+    }, 1200);
+  } catch (error) {
+    showError(error?.message || '복사에 실패했습니다.');
+  }
+}
+
+story.addEventListener('click', (event) => {
+  const button = event.target.closest('.copy-block-button');
+  if (button) handleCopyClick(button);
+});
+
+adminPreviewBody.addEventListener('click', (event) => {
+  const button = event.target.closest('.copy-block-button');
+  if (button) handleCopyClick(button);
+});
+
+async function requestScene({ mode = 'action', action = '', adminRequest = '' } = {}) {
   if (sending || !runState) return;
-  const action = actionInput.value;
-  if (!action.trim()) return;
+  const isContinue = mode === 'continue';
+  const isAdmin = mode === 'admin';
+  const submittedAction = isAdmin ? String(adminRequest || '').trim() : String(action || '');
+  if (!isContinue && !submittedAction.trim()) return;
+
   showError('');
   setSending(true);
 
@@ -201,7 +299,12 @@ async function sendAction() {
         'Content-Type': 'application/json',
         'X-Lumensia-Token': currentSettings.accessToken || '',
       },
-      body: JSON.stringify({ action, runState }),
+      body: JSON.stringify({
+        action: submittedAction,
+        runState,
+        continueScene: isContinue,
+        adminScenePreview: isAdmin,
+      }),
     });
     const raw = await response.text();
     let payload = {};
@@ -211,8 +314,22 @@ async function sendAction() {
 
     const turn = payload.turn;
     const continuity = turn.continuity;
+
+    if (isAdmin || payload.admin_preview === true) {
+      adminPreview = {
+        request: submittedAction,
+        scene: turn.scene,
+        continuity,
+        diagnostics: payload.authoring_diagnostics || null,
+        createdAt: new Date().toISOString(),
+      };
+      renderAdminPreview();
+      return;
+    }
+
     runState.history.push({
-      action,
+      action: isContinue ? '' : submittedAction,
+      mode: isContinue ? 'continue' : 'action',
       scene: turn.scene,
       continuity,
       createdAt: new Date().toISOString(),
@@ -228,13 +345,21 @@ async function sendAction() {
     };
     runState.updatedAt = new Date().toISOString();
     saveJson(SAVE_KEY, runState);
-    actionInput.value = '';
+    if (!isContinue) actionInput.value = '';
     render();
   } catch (error) {
     showError(error?.message || '장면 생성에 실패했습니다.');
   } finally {
     setSending(false);
   }
+}
+
+function sendAction() {
+  return requestScene({ mode: 'action', action: actionInput.value });
+}
+
+function continueScene() {
+  return requestScene({ mode: 'continue' });
 }
 
 function openPcDialog() {
@@ -247,17 +372,21 @@ pcForm.addEventListener('submit', (event) => {
   if (!pc.name) return;
   if (!Number.isFinite(pc.age) || pc.age < 1) return;
   runState = makeRunState(pc);
+  adminPreview = null;
   saveJson(SAVE_KEY, runState);
   pcDialog.close();
   showError('');
   setSending(false);
   render();
+  renderAdminPreview();
 });
 
 composer.addEventListener('submit', (event) => {
   event.preventDefault();
   sendAction();
 });
+
+continueButton.addEventListener('click', continueScene);
 
 actionInput.addEventListener('keydown', (event) => {
   if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
@@ -267,12 +396,35 @@ actionInput.addEventListener('keydown', (event) => {
 });
 
 el('newGameButton').addEventListener('click', () => {
-  if (runState && !confirm('현재 V0 세이브를 지우고 새 캐릭터를 만들까요?')) return;
+  if (runState && !confirm('현재 세이브를 지우고 새 캐릭터를 만들까요?')) return;
   localStorage.removeItem(SAVE_KEY);
   runState = null;
+  adminPreview = null;
   render();
+  renderAdminPreview();
   openPcDialog();
 });
+
+el('adminButton').addEventListener('click', () => {
+  if (!runState) return openPcDialog();
+  renderAdminPreview();
+  adminDialog.showModal();
+});
+
+adminForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const request = adminRequestInput.value.trim();
+  if (!request) return;
+  requestScene({ mode: 'admin', adminRequest: request });
+});
+
+el('adminClearButton').addEventListener('click', () => {
+  adminPreview = null;
+  adminRequestInput.value = '';
+  renderAdminPreview();
+});
+
+el('adminCloseButton').addEventListener('click', () => adminDialog.close());
 
 el('settingsButton').addEventListener('click', () => {
   tokenInput.value = settings().accessToken || '';
@@ -292,7 +444,7 @@ el('exportButton').addEventListener('click', () => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `lumensia-v0-${runState.pc.name}-${runState.scene.date}.json`;
+  a.download = `lumensia-authoring-${runState.pc.name}-${runState.scene.date}.json`;
   a.click();
   URL.revokeObjectURL(url);
 });
@@ -305,12 +457,14 @@ importInput.addEventListener('change', async () => {
   if (!file) return;
   try {
     const parsed = JSON.parse(await file.text());
-    if (!validateImportedRun(parsed)) throw new Error('Lumensia V0 세이브 형식이 아닙니다.');
+    if (!validateImportedRun(parsed)) throw new Error('Lumensia 세이브 형식이 아닙니다.');
     runState = parsed;
+    adminPreview = null;
     saveJson(SAVE_KEY, runState);
     showError('');
     setSending(false);
     render();
+    renderAdminPreview();
   } catch (error) {
     showError(error?.message || '세이브를 불러오지 못했습니다.');
   }
@@ -320,8 +474,10 @@ async function boot() {
   await loadScenario();
   const saved = loadJson(SAVE_KEY);
   runState = validateImportedRun(saved) ? saved : null;
+  adminPreview = null;
   setSending(false);
   render();
+  renderAdminPreview();
   if (!runState) openPcDialog();
 }
 
