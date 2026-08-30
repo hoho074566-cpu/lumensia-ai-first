@@ -110,6 +110,31 @@ const lawQuestion = buildCanonContext({
 });
 assert.ok(lawQuestion.society.status_and_law, 'an explicit standalone law reference must still retrieve legal Canon');
 
+const successionQuery = buildCanonContext({
+  action: '황위 계승 방식과 현재 후계자 지명 상태를 확인한다',
+  pc: { department: '기사과' },
+  scene: neutralScene,
+  history: emptyHistory,
+});
+assert.equal(successionQuery.society.empire?.succession?.system, '선택계승', 'explicit succession query must retrieve immutable succession law');
+assert.match(String(successionQuery.dated_scenario.political_state?.imperial_succession || ''), /후계자를 지명하지 않았/, 'explicit succession query must retrieve the dated no-designation state');
+const anastasiaConversation = buildCanonContext({
+  action: '아나스타샤와 이야기한다',
+  pc: { department: '기사과' },
+  scene: neutralScene,
+  history: emptyHistory,
+});
+assert.ok(!Object.hasOwn(anastasiaConversation.society, 'empire'), 'a plain character interaction must not auto-inject the full imperial institution packet');
+assert.deepEqual(anastasiaConversation.dated_scenario, {}, 'a plain character interaction must not auto-inject dated political state');
+const academicPeriodQuery = buildCanonContext({
+  action: '초기 기량평가와 정규수업 시작 시기를 확인한다',
+  pc: { department: '기사과' },
+  scene: neutralScene,
+  history: emptyHistory,
+});
+assert.match(String(academicPeriodQuery.dated_scenario.academic_period?.state || ''), /다음 주/, 'explicit evaluation query must retrieve the dated initial-evaluation period');
+assert.match(String(academicPeriodQuery.dated_scenario.academic_period?.state || ''), /셋째 주/, 'explicit regular-class query must retrieve the dated regular-class period');
+
 const noScheduleGravity = relevantScheduleFacts({ time: '09:15', location: '생활동' }, '짐을 정리한다');
 assert.equal(noScheduleGravity.length, 0, 'distant noon orientation must not be injected into ordinary 09:15 dorm prose context');
 const durationNotSchedule = relevantScheduleFacts({ time: '09:15', location: '생활동' }, '시간을 들여 짐을 정리한다');
@@ -150,6 +175,7 @@ const training = buildCanonContext({
 assert.match(String(training.academy.location_context.zones?.west || ''), /기사과/, 'academy location context must preserve explicit Canon west=knight layout');
 assert.ok(training.academy.location_context.relevant_facilities.knight, 'training action should retrieve knight facility fact');
 assert.equal(training.schedule.length, 0, '09:30 training action must not be dragged toward noon orientation');
+assert.deepEqual(training.dated_scenario, {}, 'ordinary training must not receive unrelated dated academic or political state');
 assert.equal(training.pc_visible_knowledge.length, 0, 'training action should not receive unrelated public politics/power gossip');
 assert.match(String(training.retrieval_semantics?.system_truth_not_knowledge), /do not automatically become PC or NPC knowledge/, 'scene packet must preserve the system-truth versus knowledge boundary');
 assert.match(String(training.retrieval_semantics?.epistemic_access), /not a global PC permission ladder/, 'scene packet must state that visibility metadata is not global PC authorization');

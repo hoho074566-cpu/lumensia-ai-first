@@ -42,12 +42,18 @@ const KNOWLEDGE_TOPIC_ALIASES = Object.freeze({
 });
 
 const SOCIETY_TOPIC_ALIASES = Object.freeze({
+  empire: ['황제', '황위', '계승', '후계자', '아우구스투스'],
   status_and_law: ['법', '법률', '제국법', '사법', '재판', '범죄', '보안국', '귀족재판', '금서', '마신교'],
   adventurer_guild: ['길드', '의뢰', '모험가'],
   noble_culture: ['귀족', '작위', '황족', '예법', '결혼'],
   economy: ['금화', '은화', '동화', '가격', '비용', '돈'],
   medicine_and_death: ['치료', '의료', '부상', '죽음', '부활'],
   religion: ['도미너스', '교회', '성녀', '릴리', '마신교'],
+});
+
+const DATED_SCENARIO_TOPIC_ALIASES = Object.freeze({
+  academic_period: ['학기', '개강', '기량평가', '기량 평가', '정규수업', '정규 수업'],
+  political_state: ['황위', '계승', '후계자', '후계 지명', '아우구스투스 3세'],
 });
 
 const OPEN_SITUATION_ALIASES = Object.freeze({
@@ -64,6 +70,7 @@ const REGISTERED_LITERAL_TOKENS = Object.freeze([...new Set([
   ...Object.values(LOCATION_FACILITY_ALIASES).flat(),
   ...Object.values(KNOWLEDGE_TOPIC_ALIASES).flat(),
   ...Object.values(SOCIETY_TOPIC_ALIASES).flat(),
+  ...Object.values(DATED_SCENARIO_TOPIC_ALIASES).flat(),
   ...Object.values(OPEN_SITUATION_ALIASES).flat(),
   ...Object.values(CHARACTERS).flatMap((character) => {
     const fullName = String(character?.name || '').trim();
@@ -345,6 +352,14 @@ function relevantSociety(action = '') {
   return selected;
 }
 
+function relevantDatedScenario(action = '') {
+  const selected = {};
+  for (const [section, aliases] of Object.entries(DATED_SCENARIO_TOPIC_ALIASES)) {
+    if (includesAny(action, aliases) && scenarioData[section]) selected[section] = scenarioData[section];
+  }
+  return selected;
+}
+
 export function relevantOpenSituations(action = '') {
   return (situationsData.situations || [])
     .filter((row) => Number(row.visibility || 99) <= REACHABLE_OPEN_SITUATION_VISIBILITY)
@@ -371,6 +386,7 @@ export function buildCanonContext({ action = '', pc = {}, scene = {}, history = 
     },
     schedule: relevantScheduleFacts(scene, action),
     society: relevantSociety(action),
+    dated_scenario: relevantDatedScenario(action),
     power: {
       principles: powerSystemData.principles || {},
       martial_realms: powerSystemData.martial_realms || [],
