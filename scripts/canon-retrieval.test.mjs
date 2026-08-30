@@ -55,6 +55,21 @@ assert.deepEqual(
   'ASCII Elena key must not also select Lena',
 );
 
+const lilliaConversation = buildCanonContext({
+  action: '릴리아와 이야기한다',
+  pc: { department: '기사과' },
+  scene: neutralScene,
+  history: emptyHistory,
+});
+assert.ok(!Object.hasOwn(lilliaConversation.society, 'religion'), 'Lillia mention must not retrieve Lily religion Canon through a substring collision');
+const lilyPrayer = buildCanonContext({
+  action: '여신 릴리에게 기도한다',
+  pc: { department: '신학부' },
+  scene: { time: '09:15', location: '호숫가 예배당', presentCharacterKeys: [] },
+  history: emptyHistory,
+});
+assert.ok(lilyPrayer.society.religion, 'an explicit Lily reference must still retrieve religion Canon');
+
 const noScheduleGravity = relevantScheduleFacts({ time: '09:15', location: '생활동' }, '짐을 정리한다');
 assert.equal(noScheduleGravity.length, 0, 'distant noon orientation must not be injected into ordinary 09:15 dorm prose context');
 const imminentOrientation = relevantScheduleFacts({ time: '11:30', location: '학생식당' }, '식사를 마친다');

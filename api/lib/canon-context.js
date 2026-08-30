@@ -72,9 +72,14 @@ function cleanText(value, max = 500) {
   return text.length > max ? text.slice(0, max) : text;
 }
 
-function includesAny(text, words = []) {
+function includesAlias(text, word) {
   const value = String(text || '');
-  return words.some((word) => word && value.includes(word));
+  if (word === '릴리') return value.replaceAll('릴리아', '').includes(word);
+  return value.includes(word);
+}
+
+function includesAny(text, words = []) {
+  return words.some((word) => word && includesAlias(text, word));
 }
 
 function isWordCharacter(value) {
