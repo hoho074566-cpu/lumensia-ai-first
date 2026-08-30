@@ -1,1 +1,0 @@
-Immutable functional baseline pointer is created separately at branch baseline/narrative-v3-accepted-82160b6 -> 82160b6fa6625171b6e006826e22245eab374a2c.
