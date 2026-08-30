@@ -3,11 +3,13 @@ import knowledgeData from '../data/canon/knowledge/knowledge.json' with { type: 
 import academyData from '../data/canon/world/academy.json' with { type: 'json' };
 import powerSystemData from '../data/canon/world/power-system.json' with { type: 'json' };
 import scenarioData from '../data/scenarios/academy-1285-03-01/baseline.json' with { type: 'json' };
+import characterStateData from '../data/scenarios/academy-1285-03-01/character-state.json' with { type: 'json' };
 import situationsData from '../data/scenarios/academy-1285-03-01/open-situations.json' with { type: 'json' };
 
 export const config = { maxDuration: 300 };
 
 const CHARACTERS = charactersData.characters || {};
+const CHARACTER_STATE = characterStateData.characters || {};
 const CHARACTER_KEYS = new Set(Object.keys(CHARACTERS));
 const EXPRESSIONS = new Set([
   'default','smile','blush','serious','angry','sad','shock',
@@ -78,7 +80,14 @@ function cleanText(value, max = 500) {
   return text.length > max ? text.slice(0, max) : text;
 }
 
+function cleanList(value, maxItems = 24, maxChars = 220) {
+  return Array.isArray(value)
+    ? value.slice(0, maxItems).map((item) => cleanText(item, maxChars).trim()).filter(Boolean)
+    : [];
+}
+
 function safePc(raw = {}) {
+  const startingGoldNumber = Number(raw.startingGold);
   const pc = {
     name: cleanText(raw.name, 80).trim(),
     age: Number(raw.age),
@@ -89,11 +98,15 @@ function safePc(raw = {}) {
     admission: cleanText(raw.admission, 160),
     appearance: cleanText(raw.appearance, 700),
     background: cleanText(raw.background, 1400),
+    characterProfile: cleanText(raw.characterProfile, 1600),
     realm: cleanText(raw.realm, 120),
     magicCircle: raw.magicCircle == null || raw.magicCircle === '' ? null : Number(raw.magicCircle),
     talents: raw.talents && typeof raw.talents === 'object' ? raw.talents : {},
-    skills: Array.isArray(raw.skills) ? raw.skills.slice(0, 24).map((x) => cleanText(x, 120)).filter(Boolean) : [],
-    equipment: Array.isArray(raw.equipment) ? raw.equipment.slice(0, 24).map((x) => cleanText(x, 160)).filter(Boolean) : [],
+    traits: cleanList(raw.traits, 16, 220),
+    authorities: cleanList(raw.authorities, 16, 220),
+    skills: cleanList(raw.skills, 24, 120),
+    equipment: cleanList(raw.equipment, 24, 160),
+    startingGold: Number.isFinite(startingGoldNumber) ? Math.max(0, startingGoldNumber) : 0,
   };
   if (!pc.name) throw new Error('PC 이름이 없습니다.');
   if (!Number.isFinite(pc.age) || pc.age < 1 || pc.age > 300) throw new Error('PC 나이가 올바르지 않습니다.');
@@ -155,7 +168,7 @@ function compactCharacterPacket(key) {
     name: row.name,
     core: row.core || {},
     voice: row.voice || {},
-    current_baseline: row.baseline_1285_03_01 || {},
+    current_state: CHARACTER_STATE[key] || {},
     refined_characterization: row.refined_characterization || [],
   };
 }
@@ -167,7 +180,7 @@ function castIndex() {
     identity: Array.isArray(row?.core?.identity) ? row.core.identity.slice(0, 2) : [],
     personality: Array.isArray(row?.core?.personality) ? row.core.personality.slice(0, 2) : [],
     voice: cleanText(row?.voice?.register || '', 180),
-    baseline: row.baseline_1285_03_01 || {},
+    current_state: CHARACTER_STATE[key] || {},
   }));
 }
 
@@ -219,6 +232,9 @@ function buildInput({ action, pc, scene, history, knowledgeLevel }) {
       dated_scenario: {
         scenario_id: scenarioData.scenario_id,
         academic_period: scenarioData.academic_period,
+        housing: scenarioData.housing,
+        institution_state: scenarioData.institution_state,
+        political_state: scenarioData.political_state,
         dated_world_facts: scenarioData.dated_world_facts,
       },
       visible_open_situations: situations,
