@@ -37,11 +37,14 @@ assert.match(AUTHORING_DATA.main_author_prompt, /일정과 시각은 세계의 �
 assert.match(AUTHORING_DATA.main_author_prompt, /세라와 릴리아만 반복해서 쓰는 고정 캐스트로 취급하지 않는다/, 'foreground cast must not collapse into the same two NPCs');
 assert.match(AUTHORING_DATA.main_author_prompt, /한 명의 NPC만 작동하는 빈 무대가 아니다/, 'populated academy spaces must preserve social texture');
 assert.match(AUTHORING_DATA.main_author_prompt, /작은 live thread/, 'ordinary event density must come from small live threads, not an event engine');
+assert.match(AUTHORING_DATA.main_author_prompt, /저마찰 상태에 머물지 않는다/, 'relationship scenes must not default to endless harmless small talk');
+assert.match(AUTHORING_DATA.main_author_prompt, /시비·도발·경쟁·질투·오해·편들기·초대·부탁·호의/, 'authoring material must permit varied everyday social pressure and affinity events');
+assert.match(AUTHORING_DATA.main_author_prompt, /호감이나 갈등이 생기면 그것을 수치나 해설로 선언하지 말고 행동의 변화로 보여준다/, 'relationship change must be shown through behavior rather than reported as a stat');
 assert.match(AUTHORING_DATA.main_author_prompt, /장문의 연설로 대신 설명하지 않는다/, 'authority NPCs must not become thematic exposition monologues');
 assert.match(AUTHORING_DATA.main_author_prompt, /장면의 기본 카메라 앵커/, 'PC camera anchor must remain in story-specific authoring material');
-assert.ok(AUTHORING_DATA.development_examples.some((example) => /오리엔테이션 전까지/.test(example.user) && /세 장면 모두 오래 붙잡을 일은 아니었다/.test(example.writer)), 'broad exploration must show multiple small threads while preserving compression');
-assert.ok(AUTHORING_DATA.development_examples.some((example) => /식당 안의 여러 삶/.test(example.writer) && /아무것도 큰 사건은 아니었다/.test(example.writer)), 'quiet scene must allow cast overlap without forced escalation');
-assert.ok(AUTHORING_DATA.development_examples.some((example) => /지나가던 교수가 한마디/.test(example.writer) && /다음 교환/.test(example.writer)), 'combat must keep surrounding cast alive while the exchange evolves');
+assert.ok(AUTHORING_DATA.development_examples.some((example) => /그 검 아직도 쓰는 사람이 있네/.test(example.writer) && /대꾸할지, 그냥 지나갈지/.test(example.writer)), 'one example must demonstrate direct social friction that stops at a real PC choice');
+assert.ok(AUTHORING_DATA.development_examples.some((example) => /다음은 나랑 하자고/.test(example.writer) && /인기 많네/.test(example.writer)), 'one example must demonstrate rivalry and subtle affinity pressure in an ordinary scene');
+assert.ok(AUTHORING_DATA.development_examples.some((example) => /다음 차례 비면 나랑 해/.test(example.writer) && /새로운 경쟁 하나가 생겼다/.test(example.writer)), 'combat must be able to create a new social rivalry thread');
 
 const pc = {
   name: '테스트PC', age: 20, gender: '남성', department: '기사과', origin: '수도 외곽', socialStatus: '평민',
@@ -99,4 +102,4 @@ const failSoft = validateTurn({
 }, pc, startScene);
 assert.equal(failSoft.scene[0].kind, 'narration', 'missing dialogue speaker metadata must fail-soft to narration instead of failing the turn');
 
-console.log('PASS AUTHORING-RUNTIME-01 frozen architecture + reference-derived prose/pace/cast-density invariants');
+console.log('PASS AUTHORING-RUNTIME-01 frozen architecture + reference-derived prose/pace/cast/social-friction invariants');
