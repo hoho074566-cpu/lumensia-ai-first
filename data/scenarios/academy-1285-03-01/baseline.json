@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "scenario_id": "academy-1285-03-01",
   "title": "루멘시아 아카데미 입학식 당일",
   "start": {
@@ -31,6 +31,9 @@
     "student_council_vice_president": "lucia",
     "white_rose_president": "lucia",
     "white_rose_vice_president": "elise"
+  },
+  "political_state": {
+    "imperial_succession": "아우구스투스 3세는 아직 후계자를 지명하지 않았고, 제1황녀 아나스타샤와 제2황녀 이사벨이 주요 계승후보다."
   },
   "character_baseline_notes": {
     "anastasia": "기사과 3학년·학생회장·마스터 입문",
