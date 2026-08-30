@@ -1,67 +1,80 @@
 # LUMENSIA NARRATIVE BASELINE — CURRENT
 
-Status: **BASELINE LOCKED**
+Status: **V3 ACCEPTED BASELINE LOCKED**
 
-This document records the first Writer-facing build that reached the current human-accepted narrative baseline. Future tuning must treat this state as the regression floor.
+This document points future work to the current human-accepted narrative regression floor.
 
-## Exact baseline
+## Exact functional baseline
 
 - Repository: `hoho074566-cpu/lumensia-ai-first`
-- PR: `#22 — AUTHORING-RUNTIME-01 — Frozen Crack-like Authoring Runtime`
-- Runtime branch: `codex/authoring-runtime-01`
-- Baseline commit: `e3a5dd862cb2a605d789ddc51764d9c82d86d94a`
-- Immutable baseline pointer: `baseline/authoring-runtime-01-e3a5dd8`
-- Canon base / merge-base: `01c5a3a3c1846916063fa343f963e7055fe93c5d`
+- PR: `#25 — OPUS-PROSE-PACE-V3 — Social friction + affinity/conflict event density`
+- Runtime branch: `codex/opus-prose-pace-v3-social-friction`
+- Accepted functional head: `82160b6fa6625171b6e006826e22245eab374a2c`
+- Immutable functional pointer: `baseline/narrative-v3-accepted-82160b6`
+- Canon base: `01c5a3a3c1846916063fa343f963e7055fe93c5d`
+- Detailed record: `docs/NARRATIVE_BASELINE_V3_ACCEPTED.md`
+
+The later commits on the runtime branch are documentation-only baseline records. The functional Writer behavior is pinned to the exact SHA above.
 
 ## Human verdict
 
-This is the most stable and most original-like Lumensia AI-First narrative build so far.
+This is the strongest and most original-like AI-First Lumensia narrative build accepted so far.
 
-Observed strengths that must not regress:
+The key acceptance scene demonstrated, in one short opening sequence:
 
-- ordinary academy scenes now behave like scenes rather than administration/tutorial reports;
-- named NPCs notice concrete PC-visible details and engage naturally;
-- PC remains materially present while NPCs and the world retain initiative;
-- relationship scenes can continue across ordinary locations without requiring a manufactured event;
-- routine transitions can compress while meaningful interaction, discovery and combat receive depth;
-- dialogue, movement, gaze, equipment and positioning carry characterization instead of repeated explanatory prose;
-- combat exchanges evolve from the previous exchange instead of resetting into generic descriptions;
-- no Narrative Director / Event Engine / NPC selector / hook meter / planner was required to reach this quality.
+- immediate PC-facing class/status friction;
+- another freshman making a dismissive jab rather than harmless background chatter;
+- Lillia intervening for her own character-consistent reason;
+- direct PC contact and a natural invitation without stealing PC agency;
+- social pressure remaining alive in the background;
+- Emily entering with a short characterful line instead of a thematic lecture;
+- fast progression into the meaningful human scene;
+- no Narrative Director, Event Engine, NPC selector, relationship event engine, schedule engine, or extra planning model call.
 
-The lunch encounter with Sera and Lillia is a key acceptance signal: the scene remains ordinary, yet both NPCs respond to prior contact and to the PC's visible presence without inventing a major incident.
+## Protected qualities
 
-## Current target
+### 1. Prose and progression speed
 
-The next qualitative target is **Opus 4.6-class prose feel and progression speed** while preserving the current PC presence and world initiative.
+`ROUTINE COMPRESSES. IMPORTANT MOMENTS EXPAND.`
 
-Only these axes may be tuned before feature expansion:
+Routine procedure, walking, waiting and repeated demonstration compress. Human conflict, attraction, rivalry, discovery, combat, failure and aftermath may expand when they genuinely become meaningful.
 
-1. **Prose rhythm / original feel**
-   - faster move from concrete detail into human action;
-   - less redundant explanation after dialogue/action already conveys meaning;
-   - more variation in sentence length and conversational breathing;
-   - preserve character-specific voice and subtext.
+### 2. PC presence and agency
 
-2. **Progression speed**
-   - compress routine movement, procedure, waiting and repeated demonstration;
-   - stay longer only when relationship, conflict, discovery, danger or combat has genuinely become interesting;
-   - avoid turning ordinary moments into mandatory mysteries or incidents;
-   - avoid lingering on school procedure merely because it exists in Canon.
+PC remains the default camera anchor. NPCs and the world act independently without demoting PC into a spectator. Never invent new PC dialogue, explicit emotion, goal or meaningful choice.
 
-3. **PC presence / agency**
-   - PC remains the default camera anchor;
-   - NPC initiative may approach, notice, challenge or react to the PC;
-   - never invent a new PC goal, voluntary dialogue, explicit emotion or meaningful choice;
-   - do not let long NPC-only sequences demote the PC into a spectator.
+### 3. Social friction / affinity / conflict density
 
-## Regression rule
+Relationships do not remain indefinitely polite and low-friction. Status, skill, pride, rumors, curiosity, rivalry, invitations, jealousy, misunderstanding, taking sides, challenges and remembered details may naturally move scenes.
 
-Any future prompt/example change that makes the output worse than this baseline on scene life, PC presence, named-NPC continuity, routine compression or conversational naturalness must be reverted rather than compensated for with a new subsystem.
+Relationship change is shown through changed behavior rather than announced as numbers or system messages.
 
-Do not add feature work until the prose/pace target is accepted.
+### 4. Cast overlap without forced rotation
+
+Populated academy spaces contain overlapping lives. Recurring play must not collapse into a single-character route, but named characters are not teleported in merely to satisfy variety.
+
+### 5. Named-NPC portrayal continuity
+
+Verified Canon/Lore presentation facts and voice are fixed portrayal facts.
+
+Current verified anchors include:
+
+- Lillia: red hair / golden eyes
+- Sera: brown hair / blue eyes
+- Emily: silver hair / blue eyes
+- Artemis: tied-back white hair / red eyes
+- Lena: silver hair / violet eyes
+
+Unknown appearance details are not promoted into durable facts merely to decorate prose.
 
 ## Architecture remains frozen
 
 `Base RP Template → Main Author Prompt → Relevant Lore → Start Setting → Development Examples → Runtime State → Active Keyword Books → Recent Chat → Exact User Input → ONE Writer call`
 
-No additional narrative-planning model call is permitted in the critical path.
+No Narrative Director, Event Engine, NPC selector, hook meter, schedule planner, relationship scoring engine, prose quota, or extra planning model call.
+
+## Regression rule
+
+Any later change that makes prose rhythm, progression speed, PC presence, social friction, cast variety, named-NPC continuity, or conversational naturalness worse than this baseline must be reverted rather than compensated for with a new subsystem.
+
+Feature work comes after this baseline; it must preserve this narrative behavior rather than replace it.
