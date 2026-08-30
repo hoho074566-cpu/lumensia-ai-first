@@ -25,6 +25,7 @@ assert.match(spec, /엔딩 설정 \| Ending Layer/, 'spec must map Endings');
 assert.equal((api.match(/https:\/\/api\.openai\.com\/v1\/responses/g) || []).length, 1, 'critical write path must contain exactly one Writer call');
 assert.match(api, /assembleAuthoring/, 'api/write must delegate prompt construction to the Authoring Runtime');
 assert.match(runtime, /buildCanonContext/, 'Authoring Runtime must use factual Canon retrieval as source material');
+assert.match(runtime, /외형·가시 정보/, 'verified presentation facts must be passed into selected character lore');
 assert.doesNotMatch(runtime, /Event Director|Event Engine|Scene Planner|Scene Selector|NPC selector score|hook score|attention meter/i, 'Authoring Runtime must not implement narrative control engines');
 
 assert.equal(AUTHORING_DATA.development_examples.length, 3, 'creator-style development examples must be capped at three');
@@ -33,19 +34,23 @@ assert.match(AUTHORING_DATA.main_author_prompt, /루멘시아 아카데미/, 'Ma
 assert.match(AUTHORING_DATA.base_rp_template, /PC는 장면의 기본 카메라 앵커다/, 'PC camera anchor must remain explicit');
 assert.match(AUTHORING_DATA.base_rp_template, /작은 일은 작은 일로 끝나도 된다/, 'ordinary scenes must not auto-escalate into events');
 assert.match(AUTHORING_DATA.main_author_prompt, /ROUTINE COMPRESSES\. IMPORTANT MOMENTS EXPAND\./, 'reference-derived unequal scene density must remain explicit');
-assert.match(AUTHORING_DATA.main_author_prompt, /일정과 시각은 세계의 사실이지 장면을 강제로 이동시키는 명령이 아니다/, 'schedule facts must not force scene travel');
-assert.match(AUTHORING_DATA.main_author_prompt, /학교 절차는 다음 장면의 주행선이 아니다/, 'school procedure must not become the narrative route');
+assert.match(AUTHORING_DATA.main_author_prompt, /장비 점검 하나가 의미 없이 오래 이어지거나/, 'routine inspection must not consume an entire response without meaning');
 assert.match(AUTHORING_DATA.main_author_prompt, /개인 생활동·방번호/, 'unknown durable housing specifics must remain guarded');
-assert.match(AUTHORING_DATA.main_author_prompt, /세라와 릴리아만 반복해서 쓰는 고정 캐스트로 취급하지 않는다/, 'foreground cast must not collapse into the same two NPCs');
-assert.match(AUTHORING_DATA.main_author_prompt, /한 명의 NPC만 작동하는 빈 무대가 아니다/, 'populated academy spaces must preserve social texture');
-assert.match(AUTHORING_DATA.main_author_prompt, /사람 사이의 마찰을 전부 배경 장식으로만 남기지 않는다/, 'social friction must sometimes contact the PC directly');
-assert.match(AUTHORING_DATA.main_author_prompt, /연속된 장소마다 자동 동행시키지도 않는다/, 'one NPC must not route-lock across locations');
+assert.match(AUTHORING_DATA.main_author_prompt, /이 목록은 등장 순번표가 아니다/, 'named cast breadth must not become forced rotation');
+assert.match(AUTHORING_DATA.main_author_prompt, /최근 장면에 나온 사람이라는 이유만으로 같은 NPC를 계속 재사용하지 않는다/, 'recent speaker inertia must not monopolize foreground casting');
+assert.match(AUTHORING_DATA.main_author_prompt, /라리스는 발렌하르트 방계/, 'Laris must be part of the available early academy cast signal');
+assert.match(AUTHORING_DATA.main_author_prompt, /미라벨은 신학부 교환장학생/, 'Mirabelle must be part of the available early academy cast signal');
+assert.match(AUTHORING_DATA.main_author_prompt, /클로에는 마법과 신입생/, 'Chloe must be part of the available early academy cast signal');
+assert.match(AUTHORING_DATA.main_author_prompt, /사건감은 대형 사고를 계속 만드는 데서 나오지 않는다/, 'event density must come from causal human change rather than incident spam');
+assert.match(AUTHORING_DATA.main_author_prompt, /여러 장면을 계속 안전한 잡담만으로 평평하게 만들지 않는다/, 'natural conflict/opportunity must not be deliberately flattened');
+assert.match(AUTHORING_DATA.main_author_prompt, /최근 대화에 많이 등장했다는 사실은 다음 장면의 캐스팅 이유가 아니다/, 'single-NPC route lock must remain explicitly rejected');
 assert.match(AUTHORING_DATA.main_author_prompt, /릴리아는 붉은 머리와 금안/, 'verified Lillia presentation must remain explicit');
 assert.match(AUTHORING_DATA.main_author_prompt, /장문의 연설로 대신 설명하지 않는다/, 'authority NPCs must not become thematic exposition monologues');
 assert.match(AUTHORING_DATA.main_author_prompt, /장면의 기본 카메라 앵커/, 'PC camera anchor must remain in story-specific authoring material');
-assert.ok(AUTHORING_DATA.development_examples.some((example) => /주변을 천천히 살펴본다/.test(example.user) && /붉은 머리와 금안의 릴리아/.test(example.writer) && /귀족 신입생/.test(example.writer)), 'opening example must teach direct PC-facing friction with canonical Lillia portrayal');
-assert.ok(AUTHORING_DATA.development_examples.some((example) => /짐 정리를 마치고 식당/.test(example.user) && /자기 볼일이 있다며 갈림길에서 먼저 빠졌고/.test(example.writer) && /PC에게 남았다/.test(example.writer)), 'location transition example must teach cast handoff instead of companion route-lock');
-assert.ok(AUTHORING_DATA.development_examples.some((example) => /다음 차례 비면 나랑 해/.test(example.writer) && /다음 관계의 이유/.test(example.writer)), 'combat outcome must be able to create direct follow-up social pressure');
+
+assert.ok(AUTHORING_DATA.development_examples.some((example) => /주변을 천천히 살펴본다/.test(example.user) && /붉은 머리와 금안의 릴리아/.test(example.writer) && /귀족 신입생/.test(example.writer)), 'opening example must preserve the accepted direct-friction/Lillia intervention pattern');
+assert.ok(AUTHORING_DATA.development_examples.some((example) => /기사과 훈련에 참가한다/.test(example.user) && /라리스/.test(example.writer) && /이사벨/.test(example.writer) && /둘이 하면 나도 다음/.test(example.writer)), 'training example must widen foreground cast and turn routine into rivalry');
+assert.ok(AUTHORING_DATA.development_examples.some((example) => /학생회관 쪽을 둘러본다/.test(example.user) && /클로에/.test(example.writer) && /미라벨/.test(example.writer) && /이유도 방향도 달랐다/.test(example.writer)), 'student-area example must demonstrate a different named-cast opportunity/conflict mix');
 
 const pc = {
   name: '테스트PC', age: 20, gender: '남성', department: '기사과', origin: '수도 외곽', socialStatus: '평민',
@@ -79,7 +84,10 @@ for (const [index, label] of requiredOrder.entries()) {
 assert.equal(opening.diagnostics.start_setting_active, true, 'Start Setting must activate only at untouched exact start');
 assert.equal(opening.diagnostics.development_example_count, 3);
 assert.match(opening.input, /\n\nEXACT USER INPUT\n주변을 살펴본다\.$/, 'exact user text must survive assembly without rewrite at the final layer');
-assert.match(opening.input, /릴리아는 붉은 머리와 금안/, 'opening Writer packet must receive the verified Lillia portrayal anchor');
+
+const lilliaPacket = assembleAuthoring({ action: '릴리아와 검에 대해 이야기한다.', pc, scene: startScene, history: [], knowledgeLevel: 1, mode: 'action' });
+assert.match(lilliaPacket.input, /외형·가시 정보는[^\n]*붉은 머리/, 'selected Lillia lore must carry verified red-hair presentation fact');
+assert.match(lilliaPacket.input, /금안/, 'selected Lillia lore must carry verified golden-eye presentation fact');
 
 const history = [{
   action: '대강당 안을 본다.',
@@ -104,4 +112,4 @@ const failSoft = validateTurn({
 }, pc, startScene);
 assert.equal(failSoft.scene[0].kind, 'narration', 'missing dialogue speaker metadata must fail-soft to narration instead of failing the turn');
 
-console.log('PASS AUTHORING-RUNTIME-01 frozen architecture + V2R direct-friction/cast-handoff invariants');
+console.log('PASS AUTHORING-RUNTIME-01 frozen architecture + V2R2 cast/event-density invariants');
