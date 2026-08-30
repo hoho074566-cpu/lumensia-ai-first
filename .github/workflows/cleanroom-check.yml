@@ -32,3 +32,5 @@ jobs:
         run: node scripts/canon-retrieval.test.mjs
       - name: Run AUTHORING-RUNTIME-01 checks
         run: node scripts/authoring-runtime-01.test.mjs
+      - name: Run NARRATIVE-BASELINE-V3 portrayal guards
+        run: node scripts/narrative-baseline-v3.test.mjs
