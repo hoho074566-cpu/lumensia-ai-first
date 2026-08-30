@@ -34,14 +34,18 @@ assert.match(AUTHORING_DATA.base_rp_template, /PC는 장면의 기본 카메라 
 assert.match(AUTHORING_DATA.base_rp_template, /작은 일은 작은 일로 끝나도 된다/, 'ordinary scenes must not auto-escalate into events');
 assert.match(AUTHORING_DATA.main_author_prompt, /ROUTINE COMPRESSES\. IMPORTANT MOMENTS EXPAND\./, 'reference-derived unequal scene density must remain explicit');
 assert.match(AUTHORING_DATA.main_author_prompt, /일정과 시각은 세계의 사실이지 장면을 강제로 이동시키는 명령이 아니다/, 'schedule facts must not force scene travel');
+assert.match(AUTHORING_DATA.main_author_prompt, /학교 절차는 다음 장면의 주행선이 아니다/, 'school procedure must not become the narrative route');
+assert.match(AUTHORING_DATA.main_author_prompt, /개인 생활동·방번호/, 'unknown durable housing specifics must remain guarded');
 assert.match(AUTHORING_DATA.main_author_prompt, /세라와 릴리아만 반복해서 쓰는 고정 캐스트로 취급하지 않는다/, 'foreground cast must not collapse into the same two NPCs');
 assert.match(AUTHORING_DATA.main_author_prompt, /한 명의 NPC만 작동하는 빈 무대가 아니다/, 'populated academy spaces must preserve social texture');
-assert.match(AUTHORING_DATA.main_author_prompt, /작은 live thread/, 'ordinary event density must come from small live threads, not an event engine');
+assert.match(AUTHORING_DATA.main_author_prompt, /사람 사이의 마찰을 전부 배경 장식으로만 남기지 않는다/, 'social friction must sometimes contact the PC directly');
+assert.match(AUTHORING_DATA.main_author_prompt, /연속된 장소마다 자동 동행시키지도 않는다/, 'one NPC must not route-lock across locations');
+assert.match(AUTHORING_DATA.main_author_prompt, /릴리아는 붉은 머리와 금안/, 'verified Lillia presentation must remain explicit');
 assert.match(AUTHORING_DATA.main_author_prompt, /장문의 연설로 대신 설명하지 않는다/, 'authority NPCs must not become thematic exposition monologues');
 assert.match(AUTHORING_DATA.main_author_prompt, /장면의 기본 카메라 앵커/, 'PC camera anchor must remain in story-specific authoring material');
-assert.ok(AUTHORING_DATA.development_examples.some((example) => /오리엔테이션 전까지/.test(example.user) && /세 장면 모두 오래 붙잡을 일은 아니었다/.test(example.writer)), 'broad exploration must show multiple small threads while preserving compression');
-assert.ok(AUTHORING_DATA.development_examples.some((example) => /식당 안의 여러 삶/.test(example.writer) && /아무것도 큰 사건은 아니었다/.test(example.writer)), 'quiet scene must allow cast overlap without forced escalation');
-assert.ok(AUTHORING_DATA.development_examples.some((example) => /지나가던 교수가 한마디/.test(example.writer) && /다음 교환/.test(example.writer)), 'combat must keep surrounding cast alive while the exchange evolves');
+assert.ok(AUTHORING_DATA.development_examples.some((example) => /주변을 천천히 살펴본다/.test(example.user) && /붉은 머리와 금안의 릴리아/.test(example.writer) && /귀족 신입생/.test(example.writer)), 'opening example must teach direct PC-facing friction with canonical Lillia portrayal');
+assert.ok(AUTHORING_DATA.development_examples.some((example) => /짐 정리를 마치고 식당/.test(example.user) && /자기 볼일이 있다며 갈림길에서 먼저 빠졌고/.test(example.writer) && /PC에게 남았다/.test(example.writer)), 'location transition example must teach cast handoff instead of companion route-lock');
+assert.ok(AUTHORING_DATA.development_examples.some((example) => /다음 차례 비면 나랑 해/.test(example.writer) && /다음 관계의 이유/.test(example.writer)), 'combat outcome must be able to create direct follow-up social pressure');
 
 const pc = {
   name: '테스트PC', age: 20, gender: '남성', department: '기사과', origin: '수도 외곽', socialStatus: '평민',
@@ -75,6 +79,7 @@ for (const [index, label] of requiredOrder.entries()) {
 assert.equal(opening.diagnostics.start_setting_active, true, 'Start Setting must activate only at untouched exact start');
 assert.equal(opening.diagnostics.development_example_count, 3);
 assert.match(opening.input, /\n\nEXACT USER INPUT\n주변을 살펴본다\.$/, 'exact user text must survive assembly without rewrite at the final layer');
+assert.match(opening.input, /릴리아는 붉은 머리와 금안/, 'opening Writer packet must receive the verified Lillia portrayal anchor');
 
 const history = [{
   action: '대강당 안을 본다.',
@@ -99,4 +104,4 @@ const failSoft = validateTurn({
 }, pc, startScene);
 assert.equal(failSoft.scene[0].kind, 'narration', 'missing dialogue speaker metadata must fail-soft to narration instead of failing the turn');
 
-console.log('PASS AUTHORING-RUNTIME-01 frozen architecture + reference-derived prose/pace/cast-density invariants');
+console.log('PASS AUTHORING-RUNTIME-01 frozen architecture + V2R direct-friction/cast-handoff invariants');
