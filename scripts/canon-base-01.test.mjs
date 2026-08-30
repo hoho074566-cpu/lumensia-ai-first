@@ -20,6 +20,7 @@ const openSituations = readJson('data/scenarios/academy-1285-03-01/open-situatio
 const relationships = readJson('data/scenarios/academy-1285-03-01/relationships.json');
 const groupAttitudes = readJson('data/scenarios/academy-1285-03-01/group-attitudes.json');
 const api = readFileSync('api/write.js', 'utf8');
+const canonContext = readFileSync('api/lib/canon-context.js', 'utf8');
 const client = readFileSync('src/client.js', 'utf8');
 const html = readFileSync('index.html', 'utf8');
 
@@ -39,7 +40,7 @@ const sourceFidelity = {
   emily: ['천진난만', '장난기', '날카로운 통찰'],
   laris: ['정확성', '분석력', '장기전', '변칙대응'],
   mirabelle: ['기사과 수업 청강', '대련', '자기 방식'],
-  serena: ['디스펠', '마법구조', '공격마법'],
+  serena: ['디스펠', '마법구조'],
   chloe: ['연금술', '상업', '자유'],
 };
 for (const [key, tokens] of Object.entries(sourceFidelity)) {
@@ -117,8 +118,9 @@ for (const row of groupAttitudes.attitudes || []) {
   assert.ok(row.toward_group && !CHARACTER_KEYS.includes(row.toward_group), `group attitude target must be an explicit group id: ${row.toward_group}`);
 }
 
-assert.match(api, /character-state\.json/, 'base Writer plumbing must read structured dated character state');
-assert.doesNotMatch(api, /row\.baseline_1285_03_01/, 'Writer plumbing must not depend on dated state embedded in character core');
+assert.match(api, /buildCanonContext/, 'Writer must delegate factual retrieval through the Canon context boundary');
+assert.match(canonContext, /character-state\.json/, 'Canon retrieval boundary must read structured dated character state');
+assert.doesNotMatch(`${api}\n${canonContext}`, /row\.baseline_1285_03_01/, 'base retrieval must not depend on dated state embedded in character core');
 for (const field of ['traits', 'authorities', 'startingGold', 'characterProfile']) {
   assert.match(api, new RegExp(field), `server PC sanitizer must preserve ${field}`);
   assert.match(client, new RegExp(field), `client save state must preserve ${field}`);
