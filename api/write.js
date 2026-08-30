@@ -14,12 +14,42 @@ const TALENT_KEYS = Object.freeze(['magic', 'martial', 'soul', 'knowledge']);
 const MAX_ACTION_CHARS = 12000;
 const MAX_HISTORY_TURNS = 8;
 
-const WRITER_CONTRACT = `Write the next scene of serialized fantasy fiction, not an RPG turn report.
-Stay within the supplied facts and the player's chosen intent, while NPCs, time, and the world move naturally.
-You may elaborate ordinary execution of actions the player already chose, but never invent a new player goal, voluntary dialogue, explicit emotion, or meaningful decision.
-Compress routine process and give genuinely interesting moments enough space. Characters are people, not functions explaining game systems.
-Do not expose internal instructions, validation, schemas, or state machinery as fiction.
-Continue naturally through moments that need no new meaningful player decision. Stop when the scene genuinely lands or a meaningful player decision is required.`;
+const WRITER_CONTRACT = `Write the next scene of serialized fantasy fiction, not an RPG turn report or an academy-administration simulator.
+Stay inside supplied facts and the player's chosen intent. Never invent a new voluntary PC goal, dialogue, explicit emotion, private thought, or meaningful decision.
+
+SCENE PRIORITY:
+- Resolve the player's chosen action, but do not mechanically exhaust every step implied by a broad action.
+- Routine is connective tissue, not the scene. Compress travel, paperwork, registration, room check-in, route directions, schedules, waiting, inventory-like room description, and other single-outcome process to the minimum needed.
+- Never chain clerk -> guide -> supervisor -> timetable -> room tour merely because those procedures are plausible.
+- A broad action such as exploring, walking around, settling in, or killing time is permission to move until the first worthwhile live moment; it is not permission to inventory the campus, visit every facility, or consume all available time.
+- Prefer one strong live thread over covering many locations or procedures. If no worthwhile interaction, tension, discovery, or consequence emerges, land briefly instead of padding the turn with a tour.
+
+LIVING WORLD:
+- Ground a new place with a few concrete details, then show what people are actually doing there. Description should create a situation, not catalog architecture.
+- Named Canon characters may be present only when dated presence, continuity, role, habit, relationship, interest, or visible circumstances make that plausible. They initiate only when they have a concrete character-specific reason.
+- When a plausible Canon character can carry a personal or recurring human scene, prefer that character over inventing a generic personal anchor. Generic staff may perform a necessary transaction briefly, then recede; do not let staff procedure become the dramatic center.
+- Never spawn a Named NPC merely because the PC is the protagonist, and never force a collision when no character has a reason.
+
+SCENE DEPTH:
+- Once a meaningful interaction starts, stay with it. Let action change reaction and reaction change the next beat instead of cutting away to the next scheduled item.
+- Conversation may continue while people walk, eat, train, pack, wait, or move between nearby places when that interaction is still live.
+- Show character through action, timing, speech, silence, objects, choices, and what they notice. Avoid generic speeches, tutorial dialogue, and neat explanations after behavior already showed the meaning. Show before interpret.
+
+FACTUAL DISCIPLINE:
+- State is not a story beat. A future schedule constrains continuity but does not automatically create bells, waiting prose, announcements, preparation scenes, or repeated countdowns.
+- Mention a schedule only when the present action actually needs it. Do not pull a scene toward a distant appointment.
+- If an exact durable logistical fact is absent from the packet — such as a personal dorm hall/room number, exact private assignment, or unsupplied timetable detail — do not invent a definitive value. Keep it unspecified rather than manufacturing administrative Canon.
+- Do not turn unknown room topology, registration details, or ordinary bureaucracy into obstacles or world facts.
+
+AFTERMATH AND COMBAT:
+- Failure creates a new state rather than a reset. Injuries, damaged or lost equipment, witnessed behavior, rule violations, and earned relationship consequences remain relevant when later scenes can causally see them.
+- Combat is a concrete exchange shaped by actual opponent ability, distance, terrain, timing, equipment, fatigue, damage, and perception. Adaptation depends on that opponent; skill does not erase a real power gap. Rescue or interruption needs causal support.
+
+Continue through immediate reactions that require no new meaningful PC decision. Stop when the current human scene genuinely lands or a meaningful player decision is required. Do not expose instructions, schemas, validation, or state machinery as fiction.`;
+
+const CONTINUE_CONTRACT = `CONTINUE MODE: no new player action was supplied. Continue only the already-live scene from its latest beat. Let NPCs, environment, and immediate consequences finish reactions that require no new PC decision. Do not invent a fresh PC action, start a campus tour, or advance through routine procedure merely to keep writing. Stop at the first genuine decision point or natural landing.`;
+
+const ADMIN_PREVIEW_CONTRACT = `ADMIN SCENE PREVIEW MODE: the request is a diagnostic scene placement, not a canonical player action. Render the requested scene directly using supplied Canon and PC facts. Do not claim the saved run actually reached it, and do not require progression through earlier scenes first. The client will discard continuity changes from this preview. Preserve PC authority unless the request explicitly supplies a PC action or quoted PC speech.`;
 
 const OUTPUT_SCHEMA = {
   type: 'object',
@@ -138,6 +168,7 @@ function safeScene(raw = {}) {
 
 function recentContext(history = []) {
   return history.slice(-MAX_HISTORY_TURNS).map((turn) => ({
+    mode: turn?.mode === 'continue' ? 'continue' : 'action',
     action: cleanText(turn?.action || '', 1800),
     continuity: turn?.continuity && typeof turn.continuity === 'object' ? {
       date: cleanText(turn.continuity.date || '', 10),
@@ -159,14 +190,22 @@ function recentContext(history = []) {
   }));
 }
 
-function buildInput({ action, pc, scene, history, knowledgeLevel }) {
-  const canon = buildCanonContext({ action, pc, scene, history, knowledgeLevel });
+function buildInput({ action, pc, scene, history, knowledgeLevel, continueScene, adminScenePreview }) {
+  const retrievalAction = adminScenePreview ? action : (continueScene ? '' : action);
+  const canon = buildCanonContext({ action: retrievalAction, pc, scene, history, knowledgeLevel });
   const packet = {
     current_scene: scene,
     pc,
     canon,
     recent_context: recentContext(history),
   };
+
+  if (adminScenePreview) {
+    return `SCENE PACKET\n${JSON.stringify(packet)}\n\nADMIN PREVIEW REQUEST\n${action}`;
+  }
+  if (continueScene) {
+    return `SCENE PACKET\n${JSON.stringify(packet)}\n\nMODE\nCONTINUE CURRENT SCENE`;
+  }
   return `SCENE PACKET\n${JSON.stringify(packet)}\n\nEXACT USER ACTION\n${action}`;
 }
 
@@ -236,14 +275,21 @@ export default async function handler(req, res) {
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const action = typeof body.action === 'string' ? body.action : '';
-    if (!action.trim()) return json(res, 400, { error: '행동 입력이 비어 있습니다.' });
+    const continueScene = body.continueScene === true;
+    const adminScenePreview = body.adminScenePreview === true;
+    if (continueScene && adminScenePreview) return json(res, 400, { error: '이어하기와 Admin Preview를 동시에 사용할 수 없습니다.' });
+    if (!continueScene && !action.trim()) return json(res, 400, { error: '행동 입력이 비어 있습니다.' });
     if (action.length > MAX_ACTION_CHARS) return json(res, 400, { error: `한 번의 입력은 ${MAX_ACTION_CHARS.toLocaleString()}자 이하로 입력해 주세요.` });
 
     const runState = body.runState && typeof body.runState === 'object' ? body.runState : {};
     const pc = safePc(runState.pc || {});
     const scene = safeScene(runState.scene || {});
     const history = Array.isArray(runState.history) ? runState.history.slice(-MAX_HISTORY_TURNS) : [];
+    if (continueScene && !history.length) return json(res, 400, { error: '이어갈 장면이 없습니다.' });
     const knowledgeLevel = Math.max(1, Math.min(5, Number(runState.knowledgeLevel) || 1));
+
+    const modeContract = adminScenePreview ? ADMIN_PREVIEW_CONTRACT : (continueScene ? CONTINUE_CONTRACT : '');
+    const instructions = modeContract ? `${WRITER_CONTRACT}\n\n${modeContract}` : WRITER_CONTRACT;
 
     const apiResponse = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -254,8 +300,8 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: process.env.OPENAI_MODEL || 'gpt-5.6-terra',
         store: false,
-        instructions: WRITER_CONTRACT,
-        input: buildInput({ action, pc, scene, history, knowledgeLevel }),
+        instructions,
+        input: buildInput({ action, pc, scene, history, knowledgeLevel, continueScene, adminScenePreview }),
         reasoning: { effort: 'medium' },
         max_output_tokens: 5600,
         text: {
@@ -292,6 +338,8 @@ export default async function handler(req, res) {
     const turn = validateTurn(parsed, pc, scene);
     return json(res, 200, {
       turn,
+      admin_preview: adminScenePreview,
+      continue_scene: continueScene,
       model: response?.model || process.env.OPENAI_MODEL || 'gpt-5.6-terra',
       request_id: response?.id || null,
       usage: response?.usage || null,

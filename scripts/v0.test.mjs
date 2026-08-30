@@ -24,10 +24,12 @@ assert.doesNotMatch(api, /suggested[_ -]?actions|turn-hook|scene-momentum|contex
 assert.doesNotMatch(canonContext, /eventDensity|attentionMeter|pcHookScore|sceneDirector|npcScheduler|storyCurrent/i, 'Canon retrieval must remain factual, not become a narrative selector engine');
 assert.doesNotMatch(client, /\.focus\s*\(/, 'mobile client must not steal keyboard focus automatically');
 assert.doesNotMatch(client, /scrollTo\s*\(|scrollIntoView\s*\(/, 'mobile client must not steal scroll position after a response');
-assert.doesNotMatch(html, /Suggested Actions|AUTO FLOW|CONTINUE|Event Director/i, 'legacy turn controls must not appear in V0 UI');
+assert.doesNotMatch(html, /Suggested Actions|AUTO FLOW|Event Director/i, 'legacy narrative turn controls must not appear in V0 UI');
+assert.match(html, /id="continueButton"/, 'Continue is allowed only as a dedicated non-player-action mode');
 assert.match(html, /name="background"/, 'free PC background field required');
 assert.match(html, /name="skills"/, 'free PC skills field required');
 assert.match(html, /name="equipment"/, 'free PC equipment field required');
-assert.match(client, /JSON\.stringify\(\{ action, runState \}\)/, 'client must send current action and run state directly');
+assert.match(client, /action:\s*submittedAction/, 'normal client requests must preserve the exact submitted action');
+assert.match(client, /runState,/, 'client must send current run state directly');
 
 console.log('PASS V0 pure narrative runtime invariants');

@@ -2,9 +2,9 @@ name: AI-First clean-room checks
 
 on:
   push:
-    branches: [main, codex/canon-base-01-clean-reconciliation]
+    branches: [main, codex/canon-base-01-clean-reconciliation, codex/original-feel-pure-v1]
   pull_request:
-    branches: [main, codex/v0-pure-ai-narrative]
+    branches: [main, codex/v0-pure-ai-narrative, codex/canon-base-01-clean-reconciliation]
 
 permissions:
   contents: read
@@ -30,3 +30,5 @@ jobs:
         run: node scripts/canon-base-01.test.mjs
       - name: Run factual Canon retrieval checks
         run: node scripts/canon-retrieval.test.mjs
+      - name: Run Original-Feel Pure V1 checks
+        run: node scripts/original-feel-pure-v1.test.mjs
