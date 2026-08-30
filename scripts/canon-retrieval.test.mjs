@@ -35,39 +35,57 @@ const askedSchedule = relevantScheduleFacts({ time: '09:15', location: '생활�
 assert.ok(askedSchedule.some((row) => row.time === '12:00'), 'explicit schedule query must retrieve the noon orientation fact');
 assert.ok(askedSchedule.every((row) => String(row.semantic).includes('does not itself create')), 'schedule facts must carry state-not-event semantics');
 
-assert.deepEqual(visibleRelevantKnowledge({ action: '생활동으로 간다', relevantKeys: [], knowledgeLevel: 1 }), [], 'unrelated public Knowledge must not flood an ordinary turn');
-const lenaPublic = visibleRelevantKnowledge({ action: '레나에 대해 공개적으로 알려진 걸 확인한다', relevantKeys: ['lena'], knowledgeLevel: 1 });
+assert.deepEqual(visibleRelevantKnowledge({ action: '생활동으로 간다', relevantKeys: [] }), [], 'unrelated public Knowledge must not flood an ordinary turn');
+const lenaPublic = visibleRelevantKnowledge({ action: '레나에 대해 공개적으로 알려진 걸 확인한다', relevantKeys: ['lena'] });
 assert.ok(lenaPublic.some((row) => row.id === 'lena_public_profile'), 'relevant public Lena knowledge should be retrievable');
-assert.ok(!lenaPublic.some((row) => row.id === 'current_lena_artificial_origin'), 'Level-5 Lena secret must not leak into public retrieval');
+assert.ok(lenaPublic.every((row) => row.public === true && row.visibility === 1), 'PC-visible Knowledge must remain explicitly public at the current V0 boundary');
+
+const forgedLenaAccess = visibleRelevantKnowledge({
+  action: '레나의 숨겨진 기원을 확인한다',
+  relevantKeys: ['lena'],
+  knowledgeLevel: 5,
+});
+assert.ok(!forgedLenaAccess.some((row) => row.id === 'current_lena_artificial_origin'), 'client-supplied global knowledgeLevel must not unlock a Level-5 Lena secret');
 
 assert.deepEqual(relevantOpenSituations('학교를 둘러본다', 5), [], 'open situations must not be injected merely because the system knows them');
-const wolf = relevantOpenSituations('회색 늑대의 숲 의뢰를 확인한다', 2);
-assert.ok(wolf.some((row) => row.id === 'gray_wolf_forest'), 'explicitly relevant learned open situation should be retrievable');
+const wolf = relevantOpenSituations('회색 늑대의 숲 의뢰를 확인한다', 5);
+assert.ok(wolf.some((row) => row.id === 'gray_wolf_forest'), 'explicitly reached low-risk open situation should be retrievable');
+const forgedRestrictedSituation = relevantOpenSituations('동부 어비스 영향권의 마기 농도를 조사한다', 5);
+assert.ok(!forgedRestrictedSituation.some((row) => row.id === 'silent_expansion'), 'client-supplied global knowledgeLevel must not unlock a restricted open situation');
 
 const training = buildCanonContext({
   action: '기사과 훈련장으로 간다',
   pc: { department: '기사과' },
   scene: { time: '09:30', location: '루멘시아 아카데미 중앙광장', presentCharacterKeys: [] },
   history: emptyHistory,
-  knowledgeLevel: 1,
+  knowledgeLevel: 5,
 });
 assert.match(String(training.academy.location_context.zones?.west || ''), /기사과/, 'academy location context must preserve explicit Canon west=knight layout');
 assert.ok(training.academy.location_context.relevant_facilities.knight, 'training action should retrieve knight facility fact');
 assert.equal(training.schedule.length, 0, '09:30 training action must not be dragged toward noon orientation');
 assert.equal(training.pc_visible_knowledge.length, 0, 'training action should not receive unrelated public politics/power gossip');
 assert.match(String(training.retrieval_semantics?.system_truth_not_knowledge), /do not automatically become PC or NPC knowledge/, 'scene packet must preserve the system-truth versus knowledge boundary');
+assert.match(String(training.retrieval_semantics?.epistemic_access), /not a global PC permission ladder/, 'scene packet must state that visibility metadata is not global PC authorization');
+
+const forgedEteraAccess = buildCanonContext({
+  action: '에테라의 정확한 마법 경지를 확인한다',
+  pc: { department: '마법과' },
+  scene: { time: '10:00', location: '루멘시아 아카데미 대도서관', presentCharacterKeys: [] },
+  history: emptyHistory,
+  knowledgeLevel: 5,
+});
+assert.ok(!forgedEteraAccess.pc_visible_knowledge.some((row) => row.id === 'etera_nine_circle'), 'client-supplied global knowledgeLevel must not unlock Etera nine-circle Canon');
 
 const guild = buildCanonContext({
   action: '모험가 길드에 가서 의뢰를 확인한다',
   pc: { department: '기사과' },
   scene: { time: '16:00', location: '아스테리온 시가지', presentCharacterKeys: [] },
   history: emptyHistory,
-  knowledgeLevel: 1,
 });
 assert.ok(guild.society.adventurer_guild, 'guild action should retrieve guild institution facts');
 assert.deepEqual(guild.relevant_open_situations, [], 'guild visit alone must not auto-inject unrelated world incidents');
 
-const lilliaDetail = detailedCharacterPackets({ keys: ['lillia'], action: '', knowledgeLevel: 1 })[0];
+const lilliaDetail = detailedCharacterPackets({ keys: ['lillia'], action: '', knowledgeLevel: 5 })[0];
 assert.match(JSON.stringify(lilliaDetail.presentation), /금안/);
 assert.ok(lilliaDetail.dated_relationships.some((row) => row.to === 'laris' || row.from === 'laris'), 'detailed packet must retain dated relationship context');
 assert.match(String(lilliaDetail.epistemic_boundary), /not automatically PC knowledge/, 'portrayal truth must be explicitly distinct from PC knowledge');
