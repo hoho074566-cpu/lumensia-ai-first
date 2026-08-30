@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "as_of": "1285-03-01",
+  "attitudes": [
+    {
+      "from": "artemis",
+      "toward_group": "knight_first_year",
+      "stance": ["기대", "엄격"],
+      "context": "기사과 1학년 전체를 자신이 책임질 훈련생 집단으로 본다. 개인 평가는 실제 관찰과 사건에 따라 별도로 형성된다."
+    },
+    {
+      "from": "emily",
+      "toward_group": "academy_members",
+      "stance": ["관찰", "가능성에 대한 관심"],
+      "context": "아카데미 구성원을 정형화된 한 틀보다 각자의 가능성을 가진 개인으로 보는 편이다."
+    }
+  ],
+  "default_rule": "집단을 향한 기본 태도는 개인 관계를 자동 생성하지 않는다. 개인 관계와 지식은 실제 접점과 사건을 통해 별도로 형성된다."
+}
