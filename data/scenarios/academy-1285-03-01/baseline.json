@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "scenario_id": "academy-1285-03-01",
   "title": "루멘시아 아카데미 입학식 당일",
   "start": {
@@ -18,6 +18,20 @@
     {"time": "09:00", "fact": "입학식이 시작될 예정"},
     {"time": "12:00", "fact": "1학년 학과별 오리엔테이션 예정"}
   ],
+  "housing": {
+    "halls": ["A동", "B동", "C동"],
+    "room_style": "기본 학생 생활실은 1인실이다.",
+    "assignment_rule": "A동·B동·C동 모두 학생 배정에 사용된다. 특정 학년이나 학과를 한 생활동에 고정하지 않으며 PC의 생활동과 방은 run state에서 한 번 정한 뒤 지속한다."
+  },
+  "institution_state": {
+    "principal": "emily",
+    "knight_senior_professor": "artemis",
+    "magic_senior_professor": "elena",
+    "student_council_president": "anastasia",
+    "student_council_vice_president": "lucia",
+    "white_rose_president": "lucia",
+    "white_rose_vice_president": "elise"
+  },
   "character_baseline_notes": {
     "anastasia": "기사과 3학년·학생회장·마스터 입문",
     "isabel": "기사과 1학년·익스퍼트 하급",
@@ -36,8 +50,8 @@
     "aria": "22세 성녀·아카데미 체류 중",
     "elise": "마법과 2학년·백장미회 부회장·5서클",
     "carne": "제국 근위대 총사령관·마스터 극의",
-    "etera": "마탑주·현존 9서클",
+    "etera": "마탑주. 정확한 현재 서클은 공개 baseline에 직접 노출하지 않고 Knowledge Canon의 접근 수준을 따른다.",
     "seriel": "무소속 천상사강·마스터 극의"
   },
-  "runtime_rule": "이 파일은 1285-03-01 시작 시점의 사실 묶음이지 장면 순서표가 아니다. Writer에게 필요한 사실만 선택적으로 제공하고, 여기 적힌 시간표를 절차·대기·다음 행동 지시로 변환하지 않는다."
+  "runtime_rule": "이 파일은 1285-03-01 시작 시점의 사실 묶음이지 장면 순서표가 아니다. Writer에게 필요한 사실만 선택적으로 제공하고, 여기 적힌 시간표를 절차·대기·다음 행동 지시로 변환하지 않는다. 시각은 상태값이지 그 자체로 종소리·행사 시작·서술 문장을 자동 생성하는 사건이 아니다."
 }
