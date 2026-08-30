@@ -70,8 +70,27 @@ const lilyPrayer = buildCanonContext({
 });
 assert.ok(lilyPrayer.society.religion, 'an explicit Lily reference must still retrieve religion Canon');
 
+const magicDepartment = buildCanonContext({
+  action: '마법과 강의동으로 간다',
+  pc: { department: '마법과' },
+  scene: neutralScene,
+  history: emptyHistory,
+});
+assert.ok(!Object.hasOwn(magicDepartment.society, 'status_and_law'), 'magic terminology must not retrieve legal Canon merely because 마법 contains 법');
+const lawQuestion = buildCanonContext({
+  action: '이곳의 법을 확인한다',
+  pc: { department: '기사과' },
+  scene: neutralScene,
+  history: emptyHistory,
+});
+assert.ok(lawQuestion.society.status_and_law, 'an explicit standalone law reference must still retrieve legal Canon');
+
 const noScheduleGravity = relevantScheduleFacts({ time: '09:15', location: '생활동' }, '짐을 정리한다');
 assert.equal(noScheduleGravity.length, 0, 'distant noon orientation must not be injected into ordinary 09:15 dorm prose context');
+const durationNotSchedule = relevantScheduleFacts({ time: '09:15', location: '생활동' }, '시간을 들여 짐을 정리한다');
+assert.equal(durationNotSchedule.length, 0, 'ordinary duration language must not be mistaken for an explicit schedule query');
+const habitualNotSchedule = relevantScheduleFacts({ time: '09:15', location: '훈련장' }, '언제나 하던 대로 검을 휘두른다');
+assert.equal(habitualNotSchedule.length, 0, '언제나 must not be mistaken for an explicit schedule query');
 const imminentOrientation = relevantScheduleFacts({ time: '11:30', location: '학생식당' }, '식사를 마친다');
 assert.ok(imminentOrientation.some((row) => row.time === '12:00'), 'imminent schedule may be supplied as continuity fact');
 const askedSchedule = relevantScheduleFacts({ time: '09:15', location: '생활동' }, '오늘 오티 일정이 언제인지 확인한다');

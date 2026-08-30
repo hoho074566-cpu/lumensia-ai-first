@@ -42,7 +42,7 @@ const KNOWLEDGE_TOPIC_ALIASES = Object.freeze({
 });
 
 const SOCIETY_TOPIC_ALIASES = Object.freeze({
-  status_and_law: ['법', '재판', '범죄', '보안국', '귀족재판', '금서', '마신교'],
+  status_and_law: ['법', '법률', '제국법', '사법', '재판', '범죄', '보안국', '귀족재판', '금서', '마신교'],
   adventurer_guild: ['길드', '의뢰', '모험가'],
   noble_culture: ['귀족', '작위', '황족', '예법', '결혼'],
   economy: ['금화', '은화', '동화', '가격', '비용', '돈'],
@@ -63,7 +63,7 @@ const KOREAN_NAME_SUFFIXES = Object.freeze([
   '은', '는', '이', '가', '을', '를', '와', '과', '의', '께', '도', '만', '로', '랑',
 ].sort((a, b) => b.length - a.length));
 
-const SCHEDULE_QUERY_WORDS = ['시간', '일정', '언제', '오리엔테이션', '오티', '입학식', '집결', '정오'];
+const SCHEDULE_QUERY_WORDS = ['일정', '시간표', '몇 시', '몇시', '오리엔테이션', '오티', '입학식', '집결', '정오'];
 const PUBLIC_KNOWLEDGE_VISIBILITY = 1;
 const REACHABLE_OPEN_SITUATION_VISIBILITY = 2;
 
@@ -75,6 +75,7 @@ function cleanText(value, max = 500) {
 function includesAlias(text, word) {
   const value = String(text || '');
   if (word === '릴리') return value.replaceAll('릴리아', '').includes(word);
+  if (word === '법') return literalMentionRanges(value, word).length > 0;
   return value.includes(word);
 }
 
