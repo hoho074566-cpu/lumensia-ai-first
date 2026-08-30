@@ -4,12 +4,14 @@ import {
   academyCastIndex,
   buildCanonContext,
   detailedCharacterPackets,
+  relevantCharacterKeys,
   relevantOpenSituations,
   relevantScheduleFacts,
   visibleRelevantKnowledge,
 } from '../api/lib/canon-context.js';
 
 const emptyHistory = [];
+const neutralScene = { time: '09:15', location: '생활동', presentCharacterKeys: [] };
 
 const cast = academyCastIndex();
 assert.ok(cast.length >= 10, 'academy cast should expose the established academy population without requiring player name mentions');
@@ -26,6 +28,32 @@ assert.equal(lillia.current_state.department, '기사과');
 assert.match(JSON.stringify(lillia.presentation), /붉은 머리/);
 assert.match(JSON.stringify(lillia.personality_signals), /검|호기심|솔직|열정/);
 assert.ok((lillia.relationship_hints || []).some((row) => row.from === 'lillia' && row.to === 'laris'), 'thin cast should retain source-backed relationship signal');
+
+assert.deepEqual(
+  relevantCharacterKeys({ action: '엘레나와 이야기한다', scene: neutralScene, history: emptyHistory }),
+  ['elena'],
+  'short Korean name must select Elena without leaking the nested Lena alias',
+);
+assert.deepEqual(
+  relevantCharacterKeys({ action: '세레나에게 간다', scene: neutralScene, history: emptyHistory }),
+  ['serena'],
+  'Serena must not also select the nested Lena alias',
+);
+assert.deepEqual(
+  relevantCharacterKeys({ action: '엘레나와 레나를 찾는다', scene: neutralScene, history: emptyHistory }),
+  ['elena', 'lena'],
+  'separate explicit mentions must preserve both characters in mention order',
+);
+assert.deepEqual(
+  relevantCharacterKeys({ action: 'talk to the librarian', scene: neutralScene, history: emptyHistory }),
+  [],
+  'ASCII character keys must require token boundaries instead of matching inside ordinary words',
+);
+assert.deepEqual(
+  relevantCharacterKeys({ action: 'ask elena about the lesson', scene: neutralScene, history: emptyHistory }),
+  ['elena'],
+  'ASCII Elena key must not also select Lena',
+);
 
 const noScheduleGravity = relevantScheduleFacts({ time: '09:15', location: '생활동' }, '짐을 정리한다');
 assert.equal(noScheduleGravity.length, 0, 'distant noon orientation must not be injected into ordinary 09:15 dorm prose context');

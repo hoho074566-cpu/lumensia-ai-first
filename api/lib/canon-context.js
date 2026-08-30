@@ -57,6 +57,12 @@ const OPEN_SITUATION_ALIASES = Object.freeze({
   orpheum_disappearances: ['오르페룸', '상인 실종'],
 });
 
+const KOREAN_NAME_SUFFIXES = Object.freeze([
+  '에게서', '한테서', '께서는', '으로', '이랑', '에게', '한테', '께서', '처럼', '부터', '까지', '보다',
+  '교수', '교장', '황녀', '전하', '선생', '하고', '이며', '이고', '이라', '라고', '님', '씨', '양', '군',
+  '은', '는', '이', '가', '을', '를', '와', '과', '의', '께', '도', '만', '로', '랑',
+].sort((a, b) => b.length - a.length));
+
 const SCHEDULE_QUERY_WORDS = ['시간', '일정', '언제', '오리엔테이션', '오티', '입학식', '집결', '정오'];
 const PUBLIC_KNOWLEDGE_VISIBILITY = 1;
 const REACHABLE_OPEN_SITUATION_VISIBILITY = 2;
@@ -71,14 +77,90 @@ function includesAny(text, words = []) {
   return words.some((word) => word && value.includes(word));
 }
 
-function exactMentionedCharacterKeys(action = '') {
-  const found = [];
-  const lowered = action.toLowerCase();
-  for (const [key, character] of Object.entries(CHARACTERS)) {
-    const name = String(character?.name || '');
-    if (lowered.includes(key.toLowerCase()) || (name && action.includes(name))) found.push(key);
+function isWordCharacter(value) {
+  return Boolean(value && /[\p{L}\p{N}_]/u.test(value));
+}
+
+function hasNameBoundary(text, start, end) {
+  const before = text[start - 1] || '';
+  if (isWordCharacter(before)) return false;
+
+  let cursor = end;
+  if (!text[cursor] || !isWordCharacter(text[cursor])) return true;
+
+  let consumedSuffix = false;
+  while (text[cursor] && isWordCharacter(text[cursor])) {
+    const suffix = KOREAN_NAME_SUFFIXES.find((candidate) => text.startsWith(candidate, cursor));
+    if (!suffix) return false;
+    cursor += suffix.length;
+    consumedSuffix = true;
   }
-  return found;
+  return consumedSuffix;
+}
+
+function literalMentionRanges(text, literal) {
+  const ranges = [];
+  if (!literal) return ranges;
+  let cursor = 0;
+  while (cursor <= text.length - literal.length) {
+    const start = text.indexOf(literal, cursor);
+    if (start < 0) break;
+    const end = start + literal.length;
+    if (hasNameBoundary(text, start, end)) ranges.push({ start, end });
+    cursor = start + Math.max(1, literal.length);
+  }
+  return ranges;
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function asciiKeyMentionRanges(text, key) {
+  const ranges = [];
+  const escaped = escapeRegExp(key);
+  const pattern = new RegExp(`(^|[^\\p{L}\\p{N}_])(${escaped})(?=$|[^\\p{L}\\p{N}_])`, 'giu');
+  let match;
+  while ((match = pattern.exec(text)) !== null) {
+    const start = match.index + match[1].length;
+    ranges.push({ start, end: start + match[2].length });
+    if (!match[0].length) pattern.lastIndex += 1;
+  }
+  return ranges;
+}
+
+function characterNameAliases(character = {}) {
+  const fullName = String(character?.name || '').trim();
+  const shortName = fullName.split(/\s+/)[0] || '';
+  return [...new Set([fullName, shortName].filter(Boolean))];
+}
+
+function exactMentionedCharacterKeys(action = '') {
+  const text = String(action || '');
+  const candidates = [];
+  for (const [key, character] of Object.entries(CHARACTERS)) {
+    for (const alias of characterNameAliases(character)) {
+      for (const range of literalMentionRanges(text, alias)) {
+        candidates.push({ key, ...range, length: range.end - range.start });
+      }
+    }
+    for (const range of asciiKeyMentionRanges(text, key)) {
+      candidates.push({ key, ...range, length: range.end - range.start });
+    }
+  }
+
+  candidates.sort((a, b) => b.length - a.length || a.start - b.start || a.key.localeCompare(b.key));
+  const selected = [];
+  for (const candidate of candidates) {
+    const overlaps = selected.some((row) => candidate.start < row.end && candidate.end > row.start);
+    if (!overlaps) selected.push(candidate);
+  }
+
+  const keys = [];
+  for (const candidate of selected.sort((a, b) => a.start - b.start)) {
+    if (!keys.includes(candidate.key)) keys.push(candidate.key);
+  }
+  return keys;
 }
 
 function recentSpeakerKeys(history = []) {
