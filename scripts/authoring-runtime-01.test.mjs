@@ -31,6 +31,8 @@ assert.doesNotMatch(runtime, /Event Director|Event Engine|Scene Planner|Scene Se
 
 assert.equal(AUTHORING_DATA.development_examples.length, 3, 'creator-style development examples must be capped at three');
 assert.doesNotMatch(AUTHORING_DATA.base_rp_template, /루멘시아|세라|릴리아|에밀리|아르테미스/, 'Base RP Template must remain story-agnostic');
+assert.match(AUTHORING_DATA.base_rp_template, /별도의 dialogue beat/, 'spoken NPC dialogue must be separated from narration beats');
+assert.match(AUTHORING_DATA.base_rp_template, /상황·행동·묘사는 narration beat/, 'action and description must remain narration beats');
 assert.match(AUTHORING_DATA.main_author_prompt, /루멘시아 아카데미/, 'Main Author Prompt must carry story identity');
 assert.match(AUTHORING_DATA.base_rp_template, /PC는 장면의 기본 카메라 앵커다/, 'PC camera anchor must remain explicit');
 assert.match(AUTHORING_DATA.base_rp_template, /작은 일은 작은 일로 끝나도 된다/, 'ordinary scenes must not auto-escalate into random danger');
@@ -113,4 +115,4 @@ const failSoft = validateTurn({
 }, pc, startScene);
 assert.equal(failSoft.scene[0].kind, 'narration', 'missing dialogue speaker metadata must fail-soft to narration instead of failing the turn');
 
-console.log('PASS AUTHORING-RUNTIME-01 frozen architecture + V2R2 ensemble/tempo/payoff invariants');
+console.log('PASS AUTHORING-RUNTIME-01 frozen architecture + V2R3 ensemble/tempo/payoff/beat-split invariants');
