@@ -1,6 +1,5 @@
 {
-  "version": 1,
-  "source_classification": "CANON_CLEANROOM",
+  "version": 3,
   "principles": {
     "talent": "성장 속도와 잠재적 천장",
     "realm": "기술적으로 도달한 단계",
@@ -12,9 +11,9 @@
     {"id": "beginner", "label": "비기너", "meaning": "신체단련·마나감지·무기 기본기"},
     {"id": "expert_low", "label": "익스퍼트 하급", "meaning": "마나를 오러로 변환하고 신체 일부를 강화"},
     {"id": "expert_mid", "label": "익스퍼트 중급", "meaning": "전신 오러 강화"},
-    {"id": "expert_high", "label": "익스퍼트 상급", "meaning": "검기 형성"},
-    {"id": "expert_peak", "label": "익스퍼트 최상급", "meaning": "존재는 확정, 상급과의 정확한 세부 차이는 미확정"},
-    {"id": "master", "label": "마스터", "meaning": "검강과 비접촉 참격이 가능한 국가전략급 영역"},
+    {"id": "expert_high", "label": "익스퍼트 상급", "meaning": "오러를 신체·무기 바깥으로 안정적으로 외부화해 검기 등 형태 있는 공격에 사용할 수 있는 단계"},
+    {"id": "expert_peak", "label": "익스퍼트 최상급", "meaning": "외부화한 오러의 형태·밀도·방향을 정교하게 다루며, 신체 내부 강화와 외부 오러 운용을 동시에 높은 정밀도로 제어하는 단계"},
+    {"id": "master", "label": "마스터", "meaning": "검강과 비접촉 참격을 구현하고 자신의 의지·개념을 오러에 실을 수 있는 국가전략급 영역. 마스터 경지 자체가 곧 Authority를 뜻하지는 않는다"},
     {"id": "heart_sword", "label": "심검", "meaning": "검과 자신이 완전히 하나가 되는 신화 영역"}
   ],
   "magic_circles": {
@@ -28,7 +27,6 @@
     "8": "세계 법칙 조작",
     "9": "새로운 마법 창조에 이르는 극희귀 영역"
   },
-  "magic_record_note": "과거 '최근 100년 제국 9서클 없음' 문구는 최신 NPC 상세와 충돌하여 폐기한다. 에테라는 현존 9서클로 확정되어 있다. 일반 공개기록과 실제 기밀 진실은 별도 Knowledge Canon으로 관리한다.",
   "talent_scale": {
     "1": "둔재; 비기너/1서클 돌파도 어려울 수 있음",
     "2-3": "범재; 익스퍼트 하급/3서클권, 아카데미 입학 최저선",

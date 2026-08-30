@@ -1,33 +1,12 @@
 {
-  "version": 1,
+  "version": 2,
   "as_of": "1285-03-01",
   "situations": [
-    {
-      "id": "entrance_and_orientation",
-      "visibility": 1,
-      "horizon": "today",
-      "fact": "오늘은 입학식과 신입생 오리엔테이션이 진행되는 날이다.",
-      "fixed": true
-    },
-    {
-      "id": "freshman_evaluation",
-      "visibility": 1,
-      "horizon": "next_week",
-      "fact": "1학년 신입생 초기 기량평가가 다음 주 학과별로 진행될 예정이다. 1학년 신입생에게는 의무 일정이며 결과는 초기 평가·분반·스카우트·교우관계에 영향을 줄 수 있다.",
-      "fixed": true
-    },
     {
       "id": "gray_wolf_forest",
       "visibility": 2,
       "horizon": "2-3_weeks",
       "fact": "회색 늑대의 숲에서 트윈헤드 울프가 증가해 2학년 이상 대상 토벌 의뢰가 나와 있다. PC가 개입하지 않으면 상급생 파티가 해결할 가능성이 높으며 실패할 경우 외곽 활동 제한과 이후 실습장 변경으로 이어질 수 있다.",
-      "fixed": false
-    },
-    {
-      "id": "imperial_succession",
-      "visibility": 1,
-      "horizon": "long",
-      "fact": "황제의 후계자 미지명 상태가 계속되고 있으며 아나스타샤가 현재 우세한 주요 후보로 평가된다. 이사벨은 황위 자체보다 자신의 영향력과 행동권을 넓히는 방향으로 사람을 모으는 경향이 있다.",
       "fixed": false
     },
     {
@@ -52,21 +31,7 @@
       "fact": "오르페룸 상인 실종 사건과 아리스 연루 의심에 대한 제한 수사가 존재한다.",
       "fixed": false,
       "detail_policy": "의심은 확정 유죄가 아니다."
-    },
-    {
-      "id": "aria_stay",
-      "visibility": 2,
-      "horizon": "current_term",
-      "fact": "도미너스의 성녀 아리아가 아카데미에 체류하고 있다. 그녀의 무의식 신탁 기록은 별도 LEVEL 4 기밀이다.",
-      "fixed": false
-    },
-    {
-      "id": "student_recruitment",
-      "visibility": 1,
-      "horizon": "early_term",
-      "fact": "청기사단·백장미회·학생회 등 교내 조직이 신학기 신입 인재를 관찰하고 탐색하는 시기다.",
-      "fixed": false
     }
   ],
-  "runtime_rule": "상황 목록은 세계에 존재하는 열린 사실이며 Writer용 이벤트 큐나 발생 순서가 아니다. PC가 관여하지 않는 상황도 세계에서 진행될 수 있지만 그 결과는 실제 인과와 이후 상태에 의해 결정되어야 한다."
+  "runtime_rule": "이 파일에는 해결되지 않은 세계 상황만 둔다. 입학식·오리엔테이션·기량평가 같은 일정은 Scenario/Academic Calendar, 황위계승 같은 장기 정치 baseline은 World Canon, 현재 체류·직책은 Dated State에 둔다. 이 목록은 Writer용 이벤트 큐나 발생 순서가 아니며 현재 장면과 무관한 상황을 자동 노출하지 않는다."
 }

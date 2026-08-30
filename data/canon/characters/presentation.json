@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "policy": "이 파일은 외형·성별·대표 착장처럼 장면에서 직접 보일 수 있는 presentation facts만 담는다. 텍스트/참조 로그에서 확인되지 않은 색·체형·복장·장신구를 이미지나 이름만 보고 추측하지 않는다. 대표 착장/장비는 현재 장면·run state가 다르면 강제하지 않는다.",
+  "characters": {
+    "anastasia": {"gender": "여성"},
+    "isabel": {"gender": "여성"},
+    "lucia": {"gender": "여성"},
+    "elena": {"gender": "여성"},
+    "artemis": {
+      "gender": "여성",
+      "hair": "백발을 뒤로 단단히 묶는 모습이 확인됨",
+      "eyes": "적안",
+      "typical_clothing": "군복을 연상시키는 단정한 교수복",
+      "visible_equipment": ["허리에 찬 실검"]
+    },
+    "sera": {
+      "gender": "여성",
+      "hair": "갈색 머리",
+      "eyes": "청안",
+      "typical_clothing": "화려한 귀족 장식이 없는 기사과 교복",
+      "visible_equipment": ["낡은 단검 또는 짧은 실전용 검", "수선 흔적이 있는 가죽 장갑"]
+    },
+    "sia": {"gender": "여성"},
+    "lillia": {
+      "gender": "여성",
+      "hair": "붉은 머리",
+      "eyes": "금안",
+      "visible_equipment": ["장검", "발렌하르트 가문 문장이 새겨진 검집"]
+    },
+    "lena": {
+      "gender": "여성",
+      "hair": "은발",
+      "eyes": "자색 눈",
+      "build": "작은 체구",
+      "typical_clothing": "마법과 로브를 느슨하게 걸친 모습이 확인됨"
+    },
+    "emily": {
+      "gender": "여성",
+      "hair": "은발",
+      "eyes": "청안",
+      "build": "작은 체구",
+      "typical_clothing": "공식 입학식에서는 순백의 드레스 위에 아카데미 교장 망토를 착용"
+    },
+    "laris": {"gender": "여성"},
+    "mirabelle": {"gender": "여성"},
+    "serena": {"gender": "여성"},
+    "chloe": {"gender": "여성"},
+    "aria": {"gender": "여성"}
+  },
+  "unverified_presentation_keys": ["delpirem", "nemesis", "kartia", "veradin", "arien", "bellian", "aris", "sloth", "beelzebub", "fria", "asmo", "levian", "carne", "etera", "seriel", "lily_lumina", "elise"]
+}

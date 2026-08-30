@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "as_of": "1285-03-01",
+  "characters": {
+    "anastasia": {"age": 22, "presence": "academy_student", "department": "기사과", "academy_year": 3, "offices": ["학생회장"], "realm": "마스터(입문)"},
+    "isabel": {"age": 20, "presence": "academy_student", "department": "기사과", "academy_year": 1, "realm": "익스퍼트 하급"},
+    "lucia": {"age": 21, "presence": "academy_student", "department": "마법과", "academy_year": 2, "offices": ["학생회 부회장", "백장미회 회장"], "circle": 6},
+    "elena": {"age": 29, "presence": "academy_faculty", "office": "마법과 수석교수", "circle": 8},
+    "artemis": {"age": 34, "presence": "academy_faculty", "office": "기사과 수석교수", "realm": "마스터(완숙)"},
+    "sera": {"age": 20, "presence": "academy_student", "department": "기사과", "academy_year": 1, "admission": "실기 수석 입학", "realm": "익스퍼트 하급"},
+    "sia": {"age": 20, "presence": "academy_student", "department": "마법과", "academy_year": 1, "admission": "정령학 특별추천", "circle": 4},
+    "lillia": {"age": 20, "presence": "academy_student", "department": "기사과", "academy_year": 1, "admission": "가문추천", "realm": "익스퍼트 중급"},
+    "lena": {"age": 20, "presence": "academy_student", "department": "마법과", "academy_year": 1, "admission": "마탑주 특별추천", "circle": 7},
+    "emily": {"age_public": "30대 중반 추정", "presence": "academy_faculty", "office": "아카데미 교장", "power_public": "정확한 상한 비공개"},
+    "laris": {"age": 20, "presence": "academy_student", "department": "기사과", "academy_year": 1, "admission": "가문추천", "realm": "익스퍼트 하급"},
+    "mirabelle": {"age": 20, "presence": "academy_student", "department": "신학부", "academy_year": 1, "admission": "교환장학생", "martial_level": "익스퍼트 하급 수준 근접전 역량"},
+    "serena": {"age": 20, "presence": "academy_student", "department": "마법과", "academy_year": 1, "admission": "가문추천", "circle": 4},
+    "chloe": {"age": 20, "presence": "academy_student", "department": "마법과", "academy_year": 1, "admission": "일반전형", "circle": 2},
+    "aria": {"age": 22, "presence": "academy_guest", "role": "도미너스 성녀·아카데미 체류 중"},
+    "elise": {"presence": "academy_student", "department": "마법과", "academy_year": 2, "offices": ["백장미회 부회장"], "circle": 5},
+    "carne": {"presence": "external", "office": "제국 근위대 총사령관", "realm": "마스터 극의"},
+    "etera": {"presence": "external", "office": "마탑주", "restricted_power_ref": "etera_nine_circle"},
+    "seriel": {"presence": "external", "affiliation": "무소속", "realm": "마스터 극의"}
+  },
+  "rule": "이 파일은 시작 날짜의 mutable state다. 학년·직책·현재 경지·아카데미 체류 여부가 변하면 run state가 우선하며, 캐릭터의 영구 정체성으로 취급하지 않는다. presence는 위치 스케줄이 아니라 해당 인물이 이 시점에 아카데미 생활권 구성원인지 외부 인물인지에 대한 시작상태 분류다."
+}

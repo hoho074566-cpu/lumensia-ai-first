@@ -93,14 +93,18 @@ function readPcForm() {
     admission: String(data.get('admission') || '').trim(),
     realm: String(data.get('realm') || '').trim(),
     magicCircle: String(data.get('magicCircle') || '').trim(),
+    startingGold: Math.max(0, Number(data.get('startingGold') || 0)),
     appearance: String(data.get('appearance') || '').trim(),
     background: String(data.get('background') || '').trim(),
+    characterProfile: String(data.get('characterProfile') || '').trim(),
     talents: {
       magic: Number(data.get('talentMagic') || 5),
       martial: Number(data.get('talentMartial') || 5),
       soul: Number(data.get('talentSoul') || 5),
       knowledge: Number(data.get('talentKnowledge') || 5),
     },
+    traits: splitList(data.get('traits')).slice(0, 16),
+    authorities: splitList(data.get('authorities')).slice(0, 16),
     skills: splitList(data.get('skills')),
     equipment: splitList(data.get('equipment')),
   };
