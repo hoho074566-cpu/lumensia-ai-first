@@ -58,6 +58,8 @@ const OPEN_SITUATION_ALIASES = Object.freeze({
 });
 
 const SCHEDULE_QUERY_WORDS = ['시간', '일정', '언제', '오리엔테이션', '오티', '입학식', '집결', '정오'];
+const PUBLIC_KNOWLEDGE_VISIBILITY = 1;
+const REACHABLE_OPEN_SITUATION_VISIBILITY = 2;
 
 function cleanText(value, max = 500) {
   const text = String(value ?? '');
@@ -166,12 +168,11 @@ function selectedKnowledgeSubjects(action, relevantKeys) {
   return subjects;
 }
 
-export function visibleRelevantKnowledge({ action = '', relevantKeys = [], knowledgeLevel = 1 } = {}) {
-  const allowedLevel = Math.max(1, Math.min(5, Number(knowledgeLevel) || 1));
+export function visibleRelevantKnowledge({ action = '', relevantKeys = [] } = {}) {
   const subjects = selectedKnowledgeSubjects(action, relevantKeys);
   if (!subjects.size) return [];
   return (knowledgeData.facts || [])
-    .filter((row) => Number(row.visibility || 99) <= allowedLevel)
+    .filter((row) => row.public === true && Number(row.visibility) === PUBLIC_KNOWLEDGE_VISIBILITY)
     .filter((row) => row.subject && subjects.has(row.subject))
     .slice(0, 16)
     .map(({ id, subject, fact, truth_status, visibility, public: isPublic }) => ({
@@ -179,8 +180,8 @@ export function visibleRelevantKnowledge({ action = '', relevantKeys = [], knowl
     }));
 }
 
-export function detailedCharacterPackets({ keys = [], action = '', knowledgeLevel = 1 } = {}) {
-  const visibleKnowledge = visibleRelevantKnowledge({ action, relevantKeys: keys, knowledgeLevel });
+export function detailedCharacterPackets({ keys = [], action = '' } = {}) {
+  const visibleKnowledge = visibleRelevantKnowledge({ action, relevantKeys: keys });
   return keys.map((key) => {
     const row = CHARACTERS[key];
     if (!row) return null;
@@ -246,21 +247,20 @@ function relevantSociety(action = '') {
   return selected;
 }
 
-export function relevantOpenSituations(action = '', knowledgeLevel = 1) {
-  const allowedLevel = Math.max(1, Math.min(5, Number(knowledgeLevel) || 1));
+export function relevantOpenSituations(action = '') {
   return (situationsData.situations || [])
-    .filter((row) => Number(row.visibility || 99) <= allowedLevel)
+    .filter((row) => Number(row.visibility || 99) <= REACHABLE_OPEN_SITUATION_VISIBILITY)
     .filter((row) => includesAny(action, OPEN_SITUATION_ALIASES[row.id] || []))
     .map(({ id, horizon, fact, fixed }) => ({ id, horizon, fact, fixed }));
 }
 
-export function buildCanonContext({ action = '', pc = {}, scene = {}, history = [], knowledgeLevel = 1 } = {}) {
+export function buildCanonContext({ action = '', pc = {}, scene = {}, history = [] } = {}) {
   const relevantKeys = relevantCharacterKeys({ action, scene, history });
-  const selectedKnowledge = visibleRelevantKnowledge({ action, relevantKeys, knowledgeLevel });
+  const selectedKnowledge = visibleRelevantKnowledge({ action, relevantKeys });
   const departments = academyData?.academic_structure?.departments || {};
   return {
     relevant_character_keys: relevantKeys,
-    relevant_characters: detailedCharacterPackets({ keys: relevantKeys, action, knowledgeLevel }),
+    relevant_characters: detailedCharacterPackets({ keys: relevantKeys, action }),
     academy_cast_index: academyCastIndex(),
     academy: {
       institution: academyData.institution,
@@ -280,12 +280,13 @@ export function buildCanonContext({ action = '', pc = {}, scene = {}, history = 
       trait_authority: powerSystemData.trait_authority || {},
     },
     pc_visible_knowledge: selectedKnowledge,
-    relevant_open_situations: relevantOpenSituations(action, knowledgeLevel),
+    relevant_open_situations: relevantOpenSituations(action),
     retrieval_semantics: {
       canon_exists_but_not_selected: 'A fact omitted from this packet is not false; it is simply not currently selected for this turn.',
       know_not_mention: 'Receiving a fact does not require mentioning it in prose.',
       state_not_story_beat: 'State and schedules constrain continuity but do not prescribe a scene beat.',
       system_truth_not_knowledge: 'Character core, dated state, presentation, and relationship facts are system facts for portrayal and continuity; they do not automatically become PC or NPC knowledge. PC-facing facts are supplied separately through pc_visible_knowledge.',
+      epistemic_access: 'Numeric visibility is classification metadata, not a global PC permission ladder. Until an explicit acquired-fact ledger exists, restricted facts and situations fail closed.',
     },
   };
 }
