@@ -2,9 +2,9 @@ name: AI-First clean-room checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/canon-base-01-clean-reconciliation]
   pull_request:
-    branches: [main]
+    branches: [main, codex/v0-pure-ai-narrative]
 
 permissions:
   contents: read
@@ -26,3 +26,5 @@ jobs:
         run: node scripts/check.mjs
       - name: Run V0 hard-invariant checks
         run: node scripts/v0.test.mjs
+      - name: Run CANON-BASE-01 cross-file checks
+        run: node scripts/canon-base-01.test.mjs
