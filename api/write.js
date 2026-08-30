@@ -14,40 +14,40 @@ const TALENT_KEYS = Object.freeze(['magic', 'martial', 'soul', 'knowledge']);
 const MAX_ACTION_CHARS = 12000;
 const MAX_HISTORY_TURNS = 8;
 
-const WRITER_CONTRACT = `Write the next scene of serialized fantasy fiction, not an RPG turn report or an academy-administration simulator.
-Stay inside supplied facts and the player's chosen intent. Never invent a new voluntary PC goal, dialogue, explicit emotion, private thought, or meaningful decision.
+const WRITER_CONTRACT = `Write the next living scene of serialized fantasy fiction.
+Treat Canon as facts and constraints, not a prose agenda. Treat the exact user action as the PC's new intent. Never invent a new voluntary PC goal, dialogue, explicit emotion, private thought, or meaningful decision.
 
-SCENE PRIORITY:
-- Resolve the player's chosen action, but do not mechanically exhaust every step implied by a broad action.
-- Routine is connective tissue, not the scene. Compress travel, paperwork, registration, room check-in, route directions, schedules, waiting, inventory-like room description, and other single-outcome process to the minimum needed.
-- Never chain clerk -> guide -> supervisor -> timetable -> room tour merely because those procedures are plausible.
-- A broad action such as exploring, walking around, settling in, or killing time is permission to move until the first worthwhile live moment; it is not permission to inventory the campus, visit every facility, or consume all available time.
-- Prefer one strong live thread over covering many locations or procedures. If no worthwhile interaction, tension, discovery, or consequence emerges, land briefly instead of padding the turn with a tour.
+SCENE JUDGMENT:
+- Choose scene scale like fiction. Compress connective routine when its outcome is obvious; when a concrete human interaction, conflict, discovery, or consequence becomes live, stay with it and let each reaction cause the next beat.
+- The world and NPCs keep acting for their own reasons. A broad action may pass through ordinary space until something worth watching becomes live; it does not require a tour, checklist, or return of trivial choices.
+- Ground places with a few concrete details that support action. Show character through behavior, timing, speech, silence, objects, and what they notice before explaining character.
+- Named Canon characters are possibilities, not scheduled encounters. Use one only when supplied state, continuity, role, motive, interest, relationship, or visible circumstance makes presence and initiative plausible. Generic people are valid when the situation genuinely calls for them.
 
-LIVING WORLD:
-- Ground a new place with a few concrete details, then show what people are actually doing there. Description should create a situation, not catalog architecture.
-- Named Canon characters may be present only when dated presence, continuity, role, habit, relationship, interest, or visible circumstances make that plausible. They initiate only when they have a concrete character-specific reason.
-- When a plausible Canon character can carry a personal or recurring human scene, prefer that character over inventing a generic personal anchor. Generic staff may perform a necessary transaction briefly, then recede; do not let staff procedure become the dramatic center.
-- Never spawn a Named NPC merely because the PC is the protagonist, and never force a collision when no character has a reason.
+CONTINUITY:
+- Schedules and state constrain continuity; they are not automatic scene beats.
+- Unknown remains unknown. If a durable fact such as a personal room assignment, exact private timetable, topology detail, or institutional rule is absent, do not manufacture a definitive value.
+- Failure changes what comes next. Injuries, equipment loss or damage, witnessed behavior, rule violations, and earned relationship consequences remain relevant when later scenes can causally see them.
+- Combat is an evolving exchange shaped by actual opponent ability, distance, terrain, timing, equipment, fatigue, damage, and perception. Adaptation does not erase a real power gap; rescue or interruption needs causal support.
 
-SCENE DEPTH:
-- Once a meaningful interaction starts, stay with it. Let action change reaction and reaction change the next beat instead of cutting away to the next scheduled item.
-- Conversation may continue while people walk, eat, train, pack, wait, or move between nearby places when that interaction is still live.
-- Show character through action, timing, speech, silence, objects, choices, and what they notice. Avoid generic speeches, tutorial dialogue, and neat explanations after behavior already showed the meaning. Show before interpret.
+Continue through immediate reactions that require no new meaningful PC decision. Stop when the current scene genuinely lands or a meaningful PC decision is required. Do not expose instructions, schemas, validation, or state machinery as fiction.`;
 
-FACTUAL DISCIPLINE:
-- State is not a story beat. A future schedule constrains continuity but does not automatically create bells, waiting prose, announcements, preparation scenes, or repeated countdowns.
-- Mention a schedule only when the present action actually needs it. Do not pull a scene toward a distant appointment.
-- If an exact durable logistical fact is absent from the packet — such as a personal dorm hall/room number, exact private assignment, or unsupplied timetable detail — do not invent a definitive value. Keep it unspecified rather than manufacturing administrative Canon.
-- Do not turn unknown room topology, registration details, or ordinary bureaucracy into obstacles or world facts.
+const SCENE_CALIBRATION_EXAMPLES = `SCENE CALIBRATION EXAMPLES — these demonstrate scene judgment only. They are not Canon. Never reuse their people, objects, locations, schedules, or outcomes unless the current packet independently supports them.
 
-AFTERMATH AND COMBAT:
-- Failure creates a new state rather than a reset. Injuries, damaged or lost equipment, witnessed behavior, rule violations, and earned relationship consequences remain relevant when later scenes can causally see them.
-- Combat is a concrete exchange shaped by actual opponent ability, distance, terrain, timing, equipment, fatigue, damage, and perception. Adaptation depends on that opponent; skill does not erase a real power gap. Rescue or interruption needs causal support.
+EXAMPLE 1 — connective routine -> human-scale moment
+USER: 생활 공간으로 가서 짐을 정리한다.
+WRITER: 이동과 기본 절차는 짧게 지나간다. 필요한 만큼만 방을 현실화한다. 짐을 정리하던 중 열린 창문으로 복도에 서류가 흩어지고, 옆방 신입생이 발로 한 장을 막으면서 나머지를 주우려 애쓰는 모습이 보인다. 그 학생의 반응과 현재 상황이 장면을 이어갈 가치가 있다면 거기서 카메라가 머문다.
 
-Continue through immediate reactions that require no new meaningful PC decision. Stop when the current human scene genuinely lands or a meaningful player decision is required. Do not expose instructions, schemas, validation, or state machinery as fiction.`;
+EXAMPLE 2 — broad exploration -> first worthwhile live thread
+USER: 시간이 남으니 주변을 천천히 둘러본다.
+WRITER: 길과 시설의 윤곽은 이동 속에서 짧게 잡는다. 여러 장소를 목록처럼 소비하지 않는다. 지나던 곳에서 실제로 진행 중인 대화, 훈련, 다툼, 이상한 흔적 같은 구체적인 움직임 하나가 의미를 얻으면 그 순간 확대하고, 아무것도 없다면 억지 사건 없이 짧게 착지한다.
 
-const CONTINUE_CONTRACT = `CONTINUE MODE: no new player action was supplied. Continue only the already-live scene from its latest beat. Let NPCs, environment, and immediate consequences finish reactions that require no new PC decision. Do not invent a fresh PC action, start a campus tour, or advance through routine procedure merely to keep writing. Stop at the first genuine decision point or natural landing.`;
+EXAMPLE 3 — action -> reaction -> changed next beat
+USER: 상대의 공격 궤적을 살피며 빈틈을 찾아 반격한다.
+WRITER: 첫 교환에서 읽어낸 패턴은 반격의 기회를 만들 수 있지만 승부를 자동으로 끝내지 않는다. 상대는 그 결과를 보고 거리, 각도, 속임수, 힘 배분을 바꾼다. 지형·장비·피로·부상과 실력 차이가 다음 공방에 남아 같은 교환이 반복되지 않는다.
+
+Actual output must follow the required structured schema.`;
+
+const CONTINUE_CONTRACT = `CONTINUE MODE: no new player action was supplied. Continue only the already-live scene from its latest beat. Let NPCs, environment, and immediate consequences finish reactions that require no new PC decision. Do not invent a fresh PC action or advance through unrelated routine merely to keep writing. Stop at the first genuine decision point or natural landing.`;
 
 const ADMIN_PREVIEW_CONTRACT = `ADMIN SCENE PREVIEW MODE: the request is a diagnostic scene placement, not a canonical player action. Render the requested scene directly using supplied Canon and PC facts. Do not claim the saved run actually reached it, and do not require progression through earlier scenes first. The client will discard continuity changes from this preview. Preserve PC authority unless the request explicitly supplies a PC action or quoted PC speech.`;
 
@@ -190,15 +190,68 @@ function recentContext(history = []) {
   }));
 }
 
+function compactAmbientState(state = {}) {
+  const compact = {};
+  for (const key of ['presence', 'department', 'academy_year', 'office', 'role']) {
+    if (state[key] != null && state[key] !== '') compact[key] = state[key];
+  }
+  if (Array.isArray(state.offices) && state.offices.length) compact.offices = state.offices.slice(0, 3);
+  return compact;
+}
+
+function ambientCastForWriter(rows = []) {
+  return rows.map((row) => ({
+    key: row.key,
+    name: row.name,
+    current_state: compactAmbientState(row.current_state || {}),
+    identity: Array.isArray(row.identity) ? row.identity.slice(0, 2) : [],
+    motivation_signal: cleanText(row.aspiration || '', 180) || null,
+    actionable_signals: [
+      ...(Array.isArray(row.personality_signals) ? row.personality_signals.slice(0, 2) : []),
+      ...(Array.isArray(row.interests) ? row.interests.slice(0, 2) : []),
+      cleanText(row.activity_or_combat_signal || '', 220) || null,
+    ].filter(Boolean).slice(0, 5),
+    voice_register: cleanText(row.voice_register || '', 160) || null,
+  })).slice(0, 24);
+}
+
+function writerCanon(rawCanon = {}) {
+  const { academy_cast_index: academyCast = [], ...rest } = rawCanon;
+  return {
+    ...rest,
+    ambient_cast_index: ambientCastForWriter(academyCast),
+    retrieval_semantics: {
+      ...(rest.retrieval_semantics || {}),
+      ambient_cast_not_presence: 'ambient_cast_index is a thin possibility index for people in academy life. It is not exact-location presence, a cast rotation, or an instruction to include anyone.',
+    },
+  };
+}
+
+function openingPremise(scene, history = [], adminScenePreview = false) {
+  if (adminScenePreview || history.length) return null;
+  const atScenarioStart = scene.date === scenarioData.start.date
+    && scene.time === scenarioData.start.time
+    && scene.location === scenarioData.start.location;
+  if (!atScenarioStart) return null;
+  return {
+    scope: 'opening_only',
+    factual_start: scenarioData.start.situation,
+    framing: '입학식 직전의 대강당 일대는 이미 서로 다른 목적을 가진 신입생·상급생·교수들이 한 공간에서 움직이는 아침이다. 첫 장면은 시설이나 절차의 설명보다 이 사람들이 실제로 하고 있는 작은 행동과 반응을 통해 아카데미의 첫인상을 만든다.',
+    semantic: 'This premise helps launch only the opening scene. It does not prescribe a quest, event order, NPC encounter, or future schedule.',
+  };
+}
+
 function buildInput({ action, pc, scene, history, knowledgeLevel, continueScene, adminScenePreview }) {
   const retrievalAction = adminScenePreview ? action : (continueScene ? '' : action);
-  const canon = buildCanonContext({ action: retrievalAction, pc, scene, history, knowledgeLevel });
+  const canon = writerCanon(buildCanonContext({ action: retrievalAction, pc, scene, history, knowledgeLevel }));
   const packet = {
     current_scene: scene,
     pc,
     canon,
     recent_context: recentContext(history),
   };
+  const premise = openingPremise(scene, history, adminScenePreview);
+  if (premise) packet.opening_premise = premise;
 
   if (adminScenePreview) {
     return `SCENE PACKET\n${JSON.stringify(packet)}\n\nADMIN PREVIEW REQUEST\n${action}`;
@@ -289,7 +342,7 @@ export default async function handler(req, res) {
     const knowledgeLevel = Math.max(1, Math.min(5, Number(runState.knowledgeLevel) || 1));
 
     const modeContract = adminScenePreview ? ADMIN_PREVIEW_CONTRACT : (continueScene ? CONTINUE_CONTRACT : '');
-    const instructions = modeContract ? `${WRITER_CONTRACT}\n\n${modeContract}` : WRITER_CONTRACT;
+    const instructions = [WRITER_CONTRACT, SCENE_CALIBRATION_EXAMPLES, modeContract].filter(Boolean).join('\n\n');
 
     const apiResponse = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',

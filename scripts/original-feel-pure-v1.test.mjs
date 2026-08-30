@@ -6,20 +6,30 @@ const client = readFileSync('src/client.js', 'utf8');
 const html = readFileSync('index.html', 'utf8');
 const styles = readFileSync('src/styles.css', 'utf8');
 
-assert.match(api, /not an RPG turn report or an academy-administration simulator/i, 'Writer must reject academy-simulator framing');
-assert.match(api, /Routine is connective tissue, not the scene/i, 'routine process must be compressed instead of dramatized');
-assert.match(api, /Never chain clerk -> guide -> supervisor -> timetable -> room tour/i, 'administrative NPC chains must not dominate scenes');
-assert.match(api, /not permission to inventory the campus/i, 'broad exploration must not become an exhaustive campus tour');
-assert.match(api, /Prefer one strong live thread/i, 'Writer should deepen one live thread instead of covering every nearby location');
-assert.match(api, /Generic staff may perform a necessary transaction briefly, then recede/i, 'generic staff must stay transactional rather than become scene anchors');
-assert.match(api, /exact durable logistical fact is absent from the packet/i, 'unsupplied dorm or timetable specifics must fail closed');
-assert.match(api, /Named Canon characters may be present/i, 'Writer must allow plausible Canon Named NPC presence');
-assert.match(api, /State is not a story beat/i, 'schedule/clock state must not become automatic fiction');
-assert.match(api, /Failure creates a new state/i, 'failure aftermath must remain part of the Writer contract');
-assert.match(api, /Show before interpret/i, 'Writer must prefer shown characterization over explanatory prose');
+assert.match(api, /Write the next living scene of serialized fantasy fiction/i, 'Writer must frame output as a living fiction scene');
+assert.match(api, /Treat Canon as facts and constraints, not a prose agenda/i, 'Canon must constrain rather than prescribe prose');
+assert.match(api, /Choose scene scale like fiction/i, 'scene scale must remain a Writer judgment');
+assert.match(api, /world and NPCs keep acting for their own reasons/i, 'world activity must not wait for the PC');
+assert.match(api, /Show character through behavior/i, 'characterization must be behavior-first');
+assert.match(api, /Named Canon characters are possibilities, not scheduled encounters/i, 'Named NPCs must remain plausible possibilities instead of scheduled beats');
+assert.match(api, /Schedules and state constrain continuity; they are not automatic scene beats/i, 'state must not become narrative procedure');
+assert.match(api, /Unknown remains unknown/i, 'unsupplied durable facts must fail closed');
+assert.match(api, /Failure changes what comes next/i, 'failure aftermath must remain consequential');
+
+assert.match(api, /SCENE CALIBRATION EXAMPLES/, 'Writer must receive a small calibration set');
+assert.match(api, /these demonstrate scene judgment only\. They are not Canon/i, 'calibration examples must be explicitly non-Canon');
+assert.match(api, /connective routine -> human-scale moment/i, 'calibration must demonstrate routine-to-live-scene camera judgment');
+assert.match(api, /broad exploration -> first worthwhile live thread/i, 'calibration must demonstrate broad-action camera judgment');
+assert.match(api, /action -> reaction -> changed next beat/i, 'calibration must demonstrate evolving combat/consequence judgment');
+
+assert.match(api, /ambient_cast_index/, 'Writer packet must expose a thin ambient cast index');
+assert.match(api, /thin possibility index for people in academy life/i, 'ambient cast must not be interpreted as exact location or forced presence');
+assert.match(api, /opening_premise/, 'opening-only scene premise must be supported');
+assert.match(api, /scope: 'opening_only'/, 'opening premise must be explicitly scoped to the opening');
+assert.doesNotMatch(api, /Never chain clerk -> guide -> supervisor -> timetable -> room tour/i, 'failed negative-rule patch stack must not remain in the active Writer contract');
 
 const writerCalls = api.match(/fetch\('https:\/\/api\.openai\.com\/v1\/responses'/g) || [];
-assert.equal(writerCalls.length, 1, 'Original-Feel V1 must keep exactly one Writer model call');
+assert.equal(writerCalls.length, 1, 'Original-Feel V2 must keep exactly one Writer model call');
 assert.doesNotMatch(api, /Event Director|Event Engine|NPC selector score|hook score|attention meter|cast rotation/i, 'deterministic narrative machinery must not return');
 
 assert.match(html, /id="continueButton"[^>]*>이어하기</, 'dedicated Continue button must exist');
@@ -39,4 +49,4 @@ assert.match(client, /copy-block-button/, 'scene blocks must expose copy control
 assert.match(styles, /\.copy-block-button/, 'copy controls must be styled');
 assert.match(styles, /\.admin-preview-body/, 'Admin Preview must be visibly separated from canonical story output');
 
-console.log('PASS Original-Feel Pure V1 runtime/UX invariants');
+console.log('PASS Original-Feel Pure V2 writer-material/runtime invariants');
