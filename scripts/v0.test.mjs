@@ -28,9 +28,14 @@ assert.doesNotMatch(canonContext, /eventDensity|attentionMeter|pcHookScore|scene
 assert.doesNotMatch(client, /\.focus\s*\(/, 'mobile client must not steal keyboard focus automatically');
 assert.doesNotMatch(client, /scrollTo\s*\(|scrollIntoView\s*\(/, 'mobile client must not steal scroll position after a response');
 assert.doesNotMatch(html, /Suggested Actions|AUTO FLOW|Event Director/i, 'legacy narrative turn controls must not appear in UI');
+assert.match(html, /id="continueButton"/, 'Continue may exist only as a dedicated non-player-action mode');
+assert.match(html, /id="adminDialog"/, 'Admin Preview may exist as an isolated diagnostic surface');
 assert.match(html, /name="background"/, 'free PC background field required');
 assert.match(html, /name="skills"/, 'free PC skills field required');
 assert.match(html, /name="equipment"/, 'free PC equipment field required');
-assert.match(client, /JSON\.stringify\(\{ action, runState \}\)/, 'normal client requests must preserve current action and run state directly');
+assert.match(client, /action:\s*submittedAction/, 'normal client requests must preserve the exact submitted action');
+assert.match(client, /runState,/, 'client must send current run state directly');
+assert.match(client, /continueScene:\s*isContinue/, 'Continue must use a dedicated request flag');
+assert.match(client, /adminScenePreview:\s*isAdmin/, 'Admin Preview must use a dedicated request flag');
 
 console.log('PASS V0 AI-first runtime invariants under Authoring Runtime assembly');
