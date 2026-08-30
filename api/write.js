@@ -3,6 +3,8 @@ import scenarioData from '../data/scenarios/academy-1285-03-01/baseline.json' wi
 import { ACADEMY_CAST_KEYS } from './lib/canon-context.js';
 import { assembleAuthoring } from './lib/authoring-runtime.js';
 
+// Factual retrieval boundary: assembleAuthoring -> buildCanonContext. This endpoint does not construct a Canon scene packet itself.
+
 export const config = { maxDuration: 300 };
 
 const CHARACTERS = charactersData.characters || {};
