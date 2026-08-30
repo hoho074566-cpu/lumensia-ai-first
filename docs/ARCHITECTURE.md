@@ -1,19 +1,23 @@
 # V0 Architecture
 
 ```text
-CLEAN CANON + CURRENT RUN STATE + RECENT MEANINGFUL CONTEXT + EXACT USER ACTION
-                                  │
-                                  ▼
-                         THIN SCENE PACKET
-                                  │
-                                  ▼
-                          ONE AI WRITER CALL
-                                  │
-                                  ▼
-                      MINIMAL HARD VALIDATION
-                                  │
-                                  ▼
-                          SAVE + RENDER
+CLEAN CANON + DATED SCENARIO + CURRENT RUN STATE + EXACT USER ACTION
+                              │
+                              ▼
+                 FACTUAL CANON RETRIEVAL
+                  (relevance, not plot)
+                              │
+                              ▼
+                    THIN SCENE PACKET
+                              │
+                              ▼
+                     ONE AI WRITER CALL
+                              │
+                              ▼
+                 MINIMAL HARD VALIDATION
+                              │
+                              ▼
+                       SAVE + RENDER
 ```
 
 ## Ownership
@@ -34,6 +38,48 @@ The Writer may compose narration, NPC dialogue, NPC-vs-NPC interaction, world in
 
 `PLAYER AUTONOMY != WORLD INACTIVITY`.
 
+## Canon layers
+
+1. immutable world Canon
+2. durable character core / voice / presentation
+3. epistemic Knowledge Canon
+4. dated Scenario state (institution, character state, relationships, group attitudes, unresolved situations)
+5. mutable run state
+
+A later layer supersedes an earlier dated value when play changes it. A system truth does not automatically become PC or NPC knowledge.
+
+## Factual retrieval boundary
+
+`api/lib/canon-context.js` selects facts for the current turn. Its job is **not** to select story beats or decide which NPC must act.
+
+Allowed retrieval work includes:
+
+- current/mentioned/recently involved character details
+- a thin index of Canon characters whose dated presence places them in the current academy population
+- current dated character state and audited presentation
+- existing relationships / group attitudes involving relevant characters
+- location-relevant academy geography
+- institution facts that the current action actually asks about or uses
+- PC-visible Knowledge for selected subjects
+- unresolved world situations only when the current action actually reaches them
+- scheduled facts when explicitly queried or close enough to constrain the current scene
+
+Retrieval must fail closed rather than flood the Writer with every fact the system knows.
+
+`KNOW != MENTION`
+
+`STATE != STORY BEAT`
+
+`SYSTEM TRUTH != PC/NPC KNOWLEDGE`
+
+### Schedule rule
+
+A scheduled fact such as `12:00 — 기사과 오리엔테이션` is continuity state, not a preparation recipe and not an instruction to fill every prior scene with waiting or countdown prose.
+
+Distant future schedule facts are omitted from ordinary packets until they are actually relevant or imminent.
+
+A clock state is not an event. `09:00` does not itself imply nine bell strikes or any other fictional effect.
+
 ## Scene packet
 
 V0 should aim to supply only:
@@ -41,12 +87,13 @@ V0 should aim to supply only:
 1. exact USER ACTION
 2. current time/location/immediate situation
 3. PC identity and immediately relevant hard state
-4. 0–3 causally relevant Named Character packets
-5. immediately relevant Canon/knowledge facts
-6. recent meaningful beats
-7. a very short Writer contract
+4. thin current academy cast index
+5. detailed packets only for currently relevant Named Characters
+6. immediately relevant geography/institution/knowledge/schedule facts
+7. recent meaningful beats
+8. a very short Writer contract
 
-Future schedules, when necessary, are facts such as `12:00 — 기사과 오리엔테이션`, not preparation recipes or prose plans.
+A character's portrayal core may help the model portray that person, but it is not automatically something the PC knows or something narration should disclose. Explicit PC-facing facts are separately identified by Knowledge retrieval.
 
 ## Writer contract target
 
@@ -72,5 +119,6 @@ V0 validation is for hard invariants only:
 - impossible hard-canon commitment
 - invented voluntary PC dialogue/decision
 - save/security integrity
+- Canon layer contradictions / restricted-fact leakage / factual retrieval flooding
 
 Narrative taste is evaluated through human/reference QA, not deterministic prose scoring.
