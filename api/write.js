@@ -1,15 +1,10 @@
 import charactersData from '../data/canon/characters/characters.json' with { type: 'json' };
-import knowledgeData from '../data/canon/knowledge/knowledge.json' with { type: 'json' };
-import academyData from '../data/canon/world/academy.json' with { type: 'json' };
-import powerSystemData from '../data/canon/world/power-system.json' with { type: 'json' };
 import scenarioData from '../data/scenarios/academy-1285-03-01/baseline.json' with { type: 'json' };
-import characterStateData from '../data/scenarios/academy-1285-03-01/character-state.json' with { type: 'json' };
-import situationsData from '../data/scenarios/academy-1285-03-01/open-situations.json' with { type: 'json' };
+import { buildCanonContext, ACADEMY_CAST_KEYS } from './lib/canon-context.js';
 
 export const config = { maxDuration: 300 };
 
 const CHARACTERS = charactersData.characters || {};
-const CHARACTER_STATE = characterStateData.characters || {};
 const CHARACTER_KEYS = new Set(Object.keys(CHARACTERS));
 const EXPRESSIONS = new Set([
   'default','smile','blush','serious','angry','sad','shock',
@@ -17,10 +12,6 @@ const EXPRESSIONS = new Set([
 ]);
 const MAX_ACTION_CHARS = 12000;
 const MAX_HISTORY_TURNS = 8;
-const EVERYDAY_ACADEMY_CAST = new Set([
-  'anastasia','isabel','lucia','elena','artemis','sera','sia','lillia',
-  'lena','emily','laris','mirabelle','serena','chloe','aria','elise',
-]);
 
 const WRITER_CONTRACT = `Write the next scene of serialized fantasy fiction, not an RPG turn report.
 Stay within the supplied facts and the player's chosen intent, while NPCs, time, and the world move naturally.
@@ -125,85 +116,18 @@ function safeScene(raw = {}) {
   };
 }
 
-function recentSpeakerKeys(history = []) {
-  const keys = [];
-  for (const turn of history.slice(-4)) {
-    for (const beat of turn?.scene || []) {
-      if (beat?.kind === 'dialogue' && CHARACTER_KEYS.has(beat.speaker_key) && !keys.includes(beat.speaker_key)) keys.push(beat.speaker_key);
-    }
-  }
-  return keys;
-}
-
-function exactMentionedCharacterKeys(action = '') {
-  const found = [];
-  const lowered = action.toLowerCase();
-  for (const [key, character] of Object.entries(CHARACTERS)) {
-    const name = String(character?.name || '');
-    if (lowered.includes(key.toLowerCase()) || (name && action.includes(name))) found.push(key);
-  }
-  return found;
-}
-
-function selectRelevantCharacters({ action, scene, history }) {
-  const keys = [];
-  const add = (key) => {
-    if (CHARACTER_KEYS.has(key) && !keys.includes(key) && keys.length < 3) keys.push(key);
-  };
-  exactMentionedCharacterKeys(action).forEach(add);
-  scene.presentCharacterKeys.forEach(add);
-  recentSpeakerKeys(history).forEach(add);
-
-  // A single factual retrieval anchor for the academy entrance-ceremony opening.
-  // This does not require Emily to speak or prescribe scene order.
-  if (!keys.length && scene.location.includes('대강당')) add('emily');
-  return keys;
-}
-
-function compactCharacterPacket(key) {
-  const row = CHARACTERS[key];
-  if (!row) return null;
-  return {
-    key,
-    name: row.name,
-    core: row.core || {},
-    voice: row.voice || {},
-    current_state: CHARACTER_STATE[key] || {},
-    refined_characterization: row.refined_characterization || [],
-  };
-}
-
-function castIndex() {
-  return Object.entries(CHARACTERS).filter(([key]) => EVERYDAY_ACADEMY_CAST.has(key)).map(([key, row]) => ({
-    key,
-    name: row.name,
-    identity: Array.isArray(row?.core?.identity) ? row.core.identity.slice(0, 2) : [],
-    personality: Array.isArray(row?.core?.personality) ? row.core.personality.slice(0, 2) : [],
-    voice: cleanText(row?.voice?.register || '', 180),
-    current_state: CHARACTER_STATE[key] || {},
-  }));
-}
-
-function visibleKnowledge(level = 1, relevantKeys = []) {
-  const allowedLevel = Math.max(1, Math.min(5, Number(level) || 1));
-  const relevant = new Set(relevantKeys);
-  return (knowledgeData.facts || [])
-    .filter((row) => Number(row.visibility || 99) <= allowedLevel)
-    .filter((row) => !row.subject || relevant.size === 0 || relevant.has(row.subject) || Number(row.visibility) === 1)
-    .slice(0, 40)
-    .map(({ id, subject, fact, truth_status, visibility }) => ({ id, subject: subject || null, fact, truth_status, visibility }));
-}
-
-function visibleSituations(level = 1) {
-  const allowedLevel = Math.max(1, Math.min(5, Number(level) || 1));
-  return (situationsData.situations || [])
-    .filter((row) => Number(row.visibility || 99) <= allowedLevel)
-    .map(({ id, horizon, fact, fixed }) => ({ id, horizon, fact, fixed }));
-}
-
 function recentContext(history = []) {
   return history.slice(-MAX_HISTORY_TURNS).map((turn) => ({
     action: cleanText(turn?.action || '', 1800),
+    continuity: turn?.continuity && typeof turn.continuity === 'object' ? {
+      date: cleanText(turn.continuity.date || '', 10),
+      time: cleanText(turn.continuity.time || '', 5),
+      location: cleanText(turn.continuity.location || '', 200),
+      situation: cleanText(turn.continuity.situation || '', 500),
+      present_character_keys: Array.isArray(turn.continuity.present_character_keys)
+        ? turn.continuity.present_character_keys.filter((key) => CHARACTER_KEYS.has(key)).slice(0, 8)
+        : [],
+    } : null,
     scene: Array.isArray(turn?.scene)
       ? turn.scene.slice(-18).map((beat) => ({
           kind: beat?.kind === 'dialogue' ? 'dialogue' : 'narration',
@@ -216,33 +140,13 @@ function recentContext(history = []) {
 }
 
 function buildInput({ action, pc, scene, history, knowledgeLevel }) {
-  const relevantKeys = selectRelevantCharacters({ action, scene, history });
-  const relevantCharacters = relevantKeys.map(compactCharacterPacket).filter(Boolean);
-  const publicKnowledge = visibleKnowledge(knowledgeLevel, relevantKeys);
-  const situations = visibleSituations(knowledgeLevel);
-
+  const canon = buildCanonContext({ action, pc, scene, history, knowledgeLevel });
   const packet = {
     current_scene: scene,
     pc,
-    relevant_characters: relevantCharacters,
-    cast_index: castIndex(),
-    world_facts: {
-      academy: academyData,
-      power_system: powerSystemData,
-      dated_scenario: {
-        scenario_id: scenarioData.scenario_id,
-        academic_period: scenarioData.academic_period,
-        housing: scenarioData.housing,
-        institution_state: scenarioData.institution_state,
-        political_state: scenarioData.political_state,
-        dated_world_facts: scenarioData.dated_world_facts,
-      },
-      visible_open_situations: situations,
-      visible_knowledge: publicKnowledge,
-    },
+    canon,
     recent_context: recentContext(history),
   };
-
   return `SCENE PACKET\n${JSON.stringify(packet)}\n\nEXACT USER ACTION\n${action}`;
 }
 
@@ -371,6 +275,7 @@ export default async function handler(req, res) {
       model: response?.model || process.env.OPENAI_MODEL || 'gpt-5.6-terra',
       request_id: response?.id || null,
       usage: response?.usage || null,
+      academy_cast_count: ACADEMY_CAST_KEYS.length,
     });
   } catch (error) {
     const timeout = error?.name === 'TimeoutError' || error?.name === 'AbortError';
