@@ -2,7 +2,7 @@
 
 Base: exact Pure V0 `876e235918c99f4588c9ef4eb874ecee4541be97`
 
-This pass is deliberately **not** a Writer-quality patch. It reconciles the facts and layer boundaries that the Writer will eventually consume.
+This pass is deliberately **not** a Writer-quality patch. It reconciles the facts, provenance, epistemic boundaries, and factual retrieval that the Writer will eventually consume. The production Writer prose contract remains unchanged from Pure V0.
 
 ## Fixed in this pass
 
@@ -20,6 +20,8 @@ Reconciled rule:
 - halls are not immutable year-exclusive or department-exclusive buildings
 - individual assignment is dated/run state
 - baseline student rooms are single occupancy
+
+The older legacy A=first-year rule is explicitly superseded by current project Canon and documented in `CANON_SOURCE_AUDIT.md` so later migration work does not accidentally restore it.
 
 ### 2. Dated academy state removed from immutable academy Canon
 
@@ -64,9 +66,11 @@ Group-facing defaults such as:
 
 live in `group-attitudes.json` and do not automatically create an individual relationship.
 
+Source-backed relationship rows omitted by the first Cleanroom were restored, including Isabel↔Sera, Isabel→Anastasia, and Elena→Lucia/Serena.
+
 ### 7. Durable character core separated from dated character state
 
-`characters.json` now contains durable identity / background / personality / values / aspiration / combat identity / voice / source-supported characterization only.
+`characters.json` now contains durable identity / background / personality / aspiration / combat identity / capabilities / strengths / limitations / voice / source-supported characterization.
 
 Removed from durable character core:
 
@@ -78,26 +82,52 @@ New `character-state.json` contains dated academy membership, year/department, c
 
 Restricted Etera power is referenced through Knowledge Canon rather than copied into ordinary public dated state.
 
-### 8. Runtime Canon data cleaned of migration commentary
+### 8. Source-fidelity character pass
+
+The first Cleanroom had sometimes replaced source personality with a safer semantic rewrite. The academy cast was re-audited against source Canon so refinement supplements rather than erases the original characterization.
+
+Examples restored/protected:
+
+- Elena — free-spirited / playful / hedonistic / curiosity-first alongside her analytical research mind
+- Artemis — source background, old chipped greatsword, practical shortest-path combat, true-knight aspiration
+- Sera — cynical/practical survivalist axis and stable-life aspiration
+- Sia — Spirit Affinity and established spirit-role distinctions
+- Lillia — fair-competition axis plus source limitations in practical experience, deception response, and aura control under excitement
+- Lena — extreme low-energy/laziness contrast plus Mana's Beloved
+- Emily — playful/sharp contrast, with an explicit voice guard against converting `possibility / choice / responsibility` into repetitive thematic sermons
+- Laris, Mirabelle, Serena, Chloe — source-backed strengths, limitations, interests, and activity axes restored
+
+Source-confirmed facts whose information-access level is not yet audited are kept out of ordinary public knowledge and recorded as `access_unclassified` in `uncertainties.json`.
+
+### 9. Presentation Canon added without guessing
+
+New `characters/presentation.json` stores only source-audited visible facts.
+
+Opening-benchmark characters now have stable presentation anchors where the source/reference supports them:
+
+- Emily — female, silver hair, blue eyes, small build
+- Lena — female, silver hair, purple eyes, small build, loose magic robe
+- Artemis — female, tied white hair, red eyes, military-like professor wear, real sword
+- Sera — female, brown hair, blue eyes, plain/practical knight presentation
+- Lillia — female, red hair, gold eyes, longsword, Valenhardt-marked scabbard
+
+Gender is source-confirmed for the detailed academy cast and Aria. Characters without audited presentation remain explicitly unverified rather than being filled from name/genre expectation.
+
+### 10. Runtime Canon data cleaned of migration commentary
 
 Removed development/migration notes from `power-system.json`, `pc.json`, and `academic-calendar.json` where those notes were not world facts.
 
 Migration history remains documentation, not model-facing Canon.
 
-### 9. Cross-file hard-invariant tests added
+### 11. Martial-realm Canon reconciled
 
-`scripts/canon-base-01.test.mjs` now rejects:
+Later source clarification already documented by the migration audit is now reflected in actual runtime Canon:
 
-- year-exclusive A/B/C dorm regression
-- dated academy office state in immutable academy Canon
-- current succession snapshot in immutable society Canon
-- Etera 9-circle leakage through ordinary dated state
-- schedule/political facts leaking back into Open Situations
-- group pseudo-targets inside person relationship rows
-- migration metadata returning to runtime Canon
-- dated/source metadata returning to durable character core
+- Expert High — stable externalized aura / sword-energy use
+- Expert Peak — aura shaping plus precise simultaneous internal/external aura control
+- Master — aura blade / non-contact slash and will/concept carried through aura; Master itself is **not** automatically an Authority
 
-### 10. PC creation contract aligned with the base UI/state path
+### 12. PC creation contract aligned with the base UI/state path
 
 The Canon already allowed:
 
@@ -108,50 +138,74 @@ The Canon already allowed:
 
 The temporary Pure UI/server previously dropped those fields. The base form, local save, and server sanitizer now preserve them instead of shrinking Canon freedom to match a prototype UI.
 
-The Writer prose contract itself is unchanged.
+### 13. Relevance-based factual Canon retrieval added
 
-### 11. Basic dated-state retrieval compatibility restored
+New `api/lib/canon-context.js` is a factual retrieval boundary, not a narrative selector.
 
-After dated character state moved out of `characters.json`, the existing Pure packet would otherwise look for removed `baseline_1285_03_01` blocks.
+It now provides:
 
-The base retrieval path now reads `character-state.json` for current dated character facts. This is compatibility plumbing only, not a new NPC selector or narrative rule.
+- academy cast discovered from dated `presence`, rather than a hand-picked everyday-cast name list
+- thin current-state / presentation / source-character signals for academy-resident Canon characters
+- detailed packets only for mentioned/current/recently involved characters
+- source-backed dated relationship hints and group attitudes
+- location-relevant academy geography instead of omitting geography entirely
+- society facts only when the current action actually references the relevant institutional topic
+- public Knowledge only for selected subjects instead of dumping all level-1 facts when no character is relevant
+- Open Situations only when the current action explicitly reaches one of those situations
+- schedule facts only when imminent or explicitly queried
 
-## Intentionally NOT solved yet
+A 09:15 dorm/training turn therefore does **not** receive the distant 12:00 orientation simply because the schedule exists.
 
-These are Canon/base follow-ups, not reasons to resume Writer tuning.
+Schedule rows carry an explicit `state-not-event` semantic: `09:00` does not itself create nine bell strikes, an announcement, waiting prose, or any other fictional beat.
 
-### A. 32-character presentation facts
+The Writer contract itself was not changed in this Canon/base PR.
 
-The asset registry has all 32 characters, but text Canon does not yet have a complete, source-audited presentation layer for every character (gender/presentation, hair/eye colors, stable signature clothing/equipment where genuinely canonical).
+### 14. Cross-file and retrieval hard-invariant tests added
 
-Do **not** invent missing presentation facts from names or genre expectations.
-A later Canon pass should mine existing character assets / authoritative source material and record only supported facts.
+Automated checks now reject:
 
-### B. Runtime Canon retrieval coverage
+- year-exclusive A/B/C dorm regression
+- dated academy office state in immutable academy Canon
+- current succession snapshot in immutable society Canon
+- Etera 9-circle leakage through ordinary dated state
+- schedule/political facts leaking back into Open Situations
+- group pseudo-targets inside person relationship rows
+- migration metadata returning to runtime Canon
+- dated/source metadata returning to durable character core
+- opening presentation anchors disappearing
+- key source-character traits being flattened away again
+- external/high-tier characters entering the ordinary academy cast solely because their Canon key exists
+- unrelated public Knowledge flooding ordinary turns
+- distant noon orientation entering an ordinary 09:15 dorm/training packet
+- unrelated Open Situations entering ordinary school turns
+- missing geography/relationship facts when they are actually relevant
 
-Pure V0 still imports only a subset of Canon files. Geography, society, cosmology, academic calendar, dated relationships/group attitudes, uncertainties, and PC rules are not all represented in the ordinary Writer packet.
+## Remaining gaps after CANON-BASE-01
 
-Do not solve this by dumping every file into every turn.
-After Canon is clean, design **relevance-based factual retrieval** with `KNOW != MENTION` and `STATE != STORY BEAT` preserved.
+### A. Remaining presentation audit
 
-### C. Character-state completeness / provenance
+Presentation is intentionally incomplete for characters whose appearance has not yet been source-audited. This is no longer a blocker for the opening benchmark because its principal cast has audited anchors, but the remaining characters should be completed before their visual identity becomes important in normal play.
 
-The new `character-state.json` covers the currently established dated state needed for the academy start. Any missing ages, offices, locations, or presentation details must remain absent until supported by source.
+### B. Information-access audit for several confirmed private truths
+
+`uncertainties.json` currently holds source-confirmed truths with `access_unclassified` status, including examples around Laris, Serena, Chloe, Elise, and a Sera rumor.
+
+Do not invent visibility numbers or `known_by` sets until source evidence supports them.
+
+### C. Character-state completeness
+
+`character-state.json` covers the established dated state needed for the academy opening. Missing ages, exact current locations, or other dated details remain absent rather than invented.
 
 ### D. Residence room-number assignment
 
-Canon now establishes A/B/C halls and single-room baseline, but the exact floor/room-number topology has not been source-audited. The base client therefore does not invent a deterministic room number merely to fill a field.
+Canon establishes A/B/C halls and single-room baseline, but the exact floor/room-number topology has not been source-audited. The base client therefore does not invent a deterministic room number merely to fill a field.
 
-### E. Unknown Canon must remain unknown
+### E. Unknown Canon remains unknown
 
 `uncertainties.json` remains authoritative for intentionally unresolved facts. Future cleanup must not convert an incomplete setting into a definitive answer merely for convenience.
 
 ## Gate before narrative work resumes
 
-Do not start another Original-Feel Writer experiment until:
+The Canon/base structural gate is satisfied when CI remains green on the exact PR head. Before the next Original-Feel Writer experiment, review this PR as the new factual base and keep any remaining unaudited details explicitly unknown.
 
-1. CANON-BASE-01 hard invariants are green.
-2. Presentation/state gaps needed for the opening benchmark are explicitly resolved or marked unknown.
-3. A thin retrieval design is chosen so the Writer receives relevant facts without schedule/background flooding.
-
-Only then return to narrative acceptance.
+Narrative acceptance is **not** implied by this Canon/base pass.
