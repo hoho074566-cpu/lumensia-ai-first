@@ -195,7 +195,6 @@ export function relevantCharacterKeys({ action = '', scene = {}, history = [], l
   exactMentionedCharacterKeys(action).forEach(add);
   (scene.presentCharacterKeys || []).forEach(add);
   recentSpeakerKeys(history).forEach(add);
-  if (!keys.length && String(scene.location || '').includes('대강당')) add('emily');
   return keys;
 }
 

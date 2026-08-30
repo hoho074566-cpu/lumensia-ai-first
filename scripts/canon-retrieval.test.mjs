@@ -54,6 +54,24 @@ assert.deepEqual(
   ['elena'],
   'ASCII Elena key must not also select Lena',
 );
+assert.deepEqual(
+  relevantCharacterKeys({
+    action: '자리에 앉아 주변을 살핀다',
+    scene: { time: '08:40', location: '루멘시아 마법 아카데미 대강당', presentCharacterKeys: [] },
+    history: emptyHistory,
+  }),
+  [],
+  'location alone must not choose an NPC or force a detailed character packet',
+);
+assert.deepEqual(
+  relevantCharacterKeys({
+    action: '자리에 앉아 주변을 살핀다',
+    scene: { time: '08:40', location: '루멘시아 마법 아카데미 대강당', presentCharacterKeys: ['emily'] },
+    history: emptyHistory,
+  }),
+  ['emily'],
+  'explicit scene presence must still select Emily',
+);
 
 const lilliaConversation = buildCanonContext({
   action: '릴리아와 이야기한다',
