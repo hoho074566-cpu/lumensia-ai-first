@@ -44,8 +44,10 @@ function characterLore(character = {}) {
   const identity = sentenceList(core.identity || []);
   const background = sentenceList(core.background || []);
   const personality = sentenceList(core.personality || []);
+  const presentation = plainValue(character.presentation || {});
   if (identity) lines.push(`${character.name}: ${identity}`);
   else lines.push(`${character.name}`);
+  if (presentation) lines.push(`외형·가시 정보는 ${presentation}.`);
   if (background) lines.push(`배경은 ${background}`);
   if (personality) lines.push(`성격은 ${personality}`);
   if (core.aspiration) lines.push(`지향점은 ${cleanText(core.aspiration, 320)}.`);
@@ -62,6 +64,24 @@ function characterLore(character = {}) {
   if (character.group_attitudes?.length) lines.push(`집단에 대한 태도: ${plainValue(character.group_attitudes)}.`);
   if (character.pc_visible_knowledge?.length) lines.push(`PC가 현재 알 수 있는 관련 사실: ${plainValue(character.pc_visible_knowledge)}.`);
   return lines.join(' ');
+}
+
+function academyCastPalette(canon = {}) {
+  const rows = (canon.academy_cast_index || []).map((row) => {
+    const state = row.current_state || {};
+    const roleBits = [
+      state.department || '',
+      state.academy_year ? `${state.academy_year}학년` : '',
+      ...(Array.isArray(state.offices) ? state.offices : []),
+      state.office || '',
+      state.role || '',
+    ].filter(Boolean).slice(0, 3);
+    const role = roleBits.join('/');
+    const signal = cleanText((row.personality_signals || [])[0] || '', 90);
+    return `${row.name}${role ? `[${role}]` : ''}${signal ? ` — ${signal}` : ''}`;
+  }).filter(Boolean);
+  if (!rows.length) return '';
+  return `현재 시점 아카데미 생활권의 compact cast palette다. 이것은 등장 순서나 강제 캐스팅 목록이 아니라 Writer가 장면에 맞는 사람을 고를 수 있게 주는 사실 재료다. ${rows.join(' | ')}`;
 }
 
 function locationLore(canon = {}) {
@@ -219,12 +239,17 @@ export function assembleAuthoring({ action = '', pc = {}, scene = {}, history = 
   const retrievalAction = mode === 'continue' ? '' : action;
   const canon = buildCanonContext({ action: retrievalAction, pc, scene, history, knowledgeLevel });
   const lore = relevantLoreModules(canon);
+  const castPalette = academyCastPalette(canon);
   const books = activeKeywordBooks({ canon, action: retrievalAction, scene });
   const start = startSetting(scene, history, mode);
+  const loreBlocks = [
+    castPalette ? `[CAST PALETTE] ${castPalette}` : '',
+    ...lore.map((item, i) => `[LORE ${i + 1}] ${item}`),
+  ].filter(Boolean);
 
   const sections = [
     `STORY INFORMATION\n${authoringData.main_author_prompt}`,
-    `RELEVANT LORE MODULES\n${lore.length ? lore.map((item, i) => `[LORE ${i + 1}] ${item}`).join('\n\n') : '(현재 추가 Lore 없음)'}`,
+    `RELEVANT LORE MODULES\n${loreBlocks.length ? loreBlocks.join('\n\n') : '(현재 추가 Lore 없음)'}`,
     start ? `START SETTING\n${start}` : '',
     `DEVELOPMENT EXAMPLES\n${developmentExamples()}`,
     `CURRENT RUNTIME STATE\n${currentRuntimeState(pc, scene)}`,
@@ -240,6 +265,7 @@ export function assembleAuthoring({ action = '', pc = {}, scene = {}, history = 
       story_id: authoringData.story_id,
       start_setting_active: Boolean(start),
       relevant_lore_count: lore.length,
+      academy_cast_palette_count: Array.isArray(canon.academy_cast_index) ? canon.academy_cast_index.length : 0,
       active_keyword_books: books.map(({ name, reason }) => ({ name, reason })),
       development_example_count: Math.min(3, (authoringData.development_examples || []).length),
       mode,
