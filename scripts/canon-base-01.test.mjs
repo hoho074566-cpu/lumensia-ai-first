@@ -6,6 +6,7 @@ const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 const asText = (value) => JSON.stringify(value);
 
 const characters = readJson('data/canon/characters/characters.json');
+const presentation = readJson('data/canon/characters/presentation.json');
 const academy = readJson('data/canon/world/academy.json');
 const calendar = readJson('data/canon/world/academic-calendar.json');
 const geography = readJson('data/canon/world/geography.json');
@@ -27,6 +28,25 @@ assert.deepEqual(characterKeys, [...CHARACTER_KEYS].sort(), 'durable character c
 assert.ok(characterKeys.every((key) => characters.characters[key]?.core && characters.characters[key]?.voice), 'every canonical character needs durable core + voice');
 assert.doesNotMatch(asText(characters), /baseline_1285_03_01|source_detail/, 'dated state and migration metadata must not live in durable character core');
 assert.doesNotMatch(asText(characters.characters?.lena || {}), /실제 기원에는 별도 극비/, 'ordinary Lena core must not advertise the existence of a hidden origin');
+
+for (const key of Object.keys(presentation.characters || {})) {
+  assert.ok(CHARACTER_KEYS.includes(key), `presentation contains unknown character key: ${key}`);
+}
+for (const key of presentation.unverified_presentation_keys || []) {
+  assert.ok(CHARACTER_KEYS.includes(key), `unverified presentation list contains unknown key: ${key}`);
+  assert.ok(!Object.hasOwn(presentation.characters || {}, key), `unverified character must not simultaneously receive asserted presentation: ${key}`);
+}
+const presentationOpening = {
+  emily: ['여성', '은발', '청안', '작은 체구'],
+  lena: ['여성', '은발', '자색 눈', '작은 체구'],
+  artemis: ['여성', '백발', '적안', '교수복', '실검'],
+  sera: ['여성', '갈색 머리', '청안'],
+  lillia: ['여성', '붉은 머리', '금안', '장검', '발렌하르트'],
+};
+for (const [key, required] of Object.entries(presentationOpening)) {
+  const text = asText(presentation.characters?.[key] || {});
+  for (const token of required) assert.match(text, new RegExp(token), `${key} presentation must preserve source-audited fact: ${token}`);
+}
 
 assert.ok(!Object.hasOwn(academy, 'baseline_1285_03_01'), 'immutable academy Canon must not contain dated office state');
 assert.doesNotMatch(String(academy.academic_structure?.dormitories || ''), /학년별|A\s*=\s*1학년|B\s*=\s*2학년|C\s*=\s*3학년/, 'academy dorm Canon must not hard-map halls to years');
@@ -63,6 +83,9 @@ for (const row of openSituations.situations || []) {
 for (const row of relationships.relationships || []) {
   assert.ok(CHARACTER_KEYS.includes(row.from), `relationship from must be a canonical person: ${row.from}`);
   assert.ok(CHARACTER_KEYS.includes(row.to), `relationship to must be a canonical person: ${row.to}`);
+}
+for (const [from, to] of [['isabel','sera'], ['sera','isabel'], ['isabel','anastasia'], ['elena','lucia'], ['elena','serena']]) {
+  assert.ok((relationships.relationships || []).some((row) => row.from === from && row.to === to), `source-backed dated relationship missing: ${from}->${to}`);
 }
 for (const row of groupAttitudes.attitudes || []) {
   assert.ok(CHARACTER_KEYS.includes(row.from), `group attitude from must be a canonical person: ${row.from}`);
