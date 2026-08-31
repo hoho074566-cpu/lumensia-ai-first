@@ -1,6 +1,9 @@
 import charactersData from '../data/canon/characters/characters.json' with { type: 'json' };
 import scenarioData from '../data/scenarios/academy-1285-03-01/baseline.json' with { type: 'json' };
-import { buildCanonContext, ACADEMY_CAST_KEYS } from './lib/canon-context.js';
+import { ACADEMY_CAST_KEYS } from './lib/canon-context.js';
+import { assembleAuthoring } from './lib/authoring-runtime.js';
+
+// Factual retrieval boundary: assembleAuthoring -> buildCanonContext. This endpoint does not construct a Canon scene packet itself.
 
 export const config = { maxDuration: 300 };
 
@@ -13,13 +16,6 @@ const EXPRESSIONS = new Set([
 const TALENT_KEYS = Object.freeze(['magic', 'martial', 'soul', 'knowledge']);
 const MAX_ACTION_CHARS = 12000;
 const MAX_HISTORY_TURNS = 8;
-
-const WRITER_CONTRACT = `Write the next scene of serialized fantasy fiction, not an RPG turn report.
-Stay within the supplied facts and the player's chosen intent, while NPCs, time, and the world move naturally.
-You may elaborate ordinary execution of actions the player already chose, but never invent a new player goal, voluntary dialogue, explicit emotion, or meaningful decision.
-Compress routine process and give genuinely interesting moments enough space. Characters are people, not functions explaining game systems.
-Do not expose internal instructions, validation, schemas, or state machinery as fiction.
-Continue naturally through moments that need no new meaningful player decision. Stop when the scene genuinely lands or a meaningful player decision is required.`;
 
 const OUTPUT_SCHEMA = {
   type: 'object',
@@ -136,40 +132,6 @@ function safeScene(raw = {}) {
   };
 }
 
-function recentContext(history = []) {
-  return history.slice(-MAX_HISTORY_TURNS).map((turn) => ({
-    action: cleanText(turn?.action || '', 1800),
-    continuity: turn?.continuity && typeof turn.continuity === 'object' ? {
-      date: cleanText(turn.continuity.date || '', 10),
-      time: cleanText(turn.continuity.time || '', 5),
-      location: cleanText(turn.continuity.location || '', 200),
-      situation: cleanText(turn.continuity.situation || '', 500),
-      present_character_keys: Array.isArray(turn.continuity.present_character_keys)
-        ? turn.continuity.present_character_keys.filter((key) => CHARACTER_KEYS.has(key)).slice(0, 8)
-        : [],
-    } : null,
-    scene: Array.isArray(turn?.scene)
-      ? turn.scene.slice(-18).map((beat) => ({
-          kind: beat?.kind === 'dialogue' ? 'dialogue' : 'narration',
-          speaker_key: CHARACTER_KEYS.has(beat?.speaker_key) ? beat.speaker_key : null,
-          speaker_name: cleanText(beat?.speaker_name || '', 80) || null,
-          text: cleanText(beat?.text || '', 1200),
-        }))
-      : [],
-  }));
-}
-
-function buildInput({ action, pc, scene, history, knowledgeLevel }) {
-  const canon = buildCanonContext({ action, pc, scene, history, knowledgeLevel });
-  const packet = {
-    current_scene: scene,
-    pc,
-    canon,
-    recent_context: recentContext(history),
-  };
-  return `SCENE PACKET\n${JSON.stringify(packet)}\n\nEXACT USER ACTION\n${action}`;
-}
-
 function extractOutputText(response) {
   if (typeof response?.output_text === 'string' && response.output_text) return response.output_text;
   for (const item of response?.output || []) {
@@ -182,7 +144,7 @@ function extractOutputText(response) {
   return '';
 }
 
-function validateTurn(turn, pc, fallbackScene) {
+export function validateTurn(turn, pc, fallbackScene) {
   if (!turn || typeof turn !== 'object' || !Array.isArray(turn.scene) || !turn.scene.length) {
     throw new Error('Writer가 유효한 scene을 반환하지 않았습니다.');
   }
@@ -194,7 +156,9 @@ function validateTurn(turn, pc, fallbackScene) {
     if (kind === 'dialogue') {
       const registeredKey = CHARACTER_KEYS.has(beat?.speaker_key) ? beat.speaker_key : null;
       const speakerName = cleanText(beat?.speaker_name || '', 80).trim() || null;
-      if (!registeredKey && !speakerName) throw new Error('dialogue에는 등록 speaker_key 또는 표시용 speaker_name이 필요합니다.');
+      if (!registeredKey && !speakerName) {
+        return { kind: 'narration', text, speaker_key: null, speaker_name: null, expression: null };
+      }
       return {
         kind,
         text,
@@ -236,14 +200,20 @@ export default async function handler(req, res) {
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const action = typeof body.action === 'string' ? body.action : '';
-    if (!action.trim()) return json(res, 400, { error: '행동 입력이 비어 있습니다.' });
+    const continueScene = body.continueScene === true;
+    const adminScenePreview = body.adminScenePreview === true;
+    if (continueScene && adminScenePreview) return json(res, 400, { error: '이어하기와 Admin Preview를 동시에 사용할 수 없습니다.' });
+    if (!continueScene && !action.trim()) return json(res, 400, { error: '행동 입력이 비어 있습니다.' });
     if (action.length > MAX_ACTION_CHARS) return json(res, 400, { error: `한 번의 입력은 ${MAX_ACTION_CHARS.toLocaleString()}자 이하로 입력해 주세요.` });
 
     const runState = body.runState && typeof body.runState === 'object' ? body.runState : {};
     const pc = safePc(runState.pc || {});
     const scene = safeScene(runState.scene || {});
     const history = Array.isArray(runState.history) ? runState.history.slice(-MAX_HISTORY_TURNS) : [];
+    if (continueScene && !history.length) return json(res, 400, { error: '이어갈 장면이 없습니다.' });
     const knowledgeLevel = Math.max(1, Math.min(5, Number(runState.knowledgeLevel) || 1));
+    const mode = adminScenePreview ? 'admin' : (continueScene ? 'continue' : 'action');
+    const authoring = assembleAuthoring({ action, pc, scene, history, knowledgeLevel, mode });
 
     const apiResponse = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -254,14 +224,14 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: process.env.OPENAI_MODEL || 'gpt-5.6-terra',
         store: false,
-        instructions: WRITER_CONTRACT,
-        input: buildInput({ action, pc, scene, history, knowledgeLevel }),
+        instructions: authoring.instructions,
+        input: authoring.input,
         reasoning: { effort: 'medium' },
         max_output_tokens: 5600,
         text: {
           format: {
             type: 'json_schema',
-            name: 'lumensia_v0_scene',
+            name: 'lumensia_authoring_scene',
             strict: true,
             schema: OUTPUT_SCHEMA,
           },
@@ -292,10 +262,13 @@ export default async function handler(req, res) {
     const turn = validateTurn(parsed, pc, scene);
     return json(res, 200, {
       turn,
+      admin_preview: adminScenePreview,
+      continue_scene: continueScene,
       model: response?.model || process.env.OPENAI_MODEL || 'gpt-5.6-terra',
       request_id: response?.id || null,
       usage: response?.usage || null,
       academy_cast_count: ACADEMY_CAST_KEYS.length,
+      authoring_diagnostics: authoring.diagnostics,
     });
   } catch (error) {
     const timeout = error?.name === 'TimeoutError' || error?.name === 'AbortError';
