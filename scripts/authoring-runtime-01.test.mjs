@@ -15,17 +15,20 @@ execFileSync(process.execPath, ['--check', 'api/lib/authoring-runtime.js'], { st
 execFileSync(process.execPath, ['--check', 'src/client.js'], { stdio: 'pipe' });
 
 assert.match(spec, /AI의 서사 판단을 코드로 대신하지 않는다/, 'prime directive must remain');
+assert.match(spec, /Crack-style Creator Pack/, 'spec must define Crack-style Creator Pack');
 assert.equal((api.match(/https:\/\/api\.openai\.com\/v1\/responses/g) || []).length, 1, 'critical write path must contain exactly one Writer call');
-assert.match(api, /assembleAuthoring/, 'api/write must delegate prompt construction to Authoring Runtime');
-assert.match(runtime, /buildCanonContext/, 'clean Writer runtime must consume factual Canon context');
+assert.match(api, /assembleAuthoring/, 'api/write must delegate material assembly');
+assert.doesNotMatch(api, /canon-context/, 'critical Writer path must not depend on turn-level Canon relevance routing');
+assert.doesNotMatch(runtime, /buildCanonContext|relevantCharacterKeys|relevantScheduleFacts/, 'Crack runtime must not use old relevance/schedule routing');
 assert.doesNotMatch(runtime, /Event Director|Event Engine|Scene Planner|Scene Selector|NPC selector score|hook score|attention meter/i, 'no narrative control engine may return');
 
-assert.equal(AUTHORING_DATA.version, 3, 'clean Writer authoring data must be version 3');
+assert.equal(AUTHORING_DATA.version, 4, 'Crack Creator Pack must be version 4');
+assert.ok(AUTHORING_DATA.prompt_template);
+assert.ok(AUTHORING_DATA.story_settings);
+assert.ok(AUTHORING_DATA.start_settings);
 assert.equal(AUTHORING_DATA.development_examples.length, 3, 'development examples remain capped at three');
-assert.doesNotMatch(AUTHORING_DATA.base_rp_template, /루멘시아|세라|릴리아|에밀리|아르테미스|시아|미라벨/, 'Base RP Template must remain story-agnostic');
-assert.match(AUTHORING_DATA.main_author_prompt, /루멘시아 아카데미/, 'story identity belongs in Main Author Prompt');
-assert.doesNotMatch(AUTHORING_DATA.main_author_prompt, /에밀리|아르테미스|세라|릴리아|라리스|이사벨|레나|세레나|클로에|미라벨/, 'individual cast facts must come from Canon cast material, not hardcoded Story Prompt');
-assert.ok(!Object.hasOwn(AUTHORING_DATA, 'start_setting'), 'clean Writer runtime must not carry a second narrative Start Setting layer');
+assert.ok(Array.isArray(AUTHORING_DATA.keyword_books) && AUTHORING_DATA.keyword_books.length >= 4, 'Creator Pack must define keyword books');
+assert.doesNotMatch(AUTHORING_DATA.story_settings, /에밀리|아르테미스|세라|릴리아|라리스|이사벨|레나|세레나|클로에|미라벨/, 'individual cast facts belong in Add-ons, not Story Settings');
 
 const pc = {
   name: '테스트PC', age: 20, gender: '남성', department: '기사과', origin: '수도 외곽', socialStatus: '평민',
@@ -38,13 +41,14 @@ const startScene = {
   presentCharacterKeys: [],
 };
 
-const opening = assembleAuthoring({ action: '주변을 살펴본다.', pc, scene: startScene, history: [], knowledgeLevel: 1, mode: 'action' });
+const opening = assembleAuthoring({ action: '주변을 살펴본다.', pc, scene: startScene, history: [], mode: 'action' });
 const requiredOrder = [
-  'CURRENT RUNTIME STATE',
-  'ACADEMY CAST MATERIAL',
-  'CURRENT / PRESENT CHARACTER DETAIL',
-  'RELEVANT WORLD FACTS',
+  'STORY SETTINGS',
+  'ADD-ONS',
+  'START SETTINGS',
   'DEVELOPMENT EXAMPLES',
+  'RUNTIME STATE',
+  'KEYWORD BOOKS',
   'RECENT CHAT',
   'EXACT USER INPUT',
 ];
@@ -52,43 +56,63 @@ let cursor = -1;
 for (const [index, label] of requiredOrder.entries()) {
   const heading = index === 0 ? `${label}\n` : `\n\n${label}\n`;
   const next = opening.input.indexOf(heading);
-  assert.ok(next > cursor, `clean prompt assembly order broken at ${label}`);
+  assert.ok(next > cursor, `Crack assembly order broken at ${label}`);
   cursor = next;
 }
-for (const legacyHeading of ['STORY INFORMATION', 'RELEVANT LORE MODULES', 'START SETTING', 'ACTIVE KEYWORD BOOKS']) {
-  assert.doesNotMatch(opening.input, new RegExp(`(?:^|\\n\\n)${legacyHeading}\\n`), `legacy Writer-facing layer must be absent: ${legacyHeading}`);
+for (const legacyHeading of ['STORY INFORMATION', 'RELEVANT LORE MODULES', 'CURRENT / PRESENT CHARACTER DETAIL', 'RELEVANT WORLD FACTS', 'ACTIVE KEYWORD BOOKS']) {
+  assert.doesNotMatch(opening.input, new RegExp(`(?:^|\\n\\n)${legacyHeading}\\n`), `old mixed layer must be absent: ${legacyHeading}`);
 }
-assert.equal(opening.diagnostics.writer_runtime, 'cleanroom-01');
-assert.ok(opening.diagnostics.academy_cast_count >= 16, 'Writer must receive the broad current academy living cast');
+assert.equal(opening.diagnostics.writer_runtime, 'crack-runtime-01');
+assert.equal(opening.diagnostics.start_settings_active, true, 'Start Settings activate only at untouched opening');
 assert.equal(opening.diagnostics.development_example_count, 3);
-assert.match(opening.input, /\[artemis\] 아르테미스/, 'broad cast material must include Artemis');
-assert.match(opening.input, /백발을 뒤로 단단히 묶는 모습이 확인됨/, 'Artemis verified hair presentation must reach Writer');
-assert.match(opening.input, /적안/, 'Artemis verified eye presentation must reach Writer');
-assert.match(opening.input, /\[emily\] 에밀리/, 'broad cast material must include Emily');
+assert.ok(opening.diagnostics.active_addons.some((row) => row.id === 'academy' && row.activation === 'scenario'));
+assert.ok(opening.diagnostics.active_addons.some((row) => row.id === 'academy-1285-03-01' && row.activation === 'scenario'));
+assert.ok(opening.diagnostics.active_addons.filter((row) => row.kind === 'character' && row.activation === 'academy-presence').length >= 16, 'academy living cast must be supplied as Add-ons without a selector');
+assert.match(opening.input, /\[CHARACTER ADD-ON: artemis\] 아르테미스/, 'Artemis Add-on must be present');
+assert.match(opening.input, /백발을 뒤로 단단히 묶는 모습이 확인됨/, 'Artemis verified hair must reach Writer');
+assert.match(opening.input, /적안/, 'Artemis verified eyes must reach Writer');
+assert.match(opening.input, /\[CHARACTER ADD-ON: emily\] 에밀리/, 'Emily Add-on must be present');
 assert.match(opening.input, /아카데미 교장/, 'Emily current office must reach Writer');
-assert.doesNotMatch(opening.input, /기초 적성 측정/, 'Writer must not receive invented same-day aptitude procedure');
-assert.match(opening.input, /\n\nEXACT USER INPUT\n주변을 살펴본다\.$/, 'exact user text must remain the final layer');
-
-const artemis = assembleAuthoring({ action: '아르테미스에게 질문한다.', pc, scene: startScene, history: [], knowledgeLevel: 1, mode: 'action' });
-assert.ok(artemis.diagnostics.detailed_character_count >= 1, 'explicitly referenced character must receive detailed packet');
-assert.match(artemis.input, /교관식 반말\/하대/, 'detailed Artemis voice must reach Writer when directly relevant');
-assert.match(artemis.input, /보이는 외형\/표현 사실/, 'detailed character material must carry presentation facts');
+assert.match(opening.input, /09:00.*입학식이 시작될 예정/s, 'dated schedule may exist only as scenario Add-on fact');
+assert.match(opening.input, /예정 사실은 절차표가 아니며/, 'scenario Add-on must mark schedule as fact, not procedure');
+assert.doesNotMatch(opening.input, /열쇠 배부가 예정|이의 신청은 오늘|통금 시간이/, 'invented housing procedure must not be supplied');
+assert.match(opening.input, /\n\nEXACT USER INPUT\n주변을 살펴본다\.$/, 'exact user text must be final');
 
 const history = [{
   action: '대강당 안을 본다.',
   scene: [{ kind: 'narration', text: '신입생들이 자리를 찾고 있다.', speaker_key: null, speaker_name: null }],
   continuity: { date: '1285-03-01', time: '08:45', location: '루멘시아 아카데미 대강당', situation: '입학식 전', present_character_keys: [] },
 }];
-const continued = assembleAuthoring({ action: '', pc, scene: { ...startScene, time: '08:45', location: '루멘시아 아카데미 대강당' }, history, knowledgeLevel: 1, mode: 'continue' });
-assert.match(continued.input, /\n\nMODE: CONTINUE\n/, 'dedicated continue mode must remain explicit');
+const followup = assembleAuthoring({
+  action: '잠시 주변을 지켜본다.',
+  pc,
+  scene: { ...startScene, time: '08:45', location: '루멘시아 아카데미 대강당' },
+  history,
+  mode: 'action',
+});
+assert.equal(followup.diagnostics.start_settings_active, false, 'Start Settings must disappear after play begins');
+assert.doesNotMatch(followup.input, /\n\nSTART SETTINGS\n/);
+
+const housing = assembleAuthoring({ action: '생활동으로 가서 방 배정을 확인한다.', pc, scene: startScene, history, mode: 'action' });
+assert.ok(housing.diagnostics.active_keyword_books.some((row) => row.id === 'housing'), 'housing keyword book must activate by literal keyword');
+assert.match(housing.input, /특정 학년이나 학과를 한 생활동에 고정하지 않으며/, 'housing book must carry reconciled factual rule');
+
+const magic = assembleAuthoring({ action: '마나 흐름과 검술 경지 차이를 확인한다.', pc, scene: startScene, history, mode: 'action' });
+assert.ok(magic.diagnostics.active_keyword_books.some((row) => row.id === 'power'), 'power keyword book must activate literally');
+assert.ok(!magic.diagnostics.active_keyword_books.some((row) => row.id === 'society-law'), 'power wording must not activate unrelated law book');
+
+const external = assembleAuthoring({ action: '에테라에 대해 이야기한다.', pc, scene: startScene, history, mode: 'action' });
+assert.ok(external.diagnostics.active_addons.some((row) => row.id === 'etera' && row.activation === 'literal-keyword'), 'external character Add-on activates by literal name, not scoring');
+
+const continued = assembleAuthoring({
+  action: '',
+  pc,
+  scene: { ...startScene, time: '08:45', location: '루멘시아 아카데미 대강당' },
+  history,
+  mode: 'continue',
+});
+assert.match(continued.input, /\n\nMODE: CONTINUE\n/, 'dedicated continue mode must remain');
 assert.doesNotMatch(continued.input, /\n\nEXACT USER INPUT\n/, 'continue mode must not fake a user action');
-
-const housing = assembleAuthoring({ action: '생활동으로 가서 방 배정을 확인한다.', pc, scene: startScene, history, knowledgeLevel: 1, mode: 'action' });
-assert.ok(housing.diagnostics.active_keyword_books.some((row) => row.name.includes('생활동')), 'housing facts must still be available on demand');
-
-const magic = assembleAuthoring({ action: '마법의 마나 흐름을 관찰한다.', pc, scene: startScene, history, knowledgeLevel: 1, mode: 'action' });
-assert.ok(magic.diagnostics.active_keyword_books.some((row) => row.name.includes('마나')), 'power facts must still be available on demand');
-assert.ok(!magic.diagnostics.active_keyword_books.some((row) => row.name.includes('사회/법')), 'magic wording must not activate social/law facts by collision');
 
 assert.match(index, /id="continueButton"[^>]*>이어하기</, '이어하기 button must remain in UI');
 assert.match(client, /continueButton\.addEventListener\('click', continueScene\)/, '이어하기 click handler must remain wired');
@@ -103,4 +127,4 @@ const failSoft = validateTurn({
 }, pc, startScene);
 assert.equal(failSoft.scene[0].kind, 'narration', 'missing dialogue speaker metadata must fail-soft to narration');
 
-console.log('PASS WRITER-CLEANROOM-01 factual cast assembly + Copy/Continue preservation');
+console.log('PASS CRACK-RUNTIME-01 Creator Pack assembly + factual Add-ons + Copy/Continue preservation');
