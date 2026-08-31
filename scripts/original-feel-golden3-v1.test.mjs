@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 const authoring = JSON.parse(readFileSync(new URL('../data/authoring/lumensia-academy.json', import.meta.url), 'utf8'));
 const prompt = String(authoring.prompt_template || '');
 
-assert.equal(authoring.version, 6, 'Golden3 Writer contract must use authoring version 6');
+assert.equal(authoring.version, 5, 'Golden3 changes Writer behavior without introducing a new authoring pack format');
 
 assert.match(prompt, /세계는 player의 다음 입력을 기다리며 정지하지 않는다/);
 assert.match(prompt, /결과가 하나뿐인 구간은 필요한 만큼 압축/);
