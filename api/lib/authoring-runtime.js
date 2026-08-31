@@ -18,6 +18,7 @@ const PRESENTATION = presentationData.characters || {};
 const CHARACTER_STATE = characterStateData.characters || {};
 const RELATIONSHIPS = relationshipsData.relationships || [];
 const GROUP_ATTITUDES = groupAttitudesData.attitudes || [];
+const ACADEMY_PRESENCE = new Set(['academy_student', 'academy_faculty', 'academy_guest']);
 
 function cleanText(value, max = 4000) {
   const text = String(value ?? '').trim();
@@ -94,7 +95,7 @@ function characterSourcebookEntry(key) {
   return parts.join('\n');
 }
 
-function worldSourcebook() {
+function fullWorldSourcebook() {
   const sections = [
     ['ACADEMY', academyData],
     ['ACADEMIC CALENDAR', academicCalendarData],
@@ -109,21 +110,44 @@ function worldSourcebook() {
   )).join('\n\n');
 }
 
+function compactWorldSourcebook() {
+  const sections = [
+    ['ACADEMY', academyData],
+    ['ACADEMY LAYOUT', geographyData?.academy_layout || {}],
+    ['POWER SYSTEM', powerSystemData],
+    ['EMPIRE', societyData?.empire || {}],
+  ];
+
+  return sections.map(([label, value]) => (
+    `[WORLD: ${label}]\n${cleanText(plainValue(value), 10000)}`
+  )).join('\n\n');
+}
+
 function scenarioSourcebook() {
   return `[DATED SCENARIO: academy-1285-03-01]\n${cleanText(plainValue(scenarioData), 16000)}`;
 }
 
-function knowledgeBase() {
-  const characterEntries = Object.keys(CHARACTERS)
+function academyCharacterKeys() {
+  return Object.entries(CHARACTER_STATE)
+    .filter(([key, state]) => CHARACTERS[key] && ACADEMY_PRESENCE.has(state?.presence))
+    .map(([key]) => key);
+}
+
+function knowledgeBase(contextMode = 'full') {
+  const compact = contextMode === 'compact';
+  const characterKeys = compact ? academyCharacterKeys() : Object.keys(CHARACTERS);
+  const characterEntries = characterKeys
     .map((key) => characterSourcebookEntry(key))
     .filter(Boolean)
     .join('\n\n');
 
-  return [
-    worldSourcebook(),
+  const text = [
+    compact ? compactWorldSourcebook() : fullWorldSourcebook(),
     scenarioSourcebook(),
     characterEntries,
   ].filter(Boolean).join('\n\n');
+
+  return { text, characterKeys };
 }
 
 function currentRuntimeState(pc = {}, scene = {}) {
@@ -173,8 +197,8 @@ function recentChat(history = []) {
   if (!turns.length) return '(아직 이전 대화 없음)';
   return turns.map((turn, index) => {
     const sceneText = Array.isArray(turn?.scene)
-      ? turn.scene.slice(-20).map((beat) => {
-          const text = cleanText(beat?.text, 1400);
+      ? turn.scene.slice(-24).map((beat) => {
+          const text = cleanText(beat?.text, 1800);
           if (!text) return '';
           if (beat?.kind === 'dialogue') return `${cleanText(beat?.speaker_name || beat?.speaker_key || '인물', 80)}: ${text}`;
           return text;
@@ -194,11 +218,13 @@ function exactUserEnvelope(mode, action) {
   return `EXACT USER INPUT\n${action}`;
 }
 
-export function assembleAuthoring({ action = '', pc = {}, scene = {}, history = [], mode = 'action' } = {}) {
+export function assembleAuthoring({ action = '', pc = {}, scene = {}, history = [], mode = 'action', contextMode = 'full' } = {}) {
+  const normalizedContextMode = contextMode === 'compact' ? 'compact' : 'full';
   const start = startSettings(scene, history, mode);
+  const sourcebook = knowledgeBase(normalizedContextMode);
   const sections = [
     `STORY SETTINGS\n${authoringData.story_settings}`,
-    `KNOWLEDGE BASE\n${knowledgeBase()}`,
+    `KNOWLEDGE BASE\n${sourcebook.text}`,
     start ? `START SETTINGS\n${start}` : '',
     `DEVELOPMENT EXAMPLES\n${developmentExamples()}`,
     `RUNTIME STATE\n${currentRuntimeState(pc, scene)}`,
@@ -206,17 +232,25 @@ export function assembleAuthoring({ action = '', pc = {}, scene = {}, history = 
     exactUserEnvelope(mode, action),
   ].filter(Boolean);
 
-  const sourcebookCharacters = Object.keys(CHARACTERS);
+  const input = sections.join('\n\n');
+  const knowledgeSections = normalizedContextMode === 'compact'
+    ? ['academy', 'academy-layout', 'power-system', 'empire', 'dated-scenario', 'academy-characters']
+    : ['academy', 'academic-calendar', 'cosmology', 'geography', 'power-system', 'society', 'dated-scenario', 'characters'];
+
   return {
     instructions: authoringData.prompt_template,
-    input: sections.join('\n\n'),
+    input,
     diagnostics: {
       story_id: authoringData.story_id,
-      writer_runtime: 'crack-runtime-02-simple',
+      writer_runtime: 'chat-parity-01',
+      context_mode: normalizedContextMode,
       start_settings_active: Boolean(start),
-      knowledge_base_character_count: sourcebookCharacters.length,
-      knowledge_base_sections: ['academy', 'academic-calendar', 'cosmology', 'geography', 'power-system', 'society', 'dated-scenario', 'characters'],
-      active_addons: sourcebookCharacters.map((id) => ({ id, kind: 'character', activation: 'always-sourcebook' })),
+      knowledge_base_character_count: sourcebook.characterKeys.length,
+      knowledge_base_sections: knowledgeSections,
+      knowledge_base_chars: sourcebook.text.length,
+      instructions_chars: authoringData.prompt_template.length,
+      input_chars: input.length,
+      active_addons: sourcebook.characterKeys.map((id) => ({ id, kind: 'character', activation: 'sourcebook' })),
       active_keyword_books: [],
       development_example_count: Math.min(2, (authoringData.development_examples || []).length),
       mode,
