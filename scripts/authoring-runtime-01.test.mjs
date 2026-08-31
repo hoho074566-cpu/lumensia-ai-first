@@ -62,12 +62,13 @@ for (const removedHeading of ['ADD-ONS', 'KEYWORD BOOKS', 'RELEVANT LORE MODULES
   assert.doesNotMatch(opening.input, new RegExp(`(?:^|\\n\\n)${removedHeading}\\n`), `routed/mixed Writer layer must be absent: ${removedHeading}`);
 }
 
-assert.equal(opening.diagnostics.writer_runtime, 'crack-runtime-02-simple');
+assert.equal(opening.diagnostics.writer_runtime, 'chat-parity-01');
+assert.equal(opening.diagnostics.context_mode, 'full', 'default parity control must preserve the full CRACK-RUNTIME-02 context');
 assert.equal(opening.diagnostics.start_settings_active, true, 'Start Settings activate only at untouched opening');
 assert.equal(opening.diagnostics.development_example_count, 2);
 assert.equal(opening.diagnostics.knowledge_base_character_count, 32, 'full durable character sourcebook must be available every turn');
 assert.equal(opening.diagnostics.active_keyword_books.length, 0, 'no conditional keyword material should enter this experiment');
-assert.ok(opening.diagnostics.active_addons.every((row) => row.activation === 'always-sourcebook'), 'character sourcebook must not use activation selection');
+assert.ok(opening.diagnostics.active_addons.every((row) => row.activation === 'sourcebook'), 'character sourcebook must not use narrative activation selection');
 
 assert.match(opening.input, /\[CHARACTER: artemis\] 아르테미스/, 'Artemis must exist in the always-on sourcebook');
 assert.match(opening.input, /백발을 뒤로 단단히 묶는 모습이 확인됨/, 'Artemis verified hair must reach Writer');
@@ -124,4 +125,4 @@ const failSoft = validateTurn({
 }, pc, startScene);
 assert.equal(failSoft.scene[0].kind, 'narration', 'missing dialogue speaker metadata must fail-soft to narration');
 
-console.log('PASS CRACK-RUNTIME-02 simple full-sourcebook + two-example + Copy/Continue preservation');
+console.log('PASS CHAT-PARITY-01 full-sourcebook control + Copy/Continue preservation');
