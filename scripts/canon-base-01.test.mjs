@@ -21,6 +21,7 @@ const openSituations = readJson('data/scenarios/academy-1285-03-01/open-situatio
 const relationships = readJson('data/scenarios/academy-1285-03-01/relationships.json');
 const groupAttitudes = readJson('data/scenarios/academy-1285-03-01/group-attitudes.json');
 const api = readFileSync('api/write.js', 'utf8');
+const authoringRuntime = readFileSync('api/lib/authoring-runtime.js', 'utf8');
 const canonContext = readFileSync('api/lib/canon-context.js', 'utf8');
 const client = readFileSync('src/client.js', 'utf8');
 const html = readFileSync('index.html', 'utf8');
@@ -134,9 +135,12 @@ for (const row of groupAttitudes.attitudes || []) {
   assert.ok(row.toward_group && !CHARACTER_KEYS.includes(row.toward_group), `group attitude target must be an explicit group id: ${row.toward_group}`);
 }
 
-assert.match(api, /buildCanonContext/, 'Writer must delegate factual retrieval through the Canon context boundary');
-assert.match(canonContext, /character-state\.json/, 'Canon retrieval boundary must read structured dated character state');
-assert.doesNotMatch(`${api}\n${canonContext}`, /row\.baseline_1285_03_01/, 'base retrieval must not depend on dated state embedded in character core');
+assert.match(canonContext, /character-state\.json/, 'standalone Canon context tooling must still read structured dated character state');
+assert.doesNotMatch(authoringRuntime, /buildCanonContext|relevantCharacterKeys|relevantScheduleFacts/, 'Crack-style Writer assembly must not use turn-level Canon relevance routing');
+for (const source of ['characters/characters.json', 'characters/presentation.json', 'character-state.json', 'baseline.json']) {
+  assert.match(authoringRuntime, new RegExp(source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `Crack-style Writer must assemble factual source directly: ${source}`);
+}
+assert.doesNotMatch(`${api}\n${authoringRuntime}\n${canonContext}`, /row\.baseline_1285_03_01/, 'base retrieval must not depend on dated state embedded in character core');
 for (const field of ['traits', 'authorities', 'startingGold', 'characterProfile']) {
   assert.match(api, new RegExp(field), `server PC sanitizer must preserve ${field}`);
   assert.match(client, new RegExp(field), `client save state must preserve ${field}`);
