@@ -7,6 +7,21 @@
   <title>Lumensia Authoring Runtime</title>
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/src/styles.css">
+  <script>
+    (() => {
+      const url = new URL(window.location.href);
+      let changed = false;
+      if (!url.searchParams.has('context')) {
+        url.searchParams.set('context', 'compact');
+        changed = true;
+      }
+      if (!url.searchParams.has('output')) {
+        url.searchParams.set('output', 'raw');
+        changed = true;
+      }
+      if (changed) window.history.replaceState(null, '', `${url.pathname}?${url.searchParams}${url.hash}`);
+    })();
+  </script>
 </head>
 <body>
   <header class="topbar">
