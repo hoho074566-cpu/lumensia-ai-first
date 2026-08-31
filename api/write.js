@@ -1,14 +1,18 @@
 import charactersData from '../data/canon/characters/characters.json' with { type: 'json' };
+import characterStateData from '../data/scenarios/academy-1285-03-01/character-state.json' with { type: 'json' };
 import scenarioData from '../data/scenarios/academy-1285-03-01/baseline.json' with { type: 'json' };
-import { ACADEMY_CAST_KEYS } from './lib/canon-context.js';
 import { assembleAuthoring } from './lib/authoring-runtime.js';
-
-// Factual retrieval boundary: assembleAuthoring -> buildCanonContext. This endpoint does not construct a Canon scene packet itself.
 
 export const config = { maxDuration: 300 };
 
 const CHARACTERS = charactersData.characters || {};
 const CHARACTER_KEYS = new Set(Object.keys(CHARACTERS));
+const ACADEMY_PRESENCE = new Set(['academy_student', 'academy_faculty', 'academy_guest']);
+const ACADEMY_CAST_KEYS = Object.freeze(
+  Object.entries(characterStateData.characters || {})
+    .filter(([key, state]) => CHARACTER_KEYS.has(key) && ACADEMY_PRESENCE.has(state?.presence))
+    .map(([key]) => key),
+);
 const EXPRESSIONS = new Set([
   'default','smile','blush','serious','angry','sad','shock',
   'smug','annoyed','worried','confused','laugh','flustered',
@@ -202,18 +206,23 @@ export default async function handler(req, res) {
     const action = typeof body.action === 'string' ? body.action : '';
     const continueScene = body.continueScene === true;
     const adminScenePreview = body.adminScenePreview === true;
-    if (continueScene && adminScenePreview) return json(res, 400, { error: '이어하기와 Admin Preview를 동시에 사용할 수 없습니다.' });
+
+    if (continueScene && adminScenePreview) {
+      return json(res, 400, { error: '이어하기와 Admin Preview를 동시에 사용할 수 없습니다.' });
+    }
     if (!continueScene && !action.trim()) return json(res, 400, { error: '행동 입력이 비어 있습니다.' });
-    if (action.length > MAX_ACTION_CHARS) return json(res, 400, { error: `한 번의 입력은 ${MAX_ACTION_CHARS.toLocaleString()}자 이하로 입력해 주세요.` });
+    if (action.length > MAX_ACTION_CHARS) {
+      return json(res, 400, { error: `한 번의 입력은 ${MAX_ACTION_CHARS.toLocaleString()}자 이하로 입력해 주세요.` });
+    }
 
     const runState = body.runState && typeof body.runState === 'object' ? body.runState : {};
     const pc = safePc(runState.pc || {});
     const scene = safeScene(runState.scene || {});
     const history = Array.isArray(runState.history) ? runState.history.slice(-MAX_HISTORY_TURNS) : [];
     if (continueScene && !history.length) return json(res, 400, { error: '이어갈 장면이 없습니다.' });
-    const knowledgeLevel = Math.max(1, Math.min(5, Number(runState.knowledgeLevel) || 1));
+
     const mode = adminScenePreview ? 'admin' : (continueScene ? 'continue' : 'action');
-    const authoring = assembleAuthoring({ action, pc, scene, history, knowledgeLevel, mode });
+    const authoring = assembleAuthoring({ action, pc, scene, history, mode });
 
     const apiResponse = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -242,8 +251,11 @@ export default async function handler(req, res) {
 
     const raw = await apiResponse.text();
     let response;
-    try { response = raw ? JSON.parse(raw) : {}; }
-    catch { throw new Error(`OpenAI가 JSON이 아닌 응답을 반환했습니다. HTTP ${apiResponse.status}`); }
+    try {
+      response = raw ? JSON.parse(raw) : {};
+    } catch {
+      throw new Error(`OpenAI가 JSON이 아닌 응답을 반환했습니다. HTTP ${apiResponse.status}`);
+    }
 
     if (!apiResponse.ok) {
       const message = response?.error?.message || `OpenAI 요청 실패: HTTP ${apiResponse.status}`;
@@ -256,8 +268,11 @@ export default async function handler(req, res) {
     if (!outputText) throw new Error('Writer 응답 본문이 비어 있습니다.');
 
     let parsed;
-    try { parsed = JSON.parse(outputText); }
-    catch { throw new Error('Writer structured output을 JSON으로 해석하지 못했습니다.'); }
+    try {
+      parsed = JSON.parse(outputText);
+    } catch {
+      throw new Error('Writer structured output을 JSON으로 해석하지 못했습니다.');
+    }
 
     const turn = validateTurn(parsed, pc, scene);
     return json(res, 200, {
@@ -274,7 +289,9 @@ export default async function handler(req, res) {
     const timeout = error?.name === 'TimeoutError' || error?.name === 'AbortError';
     const status = timeout ? 504 : (Number.isInteger(error?.status) ? error.status : 500);
     return json(res, status, {
-      error: timeout ? 'Writer 응답 시간이 초과되었습니다. 게임 상태는 변경되지 않았습니다.' : (error?.message || 'Writer 요청 중 오류가 발생했습니다.'),
+      error: timeout
+        ? 'Writer 응답 시간이 초과되었습니다. 게임 상태는 변경되지 않았습니다.'
+        : (error?.message || 'Writer 요청 중 오류가 발생했습니다.'),
       code: timeout ? 'WRITER_TIMEOUT' : 'WRITER_ERROR',
     });
   }
