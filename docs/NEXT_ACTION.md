@@ -1,81 +1,88 @@
 # Next Action
 
-## Current checkpoint
+## NEW CHAT ENTRYPOINT
 
-**CLEANROOM FOUNDATION — COMPLETE**
+This repository has already gone through a full greenfield restart and several failed isolated Original-Feel experiments.
 
-The new repository now has:
+**Do not reconstruct that history from old chat messages.**
 
-- AI-first repository rules
-- explicit legacy quarantine
-- Canon migration boundary/audit
-- cleaned world Canon
-- 32-character clean core/voice registry
-- epistemic visibility/secret Canon
-- explicit Canon uncertainties
-- dated 1285-03-01 academy baseline
-- dated relationship/open-situation baselines
-- clean PC creation/progression rules
-- 32-character / 13-expression image manifest
-- reference QA policy + benchmark + source hashes
-- minimal deployment/security skeleton
-- repository-owned clean-room CI
+The current conversation is being retired because its accumulated context has become noticeably slow. A new session must begin by reading:
 
-No V0 production Writer/runtime implementation has been added yet.
+1. `docs/LUMENSIA_HANDOVER_CURRENT.md`
+2. `docs/CANON_BASE_01_RECONCILIATION.md`
+3. `docs/CANON_SOURCE_AUDIT.md`
+4. `docs/ARCHITECTURE.md`
+5. this file
 
-## Exact next implementation
+Then refetch actual GitHub state.
 
-**V0 — Pure AI Narrative Prototype**
+---
 
-Build the smallest playable vertical slice from the clean-room data.
+## Current active work
 
-Target data flow:
+**CANON-BASE-01 — Clean Canon Reconciliation**
 
-```text
-Canon + scenario/run state + exact user action
-                  ↓
-          thin scene packet
-                  ↓
-            one AI Writer
-                  ↓
-       hard-invariant validation
-                  ↓
-             save/render
-```
+- Repository: `hoho074566-cpu/lumensia-ai-first`
+- PR: #19
+- Branch: `codex/canon-base-01-clean-reconciliation`
+- Base: exact Pure V0 `876e235918c99f4588c9ef4eb874ecee4541be97`
+- Draft / unmerged
+- Narrative Writer prose contract was intentionally not tuned in this pass.
 
-### Initial V0 scope
+The factual/base layer was audited after repeated narrative experiments showed that the Writer was receiving contradictory and asymmetric world data.
 
-Implement only what is necessary to play and compare narrative quality:
+CANON-BASE-01 now includes:
 
-- minimal mobile story UI
-- free PC creation using the clean PC field model
-- current run state: PC, current time/location, recent scene/history
-- relevant character/core/voice retrieval
-- relevant knowledge visibility filtering
-- exact USER ACTION preservation
-- one Writer model call (initial quality baseline may use one fixed high-quality model rather than routing)
-- free ordered narration/dialogue beat output
-- registered `speaker_key` / portrait expression validation
-- minimal save/export/import
-- visible error handling that never becomes fiction
+- reconciled A/B/C residence Canon
+- durable character core separated from dated character state
+- source-fidelity restoration for flattened character traits
+- source-audited presentation facts with unknowns left unknown
+- secrecy/Knowledge leakage correction
+- person relationships separated from group attitudes
+- restored omitted source-backed relationships
+- cleaned Open Situations
+- reconciled special-crime jurisdiction
+- reconciled Expert High / Expert Peak / Master definitions
+- PC creation base fields preserved by UI/save/server
+- bounded factual retrieval via `api/lib/canon-context.js`
+- regression tests for cross-file Canon and factual retrieval
 
-### Explicitly out of V0
+See the handover for the complete reasoning/history.
 
-- Suggested Actions
-- AUTO/CONTINUE modes
-- Event Engine
+---
+
+## Exact next action
+
+1. Start in a **new chat/session**.
+2. Read `docs/LUMENSIA_HANDOVER_CURRENT.md` first.
+3. Refetch PR #19 exact current HEAD, base/merge-base, draft/mergeable status, CI and Vercel.
+4. Do not reopen PR #15/#16/#17/#18 and do not reanalyze their outputs; their lessons are already recorded in the handover.
+5. If PR #19 has a factual/base defect, fix only that defect and rerun the structural gates.
+6. Do **not** infer narrative PASS from green structural tests.
+7. Do **not** resume Original-Feel Writer tuning until the user accepts the Canon base.
+8. Do not merge PR #19 automatically unless the user explicitly directs that action.
+9. After Canon-base acceptance/merge, create a fresh narrative experiment branch from the accepted Canon-base commit. Do not stack prompt patches on old failed branches.
+10. The first narrative probe should be cheap and unsteered: ordinary opening / residence / broad exploration / training-ground actions, without explicitly naming the desired Canon NPC.
+
+---
+
+## Hard constraints that remain
+
+Do not introduce:
+
+- Event Director / Event Engine
 - Schedule Engine
-- Turn Hook / Scene Exit / Scene Momentum
-- NPC simulation/goal-tick engine
-- off-screen simulation
-- relationship/memory mutation engines
-- skill growth/awakening automation
-- Fate/Ending/Inheritance
-- model routing by Korean keyword regex
-- narrative scoring/rewriting validators
+- NPC goal tick / NPC selector score
+- hook/attention/event-density meters
+- cast rotation scheduler
+- prose quotas
+- Korean semantic regex narrative engines
+- extra AI calls merely to decide the next beat
 
-### First human gate
+Keep the architecture:
 
-Before adding those systems, compare actual V0 play against `reference/QUALITY_BENCHMARK.md` using opening, routine, short-action, broad-intent, quiet conversation, NPC-vs-NPC, combat, suspense, failure/aftermath, unseen-scene, intent-boundary, and identity cases.
+`System = Facts -> User = New PC Intent -> One AI Writer = Scene Composition`
 
-If V0 does not plainly read like a living novel scene, fix the thin Writer path before adding game systems.
+`HANDOFF_READY: PASS`
+
+`NEXT_ACTION: NEW CHAT -> read LUMENSIA_HANDOVER_CURRENT.md -> refetch PR #19 -> finish/accept Canon-base before new Writer experimentation.`

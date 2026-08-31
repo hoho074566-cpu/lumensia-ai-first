@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "character_creation": {
     "player_defined_fields": [
       "name",
@@ -47,6 +47,5 @@
   "knowledge_boundary": {
     "rule": "플레이어용 INFO에 보이는 메타 정보와 PC가 세계 안에서 실제로 아는 사실은 구분한다.",
     "pc_profile": "PC의 고정 프로필은 세계 반응의 사실 근거가 될 수 있지만 NPC가 그 내용을 자동으로 아는 것은 아니다."
-  },
-  "migration_note": "Legacy Aaa TEST CHARACTER — MERCENARY V1은 source 자체가 실험용 DRAFT로 명시되어 있어 Canon에 이식하지 않았다. 새 PC는 각 run에서 사용자가 생성한다. 플레이어 주권에 관한 서술 규칙은 세계 Canon이 아니라 Writer contract에 둔다."
+  }
 }

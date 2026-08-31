@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 4,
   "scenario_id": "academy-1285-03-01",
   "title": "루멘시아 아카데미 입학식 당일",
   "start": {
@@ -18,26 +18,25 @@
     {"time": "09:00", "fact": "입학식이 시작될 예정"},
     {"time": "12:00", "fact": "1학년 학과별 오리엔테이션 예정"}
   ],
-  "character_baseline_notes": {
-    "anastasia": "기사과 3학년·학생회장·마스터 입문",
-    "isabel": "기사과 1학년·익스퍼트 하급",
-    "lucia": "마법과 2학년·학생회 부회장·백장미회 회장·6서클",
-    "elena": "마법과 수석교수·8서클",
-    "artemis": "기사과 수석교수·마스터 완숙",
-    "sera": "기사과 1학년·실기 수석 입학·익스퍼트 하급",
-    "sia": "마법과 1학년·정령학 특별추천·4서클",
-    "lillia": "기사과 1학년·가문추천·익스퍼트 중급",
-    "lena": "마법과 1학년·마탑주 특별추천·7서클",
-    "emily": "아카데미 교장·정확한 상한 비공개",
-    "laris": "기사과 1학년·가문추천·익스퍼트 하급",
-    "mirabelle": "신학부 1학년·교환장학생",
-    "serena": "마법과 1학년·가문추천·4서클",
-    "chloe": "마법과 1학년·일반전형·2서클",
-    "aria": "22세 성녀·아카데미 체류 중",
-    "elise": "마법과 2학년·백장미회 부회장·5서클",
-    "carne": "제국 근위대 총사령관·마스터 극의",
-    "etera": "마탑주·현존 9서클",
-    "seriel": "무소속 천상사강·마스터 극의"
+  "housing": {
+    "halls": ["A동", "B동", "C동"],
+    "room_style": "기본 학생 생활실은 1인실이다.",
+    "assignment_rule": "A동·B동·C동 모두 학생 배정에 사용된다. 특정 학년이나 학과를 한 생활동에 고정하지 않으며 PC의 생활동과 방은 run state에서 한 번 정한 뒤 지속한다."
   },
-  "runtime_rule": "이 파일은 1285-03-01 시작 시점의 사실 묶음이지 장면 순서표가 아니다. Writer에게 필요한 사실만 선택적으로 제공하고, 여기 적힌 시간표를 절차·대기·다음 행동 지시로 변환하지 않는다."
+  "institution_state": {
+    "principal": "emily",
+    "knight_senior_professor": "artemis",
+    "magic_senior_professor": "elena",
+    "student_council_president": "anastasia",
+    "student_council_vice_president": "lucia",
+    "white_rose_president": "lucia",
+    "white_rose_vice_president": "elise"
+  },
+  "political_state": {
+    "imperial_succession": "아우구스투스 3세는 아직 후계자를 지명하지 않았고, 제1황녀 아나스타샤와 제2황녀 이사벨이 주요 계승후보다."
+  },
+  "character_state_source": "character-state.json",
+  "relationship_source": "relationships.json",
+  "group_attitude_source": "group-attitudes.json",
+  "runtime_rule": "이 파일은 1285-03-01 시작 시점의 사실 묶음이지 장면 순서표가 아니다. Writer에게 필요한 사실만 선택적으로 제공하고, 여기 적힌 시간표를 절차·대기·다음 행동 지시로 변환하지 않는다. 시각은 상태값이지 그 자체로 종소리·행사 시작·서술 문장을 자동 생성하는 사건이 아니다."
 }

@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "purpose": "Explicitly preserve unknown/undetermined areas so runtime or future development does not silently invent definitive Canon.",
+  "version": 2,
+  "purpose": "Explicitly preserve unknown/undetermined areas so runtime or future development does not silently invent definitive Canon. This file may also hold source-confirmed truths whose information-access classification has not yet been audited; those facts must not enter ordinary public packets until classified.",
   "items": [
     {
       "id": "emily_true_ceiling_and_past",
@@ -37,6 +37,41 @@
       "subject": "authority_system",
       "status": "resolved_negative",
       "note": "There is no confirmed official numeric grade system for Authorities. Comparative power depends on the law involved, user realm, soul strength, mastery, conditions, and costs. Do not invent an S/SSS-style Authority grade ladder."
+    },
+    {
+      "id": "laris_other_styles_access",
+      "subject": "laris",
+      "status": "access_unclassified",
+      "confirmed_truth": "라리스는 본가 검술 외의 다른 유파를 몰래 연구하고 있다.",
+      "note": "Legacy NPC Canon explicitly labels this a secret, but the exact set of people who know it and the appropriate visibility level have not been source-audited. Keep it out of ordinary public character packets until classified."
+    },
+    {
+      "id": "serena_attack_magic_trauma_access",
+      "subject": "serena",
+      "status": "access_unclassified",
+      "confirmed_truth": "세레나는 과거 루시아와의 대련에서 큰 부상을 낸 사건 이후 공격마법 사용에 심리적 부담과 두려움이 있다.",
+      "note": "The underlying event/trauma is source-confirmed, but dissemination beyond the directly involved people has not been audited."
+    },
+    {
+      "id": "chloe_high_risk_information_trade_access",
+      "subject": "chloe",
+      "status": "access_unclassified",
+      "confirmed_truth": "클로에는 귀족들의 약점을 사고파는 고위험 정보거래에도 관여한다.",
+      "note": "Legacy NPC Canon explicitly labels this a secret. Public rumor about Chloe trading information is already separate Knowledge Canon; the exact access level for the high-risk activity remains unaudited."
+    },
+    {
+      "id": "elise_gaze_of_charm_access",
+      "subject": "elise",
+      "status": "access_unclassified",
+      "confirmed_truth": "엘리제는 레이하트 직계 일부에게 발현하는 혈통 Trait '매혹의 시선(Gaze of Charm)'을 보유한다. 강제 정신지배가 아니라 약한 호감과 경계 완화 방향에 작용한다.",
+      "note": "The trait itself is explicitly confirmed in later legacy Canon, but who knows the exact mechanism has not been source-audited. Do not expose it through ordinary public packets until classified."
+    },
+    {
+      "id": "sera_mercenary_errand_rumor_access",
+      "subject": "sera",
+      "status": "access_unclassified",
+      "confirmed_truth": "세라가 과거 용병단에서 비공식 임무를 수행했다는 이야기는 source에서 소문으로만 제시된다.",
+      "note": "Truth is not confirmed. The exact social reach of the rumor has not been audited, so do not invent who has heard it."
     }
   ]
 }
