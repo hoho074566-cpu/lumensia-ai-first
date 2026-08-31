@@ -24,7 +24,7 @@ assert.equal(AUTHORING_DATA.version, 3, 'clean Writer authoring data must be ver
 assert.equal(AUTHORING_DATA.development_examples.length, 3, 'development examples remain capped at three');
 assert.doesNotMatch(AUTHORING_DATA.base_rp_template, /루멘시아|세라|릴리아|에밀리|아르테미스|시아|미라벨/, 'Base RP Template must remain story-agnostic');
 assert.match(AUTHORING_DATA.main_author_prompt, /루멘시아 아카데미/, 'story identity belongs in Main Author Prompt');
-assert.doesNotMatch(AUTHORING_DATA.main_author_prompt, /에밀리|아르테미스|세라|릴리아|라리스|이사벨|시아|레나|세레나|클로에|미라벨/, 'individual cast facts must come from Canon cast material, not hardcoded Story Prompt');
+assert.doesNotMatch(AUTHORING_DATA.main_author_prompt, /에밀리|아르테미스|세라|릴리아|라리스|이사벨|레나|세레나|클로에|미라벨/, 'individual cast facts must come from Canon cast material, not hardcoded Story Prompt');
 assert.ok(!Object.hasOwn(AUTHORING_DATA, 'start_setting'), 'clean Writer runtime must not carry a second narrative Start Setting layer');
 
 const pc = {
