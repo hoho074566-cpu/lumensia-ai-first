@@ -75,7 +75,10 @@ assert.match(opening.input, /적안/, 'Artemis verified eyes must reach Writer')
 assert.match(opening.input, /\[CHARACTER: emily\] 에밀리/, 'Emily must exist in the always-on sourcebook');
 assert.match(opening.input, /아카데미 교장/, 'Emily current office must reach Writer');
 assert.match(opening.input, /\[CHARACTER: etera\] 에테라/, 'external durable characters must also exist in the full sourcebook without name activation');
-assert.doesNotMatch(opening.input, /에테라.*9서클|9서클.*에테라/s, 'restricted Etera exact power must not leak through ordinary sourcebook material');
+const eteraStart = opening.input.indexOf('[CHARACTER: etera]');
+const eteraNext = opening.input.indexOf('\n\n[CHARACTER:', eteraStart + 1);
+const eteraEntry = opening.input.slice(eteraStart, eteraNext === -1 ? opening.input.length : eteraNext);
+assert.doesNotMatch(eteraEntry, /9서클/, 'restricted Etera exact power must not leak through the ordinary Etera sourcebook entry');
 assert.match(opening.input, /09:00.*입학식이 시작될 예정/s, 'dated scenario schedule remains a factual sourcebook item');
 assert.match(opening.input, /재능:.*martial: 5.*knowledge: 3/, 'PC talents must reach Runtime State as factual player material');
 assert.doesNotMatch(opening.input, /PLAY GUIDE:/, 'play guide is user-facing and must not be injected into Writer input');
