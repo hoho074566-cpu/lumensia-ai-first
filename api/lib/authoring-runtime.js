@@ -1,18 +1,26 @@
 import authoringData from '../../data/authoring/lumensia-academy.json' with { type: 'json' };
-import { buildCanonContext } from './canon-context.js';
+import charactersData from '../../data/canon/characters/characters.json' with { type: 'json' };
+import presentationData from '../../data/canon/characters/presentation.json' with { type: 'json' };
+import academyData from '../../data/canon/world/academy.json' with { type: 'json' };
+import geographyData from '../../data/canon/world/geography.json' with { type: 'json' };
+import societyData from '../../data/canon/world/society.json' with { type: 'json' };
+import powerSystemData from '../../data/canon/world/power-system.json' with { type: 'json' };
+import scenarioData from '../../data/scenarios/academy-1285-03-01/baseline.json' with { type: 'json' };
+import characterStateData from '../../data/scenarios/academy-1285-03-01/character-state.json' with { type: 'json' };
+import relationshipsData from '../../data/scenarios/academy-1285-03-01/relationships.json' with { type: 'json' };
+import groupAttitudesData from '../../data/scenarios/academy-1285-03-01/group-attitudes.json' with { type: 'json' };
 
 const MAX_HISTORY_TURNS = 8;
-const POWER_TERMS = ['마나', '오러', '검기', '검강', '경지', '써클', '마법', '검술', '무도', '심법', '권능', 'Trait', 'Authority'];
-const HOUSING_TERMS = ['생활동', '기숙사', '호실', '방 배정', '방번호', '방 번호', 'A동', 'B동', 'C동'];
+const CHARACTERS = charactersData.characters || {};
+const PRESENTATION = presentationData.characters || {};
+const CHARACTER_STATE = characterStateData.characters || {};
+const RELATIONSHIPS = relationshipsData.relationships || [];
+const GROUP_ATTITUDES = groupAttitudesData.attitudes || [];
+const ACADEMY_PRESENCE = new Set(['academy_student', 'academy_faculty', 'academy_guest']);
 
-function cleanText(value, max = 2400) {
+function cleanText(value, max = 3000) {
   const text = String(value ?? '').trim();
   return text.length > max ? text.slice(0, max) : text;
-}
-
-function includesAny(text, terms) {
-  const value = String(text || '');
-  return terms.some((term) => term && value.includes(term));
 }
 
 function plainValue(value, depth = 0) {
@@ -31,149 +39,218 @@ function plainValue(value, depth = 0) {
   return '';
 }
 
+function characterAliases(key, row = {}) {
+  const fullName = String(row.name || '').trim();
+  const shortName = fullName.split(/\s+/)[0] || '';
+  return [...new Set([key, fullName, shortName].filter(Boolean))];
+}
+
+function literalMention(text, token) {
+  if (!token) return false;
+  if (/^[a-z0-9_-]+$/i.test(token)) {
+    const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(^|[^\\p{L}\\p{N}_])${escaped}(?=$|[^\\p{L}\\p{N}_])`, 'iu').test(text);
+  }
+  return text.includes(token);
+}
+
+function relationshipFactsFor(key) {
+  return RELATIONSHIPS.filter((row) => row.from === key || row.to === key);
+}
+
+function groupAttitudesFor(key) {
+  return GROUP_ATTITUDES.filter((row) => row.from === key);
+}
+
+function characterAddon(key) {
+  const row = CHARACTERS[key];
+  if (!row) return '';
+  const core = row.core || {};
+  const voice = row.voice || {};
+  const state = CHARACTER_STATE[key] || {};
+  const presentation = PRESENTATION[key] || {};
+  const parts = [`[CHARACTER ADD-ON: ${key}] ${row.name}`];
+
+  const identity = plainValue(core.identity || []);
+  const background = plainValue(core.background || []);
+  const personality = plainValue(core.personality || []);
+  const values = plainValue(core.values || []);
+  const capabilities = plainValue(core.capabilities || []);
+  const strengths = plainValue(core.strengths || []);
+  const limitations = plainValue(core.limitations || []);
+  const interests = plainValue(core.interests || []);
+  const activities = plainValue(core.activities || []);
+  const equipment = plainValue(core.signature_equipment || []);
+
+  if (identity) parts.push(`정체성: ${identity}`);
+  if (background) parts.push(`배경: ${background}`);
+  if (personality) parts.push(`성격: ${personality}`);
+  if (values) parts.push(`가치: ${values}`);
+  if (core.aspiration) parts.push(`지향점: ${cleanText(core.aspiration, 500)}`);
+  if (interests) parts.push(`관심: ${interests}`);
+  if (activities) parts.push(`평소 활동: ${activities}`);
+  if (core.combat_identity) parts.push(`전투 성향: ${cleanText(core.combat_identity, 500)}`);
+  if (core.specialty) parts.push(`특기: ${cleanText(core.specialty, 500)}`);
+  if (capabilities) parts.push(`능력: ${capabilities}`);
+  if (strengths) parts.push(`강점: ${strengths}`);
+  if (limitations) parts.push(`한계: ${limitations}`);
+  if (equipment) parts.push(`대표 장비: ${equipment}`);
+
+  if (voice.register) parts.push(`말투: ${cleanText(voice.register, 400)}`);
+  if (voice.tendencies?.length) parts.push(`말/반응 경향: ${plainValue(voice.tendencies)}`);
+  if (voice.avoid?.length) parts.push(`피해야 할 붕괴: ${plainValue(voice.avoid)}`);
+  if (row.refined_characterization?.length) parts.push(`세부 묘사 원칙: ${plainValue(row.refined_characterization)}`);
+
+  if (Object.keys(presentation).length) parts.push(`보이는 외형/표현 사실: ${plainValue(presentation)}`);
+  if (Object.keys(state).length) parts.push(`현재 시점 상태: ${plainValue(state)}`);
+
+  const relationships = relationshipFactsFor(key);
+  if (relationships.length) parts.push(`현재 관계 사실: ${plainValue(relationships)}`);
+  const attitudes = groupAttitudesFor(key);
+  if (attitudes.length) parts.push(`집단 태도: ${plainValue(attitudes)}`);
+
+  parts.push('이 Add-on의 author-facing 사실은 해당 인물 묘사를 위한 재료이며, 다른 인물이나 player가 자동으로 아는 정보가 아니다.');
+  return parts.join('\n');
+}
+
+function academyWorldAddon() {
+  const institution = plainValue(academyData.institution || {});
+  const academic = plainValue(academyData.academic_structure || {});
+  const layout = plainValue({
+    scale: geographyData?.academy_layout?.scale || null,
+    axis: geographyData?.academy_layout?.axis || null,
+    zones: geographyData?.academy_layout?.zones || {},
+    facilities: geographyData?.academy_layout?.facilities || {},
+  });
+  return [
+    '[WORLD ADD-ON: academy]',
+    institution ? `기관: ${institution}` : '',
+    academic ? `학사 구조: ${academic}` : '',
+    layout ? `아카데미 공간: ${layout}` : '',
+    '공간 정보는 배경 사실이다. 현재 장면에 필요하지 않은 시설을 순회하거나 나열할 필요가 없다.',
+  ].filter(Boolean).join('\n');
+}
+
+function scenarioAddon() {
+  return [
+    '[SCENARIO ADD-ON: academy-1285-03-01]',
+    `시작 기준: ${plainValue(scenarioData.start || {})}`,
+    `현재 학사 기간 기준: ${plainValue(scenarioData.academic_period || {})}`,
+    `확정된 예정 사실: ${plainValue(scenarioData.dated_world_facts || [])}`,
+    `생활동 사실: ${plainValue(scenarioData.housing || {})}`,
+    `현재 기관 담당자: ${plainValue(scenarioData.institution_state || {})}`,
+    `현재 정치 상태: ${plainValue(scenarioData.political_state || {})}`,
+    '이 Add-on은 날짜가 있는 세계 상태다. 예정 사실은 절차표가 아니며, user가 그 시간 구간을 지나가도록 선택하지 않았는데 자동으로 완료하거나 다음 단계로 이동하지 않는다.',
+    '여기에 없는 접수 방식·열쇠 배부·이의 신청·통금·호실 번호·행정 순서는 미정이다.',
+  ].join('\n');
+}
+
+function signalText(action = '', scene = {}, history = []) {
+  const recent = history.slice(-MAX_HISTORY_TURNS).map((turn) => {
+    const dialogueKeys = Array.isArray(turn?.scene)
+      ? turn.scene.filter((beat) => beat?.kind === 'dialogue' && beat?.speaker_key).map((beat) => beat.speaker_key).join(' ')
+      : '';
+    return `${turn?.action || ''} ${dialogueKeys}`;
+  }).join('\n');
+  return `${scene.location || ''}\n${scene.situation || ''}\n${action || ''}\n${recent}`;
+}
+
+function activeAddons(action = '', scene = {}, history = []) {
+  const text = signalText(action, scene, history);
+  const modules = [
+    { id: 'academy', kind: 'world', content: academyWorldAddon(), activation: 'scenario' },
+    { id: 'academy-1285-03-01', kind: 'scenario', content: scenarioAddon(), activation: 'scenario' },
+  ];
+
+  for (const [key, state] of Object.entries(CHARACTER_STATE)) {
+    if (!CHARACTERS[key]) continue;
+    if (ACADEMY_PRESENCE.has(state?.presence)) {
+      modules.push({ id: key, kind: 'character', content: characterAddon(key), activation: 'academy-presence' });
+    }
+  }
+
+  for (const [key, row] of Object.entries(CHARACTERS)) {
+    if (modules.some((module) => module.id === key)) continue;
+    if (characterAliases(key, row).some((alias) => literalMention(text, alias))) {
+      modules.push({ id: key, kind: 'character', content: characterAddon(key), activation: 'literal-keyword' });
+    }
+  }
+
+  return modules;
+}
+
+function sourceForKeywordBook(source) {
+  switch (source) {
+    case 'scenario.housing':
+      return plainValue(scenarioData.housing || {});
+    case 'canon.power-system':
+      return plainValue(powerSystemData || {});
+    case 'canon.society.status_and_law':
+      return plainValue(societyData.status_and_law || {});
+    case 'canon.society.adventurer_guild':
+      return plainValue(societyData.adventurer_guild || {});
+    case 'canon.society.religion':
+      return plainValue(societyData.religion || {});
+    case 'canon.society.economy':
+      return plainValue(societyData.economy || {});
+    default:
+      return '';
+  }
+}
+
+function activeKeywordBooks(action = '', scene = {}) {
+  const text = `${scene.location || ''}\n${scene.situation || ''}\n${action || ''}`;
+  return (authoringData.keyword_books || []).filter((book) => (
+    (book.keywords || []).some((keyword) => literalMention(text, keyword))
+  )).map((book) => ({
+    id: book.id,
+    label: book.label,
+    content: sourceForKeywordBook(book.source),
+    keywords: book.keywords || [],
+  })).filter((book) => book.content);
+}
+
 function currentRuntimeState(pc = {}, scene = {}) {
   const lines = [
     `현재 날짜와 시각: ${cleanText(scene.date, 10)} ${cleanText(scene.time, 5)}.`,
     `현재 장소: ${cleanText(scene.location, 220)}.`,
-    scene.situation ? `현재 상황: ${cleanText(scene.situation, 620)}.` : '',
+    scene.situation ? `현재 상황: ${cleanText(scene.situation, 700)}.` : '',
     `player: ${cleanText(pc.name, 80)}, ${Number.isFinite(Number(pc.age)) ? `${Number(pc.age)}세` : '나이 미상'}${pc.gender ? `, ${cleanText(pc.gender, 40)}` : ''}${pc.department ? `, ${cleanText(pc.department, 80)}` : ''}.`,
     pc.origin ? `출신: ${cleanText(pc.origin, 220)}.` : '',
     pc.socialStatus ? `신분: ${cleanText(pc.socialStatus, 140)}.` : '',
+    pc.admission ? `입학 방식: ${cleanText(pc.admission, 180)}.` : '',
     pc.realm ? `무의 경지: ${cleanText(pc.realm, 140)}.` : '',
     pc.magicCircle != null && pc.magicCircle !== '' ? `마법 써클: ${pc.magicCircle}.` : '',
     pc.appearance ? `외형: ${cleanText(pc.appearance, 700)}.` : '',
-    pc.background ? `배경: ${cleanText(pc.background, 900)}.` : '',
-    pc.characterProfile ? `성격/행동 프로필: ${cleanText(pc.characterProfile, 900)}.` : '',
-    pc.traits?.length ? `Trait: ${pc.traits.map((item) => cleanText(item, 220)).join(' / ')}.` : '',
-    pc.authorities?.length ? `Authority: ${pc.authorities.map((item) => cleanText(item, 220)).join(' / ')}.` : '',
-    pc.skills?.length ? `현재 스킬: ${pc.skills.map((item) => cleanText(item, 140)).join(' / ')}.` : '',
+    pc.background ? `배경: ${cleanText(pc.background, 1000)}.` : '',
+    pc.characterProfile ? `성격/행동 프로필: ${cleanText(pc.characterProfile, 1000)}.` : '',
+    pc.traits?.length ? `Trait: ${pc.traits.map((item) => cleanText(item, 240)).join(' / ')}.` : '',
+    pc.authorities?.length ? `Authority: ${pc.authorities.map((item) => cleanText(item, 240)).join(' / ')}.` : '',
+    pc.skills?.length ? `현재 스킬: ${pc.skills.map((item) => cleanText(item, 160)).join(' / ')}.` : '',
     pc.equipment?.length ? `현재 장비: ${pc.equipment.map((item) => cleanText(item, 180)).join(' / ')}.` : '',
+    Number.isFinite(Number(pc.startingGold)) ? `현재 기준 금화: ${Math.max(0, Number(pc.startingGold))}.` : '',
     scene.presentCharacterKeys?.length ? `직전 continuity에 남아 있는 등록 인물 key: ${scene.presentCharacterKeys.join(', ')}.` : '',
   ];
   return lines.filter(Boolean).join('\n');
 }
 
-function castRow(row = {}) {
-  const parts = [`[${row.key}] ${row.name}`];
-  const state = plainValue(row.current_state || {});
-  const presentation = plainValue(row.presentation || {});
-  const identity = plainValue(row.identity || []);
-  const personality = plainValue(row.personality_signals || []);
-  const interests = plainValue(row.interests || []);
-  const relationships = plainValue(row.relationship_hints || []);
-  if (state) parts.push(`현재 상태: ${state}`);
-  if (presentation) parts.push(`보이는 외형/표현 사실: ${presentation}`);
-  if (identity) parts.push(`정체성: ${identity}`);
-  if (personality) parts.push(`성격 신호: ${personality}`);
-  if (row.aspiration) parts.push(`지향점: ${cleanText(row.aspiration, 220)}`);
-  if (interests) parts.push(`관심: ${interests}`);
-  if (row.activity_or_combat_signal) parts.push(`활동/전투 신호: ${cleanText(row.activity_or_combat_signal, 260)}`);
-  if (row.voice_register) parts.push(`말투: ${cleanText(row.voice_register, 220)}`);
-  if (relationships) parts.push(`관계 신호: ${relationships}`);
-  return parts.join(' | ');
-}
-
-function academyCastMaterial(canon = {}) {
-  const rows = canon.academy_cast_index || [];
-  if (!rows.length) return '(현재 아카데미 생활권 등록 인물 자료 없음)';
+function startSettings(scene = {}, history = [], mode = 'action') {
+  if (mode !== 'action' || history.length) return '';
+  const start = scenarioData.start || {};
+  const exactStart = scene.date === start.date && scene.time === start.time && scene.location === start.location;
+  if (!exactStart) return '';
   return [
-    '아래는 이 시점에 아카데미 생활권에 속한 등록 인물 재료다. 등장 순서표나 현재 위치표가 아니다. Writer가 현재 장면에 자연스럽게 맞는 사람을 직접 판단한다.',
-    ...rows.map(castRow),
-  ].join('\n');
+    `PROLOGUE: ${cleanText(authoringData?.start_settings?.prologue, 1200)}`,
+    `START SITUATION: ${plainValue(start)}`,
+    `RULE: ${cleanText(authoringData?.start_settings?.situation_rule, 1200)}`,
+    `PLAY GUIDE: ${cleanText(authoringData?.start_settings?.play_guide, 1200)}`,
+  ].filter(Boolean).join('\n');
 }
 
-function detailedCharacterMaterial(canon = {}) {
-  const rows = canon.relevant_characters || [];
-  if (!rows.length) return '(현재 장면에 이미 확정되었거나 직접 언급된 등록 인물의 추가 상세 자료 없음)';
-  return rows.map((character) => {
-    const parts = [`[${character.key}] ${character.name}`];
-    const core = character.portrayal_core || {};
-    const identity = plainValue(core.identity || []);
-    const background = plainValue(core.background || []);
-    const personality = plainValue(core.personality || []);
-    const capabilities = plainValue(core.capabilities || []);
-    const limitations = plainValue(core.limitations || []);
-    const interests = plainValue(core.interests || []);
-    const activities = plainValue(core.activities || []);
-    if (identity) parts.push(`정체성: ${identity}`);
-    if (background) parts.push(`배경: ${background}`);
-    if (personality) parts.push(`성격: ${personality}`);
-    if (core.aspiration) parts.push(`지향점: ${cleanText(core.aspiration, 320)}`);
-    if (interests) parts.push(`관심: ${interests}`);
-    if (activities) parts.push(`평소 활동: ${activities}`);
-    if (core.combat_identity) parts.push(`전투 성향: ${cleanText(core.combat_identity, 360)}`);
-    if (core.specialty) parts.push(`특기: ${cleanText(core.specialty, 320)}`);
-    if (capabilities) parts.push(`능력: ${capabilities}`);
-    if (limitations) parts.push(`한계: ${limitations}`);
-    const voice = character.voice || {};
-    if (voice.register) parts.push(`말투: ${cleanText(voice.register, 260)}`);
-    if (voice.tendencies?.length) parts.push(`말/반응 경향: ${plainValue(voice.tendencies)}`);
-    if (voice.avoid?.length) parts.push(`피해야 할 붕괴: ${plainValue(voice.avoid)}`);
-    const presentation = plainValue(character.presentation || {});
-    if (presentation) parts.push(`보이는 외형/표현 사실: ${presentation}`);
-    const state = plainValue(character.current_state || {});
-    if (state) parts.push(`현재 상태: ${state}`);
-    const relationships = plainValue(character.dated_relationships || []);
-    if (relationships) parts.push(`현재 관계 맥락: ${relationships}`);
-    const groupAttitudes = plainValue(character.group_attitudes || []);
-    if (groupAttitudes) parts.push(`집단 태도: ${groupAttitudes}`);
-    const pcKnowledge = plainValue(character.pc_visible_knowledge || []);
-    if (pcKnowledge) parts.push(`player가 현재 알 수 있는 관련 사실: ${pcKnowledge}`);
-    return parts.join(' | ');
-  }).join('\n');
-}
-
-function relevantWorldFacts(canon = {}, action = '', scene = {}) {
-  const activationText = `${scene.location || ''}\n${scene.situation || ''}\n${action || ''}`;
-  const groups = [];
-
-  const facilities = canon?.academy?.location_context?.relevant_facilities || {};
-  if (Object.keys(facilities).length) {
-    groups.push({ name: '현재 장소 관련 시설 사실', content: plainValue(facilities), reason: '현재 장소/입력에 직접 관련' });
-  }
-
-  if (includesAny(activationText, HOUSING_TERMS)) {
-    groups.push({
-      name: '생활동 사실',
-      content: `${plainValue(canon?.academy?.housing || {})}. 개인 생활동/방은 run state에서 확정된 값만 사용하며 미정이면 미정으로 둔다.`,
-      reason: '현재 장면/입력이 생활동을 직접 다룸',
-    });
-  }
-
-  if ((canon.schedule || []).length) {
-    groups.push({
-      name: '현재 관련 학사 일정 사실',
-      content: `${plainValue(canon.schedule)}. 이것은 세계의 사실일 뿐 다음 장면 순서나 안내 대사를 만들라는 지시가 아니다.`,
-      reason: 'Canon retrieval이 현재 시각/질문과 관련된 일정 사실을 선택함',
-    });
-  }
-
-  if (canon.society && Object.keys(canon.society).length) {
-    groups.push({ name: '사회/법/제도 사실', content: plainValue(canon.society), reason: '현재 입력이 직접 관련 주제를 다룸' });
-  }
-
-  if (canon.dated_scenario && Object.keys(canon.dated_scenario).length) {
-    groups.push({ name: '현재 시대/학사/정치 사실', content: plainValue(canon.dated_scenario), reason: '현재 입력이 dated scenario 사실을 직접 요구함' });
-  }
-
-  if (includesAny(activationText, POWER_TERMS)) {
-    groups.push({ name: '마나/무도/마법 경지 사실', content: plainValue(canon.power || {}), reason: '현재 장면/입력이 전투·마나·경지를 직접 다룸' });
-  }
-
-  if ((canon.pc_visible_knowledge || []).length) {
-    groups.push({ name: 'player가 현재 알 수 있는 세계 지식', content: plainValue(canon.pc_visible_knowledge), reason: 'Canon knowledge retrieval이 관련 공개 사실을 선택함' });
-  }
-
-  if ((canon.relevant_open_situations || []).length) {
-    groups.push({ name: '현재 접근 가능한 외부 상황', content: plainValue(canon.relevant_open_situations), reason: '현재 입력이 해당 외부 상황을 직접 다룸' });
-  }
-
-  if (!groups.length) return { text: '(현재 추가로 필요한 세계 사실 없음)', groups: [] };
-
-  return {
-    text: groups.map((group) => `[${group.name}]\n${cleanText(group.content, 3200)}`).join('\n\n'),
-    groups: groups.map(({ name, reason }) => ({ name, reason })),
-  };
+function developmentExamples() {
+  return (authoringData.development_examples || []).slice(0, 3).map((example, index) => (
+    `EXAMPLE ${index + 1}\nUSER:\n${cleanText(example.user, 1000)}\n\nWRITER:\n${cleanText(example.writer, 3600)}`
+  )).join('\n\n');
 }
 
 function recentChat(history = []) {
@@ -181,8 +258,8 @@ function recentChat(history = []) {
   if (!turns.length) return '(아직 이전 대화 없음)';
   return turns.map((turn, index) => {
     const sceneText = Array.isArray(turn?.scene)
-      ? turn.scene.slice(-18).map((beat) => {
-          const text = cleanText(beat?.text, 1200);
+      ? turn.scene.slice(-20).map((beat) => {
+          const text = cleanText(beat?.text, 1400);
           if (!text) return '';
           if (beat?.kind === 'dialogue') return `${cleanText(beat?.speaker_name || beat?.speaker_key || '인물', 80)}: ${text}`;
           return text;
@@ -190,12 +267,6 @@ function recentChat(history = []) {
       : '';
     return `TURN ${index + 1}\nUSER: ${cleanText(turn?.action || '(이어하기)', 1800)}\nWRITER:\n${sceneText}`;
   }).join('\n\n');
-}
-
-function developmentExamples() {
-  return (authoringData.development_examples || []).slice(0, 3).map((example, index) => (
-    `EXAMPLE ${index + 1}\nUSER: ${cleanText(example.user, 900)}\nWRITER:\n${cleanText(example.writer, 3000)}`
-  )).join('\n\n');
 }
 
 function exactUserEnvelope(mode, action) {
@@ -208,35 +279,32 @@ function exactUserEnvelope(mode, action) {
   return `EXACT USER INPUT\n${action}`;
 }
 
-export function assembleAuthoring({ action = '', pc = {}, scene = {}, history = [], knowledgeLevel = 1, mode = 'action' } = {}) {
-  const retrievalAction = mode === 'continue' ? '' : action;
-  const canon = buildCanonContext({ action: retrievalAction, pc, scene, history, knowledgeLevel });
-  const worldFacts = relevantWorldFacts(canon, retrievalAction, scene);
-
-  const instructions = [
-    authoringData.base_rp_template,
-    authoringData.main_author_prompt,
-  ].filter(Boolean).join('\n\n');
+export function assembleAuthoring({ action = '', pc = {}, scene = {}, history = [], mode = 'action' } = {}) {
+  const effectiveAction = mode === 'continue' ? '' : action;
+  const addons = activeAddons(effectiveAction, scene, history);
+  const books = activeKeywordBooks(effectiveAction, scene);
+  const start = startSettings(scene, history, mode);
 
   const sections = [
-    `CURRENT RUNTIME STATE\n${currentRuntimeState(pc, scene)}`,
-    `ACADEMY CAST MATERIAL\n${academyCastMaterial(canon)}`,
-    `CURRENT / PRESENT CHARACTER DETAIL\n${detailedCharacterMaterial(canon)}`,
-    `RELEVANT WORLD FACTS\n${worldFacts.text}`,
+    `STORY SETTINGS\n${authoringData.story_settings}`,
+    `ADD-ONS\n${addons.map((module) => module.content).join('\n\n')}`,
+    start ? `START SETTINGS\n${start}` : '',
     `DEVELOPMENT EXAMPLES\n${developmentExamples()}`,
+    `RUNTIME STATE\n${currentRuntimeState(pc, scene)}`,
+    `KEYWORD BOOKS\n${books.length ? books.map((book) => `[${book.label}]\n${cleanText(book.content, 5000)}`).join('\n\n') : '(현재 활성 Keyword Book 없음)'}`,
     `RECENT CHAT\n${recentChat(history)}`,
     exactUserEnvelope(mode, action),
-  ];
+  ].filter(Boolean);
 
   return {
-    instructions,
+    instructions: authoringData.prompt_template,
     input: sections.join('\n\n'),
     diagnostics: {
       story_id: authoringData.story_id,
-      writer_runtime: 'cleanroom-01',
-      academy_cast_count: (canon.academy_cast_index || []).length,
-      detailed_character_count: (canon.relevant_characters || []).length,
-      active_keyword_books: worldFacts.groups,
+      writer_runtime: 'crack-runtime-01',
+      start_settings_active: Boolean(start),
+      active_addons: addons.map(({ id, kind, activation }) => ({ id, kind, activation })),
+      active_keyword_books: books.map(({ id, label }) => ({ id, label })),
       development_example_count: Math.min(3, (authoringData.development_examples || []).length),
       mode,
     },
