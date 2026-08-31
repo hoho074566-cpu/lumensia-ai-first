@@ -15,25 +15,25 @@ execFileSync(process.execPath, ['--check', 'api/lib/authoring-runtime.js'], { st
 execFileSync(process.execPath, ['--check', 'src/client.js'], { stdio: 'pipe' });
 
 assert.match(spec, /AI의 서사 판단을 코드로 대신하지 않는다/, 'prime directive must remain');
-assert.match(spec, /Crack-style Creator Pack/, 'spec must define Crack-style Creator Pack');
 assert.equal((api.match(/https:\/\/api\.openai\.com\/v1\/responses/g) || []).length, 1, 'critical write path must contain exactly one Writer call');
-assert.match(api, /assembleAuthoring/, 'api/write must delegate material assembly');
+assert.match(api, /assembleAuthoring/, 'api/write must delegate Writer material assembly');
 assert.doesNotMatch(api, /canon-context/, 'critical Writer path must not depend on turn-level Canon relevance routing');
-assert.doesNotMatch(runtime, /buildCanonContext|relevantCharacterKeys|relevantScheduleFacts/, 'Crack runtime must not use old relevance/schedule routing');
+assert.doesNotMatch(runtime, /buildCanonContext|relevantCharacterKeys|relevantScheduleFacts|activeKeywordBooks|literalMention|signalText/, 'simple runtime must not route narrative material by relevance/keyword logic');
 assert.doesNotMatch(runtime, /Event Director|Event Engine|Scene Planner|Scene Selector|NPC selector score|hook score|attention meter/i, 'no narrative control engine may return');
 
-assert.equal(AUTHORING_DATA.version, 4, 'Crack Creator Pack must be version 4');
+assert.equal(AUTHORING_DATA.version, 5, 'simple Creator Pack must be version 5');
 assert.ok(AUTHORING_DATA.prompt_template);
 assert.ok(AUTHORING_DATA.story_settings);
 assert.ok(AUTHORING_DATA.start_settings);
-assert.equal(AUTHORING_DATA.development_examples.length, 3, 'development examples remain capped at three');
-assert.ok(Array.isArray(AUTHORING_DATA.keyword_books) && AUTHORING_DATA.keyword_books.length >= 4, 'Creator Pack must define keyword books');
-assert.doesNotMatch(AUTHORING_DATA.story_settings, /에밀리|아르테미스|세라|릴리아|라리스|이사벨|레나|세레나|클로에|미라벨/, 'individual cast facts belong in Add-ons, not Story Settings');
+assert.equal(AUTHORING_DATA.development_examples.length, 2, 'source-backed experiment uses two Development Examples');
+assert.ok(!Object.hasOwn(AUTHORING_DATA, 'keyword_books'), 'CRACK-RUNTIME-02 removes conditional keyword routing from Writer materials');
+assert.doesNotMatch(AUTHORING_DATA.story_settings, /에밀리|아르테미스|세라|릴리아|라리스|이사벨|레나|세레나|클로에|미라벨/, 'individual cast facts belong in the sourcebook, not Story Settings');
+assert.doesNotMatch(`${AUTHORING_DATA.prompt_template}\n${AUTHORING_DATA.story_settings}`, /자동 코스|열쇠 배부|이의 신청|가장 살아 있는|메인 캐스트 우선|broad intent/i, 'previous correction-policy language must not survive the simplified prompt');
 
 const pc = {
   name: '테스트PC', age: 20, gender: '남성', department: '기사과', origin: '수도 외곽', socialStatus: '평민',
   admission: '일반전형', appearance: '', background: '', characterProfile: '', realm: '익스퍼트 입문', magicCircle: null,
-  talents: { martial: 5 }, traits: [], authorities: [], skills: ['기초 검술'], equipment: ['연습용 검'], startingGold: 10,
+  talents: { martial: 5, knowledge: 3 }, traits: [], authorities: [], skills: ['기초 검술'], equipment: ['연습용 검'], startingGold: 10,
 };
 const startScene = {
   date: '1285-03-01', time: '08:40', location: '루멘시아 아카데미 대강당 앞',
@@ -44,11 +44,10 @@ const startScene = {
 const opening = assembleAuthoring({ action: '주변을 살펴본다.', pc, scene: startScene, history: [], mode: 'action' });
 const requiredOrder = [
   'STORY SETTINGS',
-  'ADD-ONS',
+  'KNOWLEDGE BASE',
   'START SETTINGS',
   'DEVELOPMENT EXAMPLES',
   'RUNTIME STATE',
-  'KEYWORD BOOKS',
   'RECENT CHAT',
   'EXACT USER INPUT',
 ];
@@ -56,27 +55,31 @@ let cursor = -1;
 for (const [index, label] of requiredOrder.entries()) {
   const heading = index === 0 ? `${label}\n` : `\n\n${label}\n`;
   const next = opening.input.indexOf(heading);
-  assert.ok(next > cursor, `Crack assembly order broken at ${label}`);
+  assert.ok(next > cursor, `simple Creator Pack assembly order broken at ${label}`);
   cursor = next;
 }
-for (const legacyHeading of ['STORY INFORMATION', 'RELEVANT LORE MODULES', 'CURRENT / PRESENT CHARACTER DETAIL', 'RELEVANT WORLD FACTS', 'ACTIVE KEYWORD BOOKS']) {
-  assert.doesNotMatch(opening.input, new RegExp(`(?:^|\\n\\n)${legacyHeading}\\n`), `old mixed layer must be absent: ${legacyHeading}`);
+for (const removedHeading of ['ADD-ONS', 'KEYWORD BOOKS', 'RELEVANT LORE MODULES', 'CURRENT / PRESENT CHARACTER DETAIL', 'RELEVANT WORLD FACTS', 'ACTIVE KEYWORD BOOKS']) {
+  assert.doesNotMatch(opening.input, new RegExp(`(?:^|\\n\\n)${removedHeading}\\n`), `routed/mixed Writer layer must be absent: ${removedHeading}`);
 }
-assert.equal(opening.diagnostics.writer_runtime, 'crack-runtime-01');
+
+assert.equal(opening.diagnostics.writer_runtime, 'crack-runtime-02-simple');
 assert.equal(opening.diagnostics.start_settings_active, true, 'Start Settings activate only at untouched opening');
-assert.equal(opening.diagnostics.development_example_count, 3);
-assert.ok(opening.diagnostics.active_addons.some((row) => row.id === 'academy' && row.activation === 'scenario'));
-assert.ok(opening.diagnostics.active_addons.some((row) => row.id === 'academy-1285-03-01' && row.activation === 'scenario'));
-assert.ok(opening.diagnostics.active_addons.filter((row) => row.kind === 'character' && row.activation === 'academy-presence').length >= 16, 'academy living cast must be supplied as Add-ons without a selector');
-assert.match(opening.input, /\[CHARACTER ADD-ON: artemis\] 아르테미스/, 'Artemis Add-on must be present');
+assert.equal(opening.diagnostics.development_example_count, 2);
+assert.equal(opening.diagnostics.knowledge_base_character_count, 32, 'full durable character sourcebook must be available every turn');
+assert.equal(opening.diagnostics.active_keyword_books.length, 0, 'no conditional keyword material should enter this experiment');
+assert.ok(opening.diagnostics.active_addons.every((row) => row.activation === 'always-sourcebook'), 'character sourcebook must not use activation selection');
+
+assert.match(opening.input, /\[CHARACTER: artemis\] 아르테미스/, 'Artemis must exist in the always-on sourcebook');
 assert.match(opening.input, /백발을 뒤로 단단히 묶는 모습이 확인됨/, 'Artemis verified hair must reach Writer');
 assert.match(opening.input, /적안/, 'Artemis verified eyes must reach Writer');
-assert.match(opening.input, /\[CHARACTER ADD-ON: emily\] 에밀리/, 'Emily Add-on must be present');
+assert.match(opening.input, /\[CHARACTER: emily\] 에밀리/, 'Emily must exist in the always-on sourcebook');
 assert.match(opening.input, /아카데미 교장/, 'Emily current office must reach Writer');
-assert.match(opening.input, /09:00.*입학식이 시작될 예정/s, 'dated schedule may exist only as scenario Add-on fact');
-assert.match(opening.input, /예정 사실은 절차표가 아니며/, 'scenario Add-on must mark schedule as fact, not procedure');
-assert.doesNotMatch(opening.input, /열쇠 배부가 예정|이의 신청은 오늘|통금 시간이/, 'invented housing procedure must not be supplied');
-assert.match(opening.input, /\n\nEXACT USER INPUT\n주변을 살펴본다\.$/, 'exact user text must be final');
+assert.match(opening.input, /\[CHARACTER: etera\] 에테라/, 'external durable characters must also exist in the full sourcebook without name activation');
+assert.doesNotMatch(opening.input, /에테라.*9서클|9서클.*에테라/s, 'restricted Etera exact power must not leak through ordinary sourcebook material');
+assert.match(opening.input, /09:00.*입학식이 시작될 예정/s, 'dated scenario schedule remains a factual sourcebook item');
+assert.match(opening.input, /재능:.*martial: 5.*knowledge: 3/, 'PC talents must reach Runtime State as factual player material');
+assert.doesNotMatch(opening.input, /PLAY GUIDE:/, 'play guide is user-facing and must not be injected into Writer input');
+assert.match(opening.input, /\n\nEXACT USER INPUT\n주변을 살펴본다\.$/, 'exact user text must remain final');
 
 const history = [{
   action: '대강당 안을 본다.',
@@ -92,17 +95,7 @@ const followup = assembleAuthoring({
 });
 assert.equal(followup.diagnostics.start_settings_active, false, 'Start Settings must disappear after play begins');
 assert.doesNotMatch(followup.input, /\n\nSTART SETTINGS\n/);
-
-const housing = assembleAuthoring({ action: '생활동으로 가서 방 배정을 확인한다.', pc, scene: startScene, history, mode: 'action' });
-assert.ok(housing.diagnostics.active_keyword_books.some((row) => row.id === 'housing'), 'housing keyword book must activate by literal keyword');
-assert.match(housing.input, /특정 학년이나 학과를 한 생활동에 고정하지 않으며/, 'housing book must carry reconciled factual rule');
-
-const magic = assembleAuthoring({ action: '마나 흐름과 검술 경지 차이를 확인한다.', pc, scene: startScene, history, mode: 'action' });
-assert.ok(magic.diagnostics.active_keyword_books.some((row) => row.id === 'power'), 'power keyword book must activate literally');
-assert.ok(!magic.diagnostics.active_keyword_books.some((row) => row.id === 'society-law'), 'power wording must not activate unrelated law book');
-
-const external = assembleAuthoring({ action: '에테라에 대해 이야기한다.', pc, scene: startScene, history, mode: 'action' });
-assert.ok(external.diagnostics.active_addons.some((row) => row.id === 'etera' && row.activation === 'literal-keyword'), 'external character Add-on activates by literal name, not scoring');
+assert.equal(followup.diagnostics.knowledge_base_character_count, 32, 'full sourcebook remains available after opening');
 
 const continued = assembleAuthoring({
   action: '',
@@ -113,6 +106,7 @@ const continued = assembleAuthoring({
 });
 assert.match(continued.input, /\n\nMODE: CONTINUE\n/, 'dedicated continue mode must remain');
 assert.doesNotMatch(continued.input, /\n\nEXACT USER INPUT\n/, 'continue mode must not fake a user action');
+assert.match(continued.input, /사용자의 새 행동·대사·감정·중요한 선택을 대신 정하지 않는다/, 'Continue must preserve player authorship without a scene-control engine');
 
 assert.match(index, /id="continueButton"[^>]*>이어하기</, '이어하기 button must remain in UI');
 assert.match(client, /continueButton\.addEventListener\('click', continueScene\)/, '이어하기 click handler must remain wired');
@@ -127,4 +121,4 @@ const failSoft = validateTurn({
 }, pc, startScene);
 assert.equal(failSoft.scene[0].kind, 'narration', 'missing dialogue speaker metadata must fail-soft to narration');
 
-console.log('PASS CRACK-RUNTIME-01 Creator Pack assembly + factual Add-ons + Copy/Continue preservation');
+console.log('PASS CRACK-RUNTIME-02 simple full-sourcebook + two-example + Copy/Continue preservation');
