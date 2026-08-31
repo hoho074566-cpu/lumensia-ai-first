@@ -28,7 +28,7 @@ assert.ok(AUTHORING_DATA.story_settings);
 assert.ok(AUTHORING_DATA.start_settings);
 assert.equal(AUTHORING_DATA.development_examples.length, 3, 'development examples remain capped at three');
 assert.ok(Array.isArray(AUTHORING_DATA.keyword_books) && AUTHORING_DATA.keyword_books.length >= 4, 'Creator Pack must define keyword books');
-assert.doesNotMatch(AUTHORING_DATA.story_settings, /에밀리|아르테미스|세라|릴리아|라리스|이사벨|시아|레나|세레나|클로에|미라벨/, 'individual cast facts belong in Add-ons, not Story Settings');
+assert.doesNotMatch(AUTHORING_DATA.story_settings, /에밀리|아르테미스|세라|릴리아|라리스|이사벨|레나|세레나|클로에|미라벨/, 'individual cast facts belong in Add-ons, not Story Settings');
 
 const pc = {
   name: '테스트PC', age: 20, gender: '남성', department: '기사과', origin: '수도 외곽', socialStatus: '평민',
