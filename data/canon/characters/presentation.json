@@ -43,7 +43,7 @@
     },
     "laris": {"gender": "여성"},
     "mirabelle": {"gender": "여성"},
-    "serena": {"gender": "여성"},
+    "serena": {"gender": "여성", "hair": "백발"},
     "chloe": {"gender": "여성"},
     "aria": {"gender": "여성"}
   },
