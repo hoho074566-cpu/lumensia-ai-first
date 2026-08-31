@@ -2,6 +2,10 @@ import { CHARACTER_ASSETS, CHARACTER_NAMES } from '/assets/manifest.js';
 
 const SAVE_KEY = 'lumensia.ai-first.v0.save.1';
 const SETTINGS_KEY = 'lumensia.ai-first.v0.settings.1';
+const PARITY_QUERY = new URLSearchParams(window.location.search);
+const WRITER_OUTPUT_MODE = PARITY_QUERY.get('output') === 'raw' ? 'raw' : 'structured';
+const WRITER_CONTEXT_MODE = PARITY_QUERY.get('context') === 'compact' ? 'compact' : 'full';
+const PARITY_LABEL = `${WRITER_CONTEXT_MODE.toUpperCase()} · ${WRITER_OUTPUT_MODE.toUpperCase()}`;
 const FALLBACK_SCENARIO = {
   start: {
     date: '1285-03-01',
@@ -176,13 +180,13 @@ function sceneTurnHtml(scene, source, index = 0, extraClass = '') {
 function render() {
   if (!runState) {
     story.innerHTML = '<div class="empty-state">캐릭터를 생성하면 시작합니다.</div>';
-    statusText.textContent = '새 게임';
+    statusText.textContent = `새 게임 · ${PARITY_LABEL}`;
     continueButton.disabled = true;
     return;
   }
 
   const scene = runState.scene;
-  statusText.textContent = `${scene.date} · ${scene.time} · ${scene.location}`;
+  statusText.textContent = `${scene.date} · ${scene.time} · ${scene.location} · ${PARITY_LABEL}`;
   const chunks = [
     `<section class="opening-state">
       <div class="opening-kicker">${escapeHtml(scene.date)} · ${escapeHtml(scene.time)}</div>
@@ -208,13 +212,14 @@ function render() {
 
 function renderAdminPreview() {
   if (!adminPreview) {
-    adminPreviewStatus.textContent = '아직 생성한 Preview가 없습니다.';
+    adminPreviewStatus.textContent = `아직 생성한 Preview가 없습니다. · ${PARITY_LABEL}`;
     adminPreviewBody.innerHTML = '';
     return;
   }
   const continuity = adminPreview.continuity || {};
-  const books = (adminPreview.diagnostics?.active_keyword_books || []).map((row) => row.name).join(', ');
-  adminPreviewStatus.textContent = `세이브 미변경 · ${continuity.date || ''} · ${continuity.time || ''} · ${continuity.location || ''}${books ? ` · Books: ${books}` : ''}`;
+  const diagnostics = adminPreview.diagnostics || {};
+  const inputChars = diagnostics.input_chars ? ` · Input ${diagnostics.input_chars.toLocaleString()}자` : '';
+  adminPreviewStatus.textContent = `세이브 미변경 · ${PARITY_LABEL} · ${continuity.date || ''} · ${continuity.time || ''} · ${continuity.location || ''}${inputChars}`;
   adminPreviewBody.innerHTML = sceneTurnHtml(adminPreview.scene, 'admin', 0, 'admin-preview-turn');
 }
 
@@ -304,6 +309,8 @@ async function requestScene({ mode = 'action', action = '', adminRequest = '' } 
         runState,
         continueScene: isContinue,
         adminScenePreview: isAdmin,
+        writerOutputMode: WRITER_OUTPUT_MODE,
+        writerContextMode: WRITER_CONTEXT_MODE,
       }),
     });
     const raw = await response.text();
@@ -321,6 +328,8 @@ async function requestScene({ mode = 'action', action = '', adminRequest = '' } 
         scene: turn.scene,
         continuity,
         diagnostics: payload.authoring_diagnostics || null,
+        writerOutputMode: payload.writer_output_mode || WRITER_OUTPUT_MODE,
+        writerContextMode: payload.writer_context_mode || WRITER_CONTEXT_MODE,
         createdAt: new Date().toISOString(),
       };
       renderAdminPreview();
@@ -332,6 +341,8 @@ async function requestScene({ mode = 'action', action = '', adminRequest = '' } 
       mode: isContinue ? 'continue' : 'action',
       scene: turn.scene,
       continuity,
+      writerOutputMode: payload.writer_output_mode || WRITER_OUTPUT_MODE,
+      writerContextMode: payload.writer_context_mode || WRITER_CONTEXT_MODE,
       createdAt: new Date().toISOString(),
     });
     runState.history = runState.history.slice(-40);

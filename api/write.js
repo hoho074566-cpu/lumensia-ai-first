@@ -20,6 +20,8 @@ const EXPRESSIONS = new Set([
 const TALENT_KEYS = Object.freeze(['magic', 'martial', 'soul', 'knowledge']);
 const MAX_ACTION_CHARS = 12000;
 const MAX_HISTORY_TURNS = 8;
+const RAW_PROSE_CONTRACT = '응답은 장면 본문만 일반 텍스트로 작성한다. JSON, 상태 메타데이터, 분석, 규칙 설명은 출력하지 않는다.';
+const STRUCTURED_PROMPT_FRAGMENT = '등록된 인물이 말하면 supplied cast key를 speaker_key에 사용한다. 엑스트라는 speaker_key를 null로 두고 speaker_name을 사용한다. 실제 대사는 dialogue beat, 상황·행동·묘사는 narration beat로 분리한다. continuity에는 실제로 이 응답에서 확정된 변화만 기록한다.';
 
 const OUTPUT_SCHEMA = {
   type: 'object',
@@ -148,6 +150,84 @@ function extractOutputText(response) {
   return '';
 }
 
+function rawWriterInstructions(instructions = '') {
+  const withoutStructuredContract = String(instructions)
+    .replace(`\n\n${STRUCTURED_PROMPT_FRAGMENT}`, '')
+    .trim();
+  return `${withoutStructuredContract}\n\n${RAW_PROSE_CONTRACT}`;
+}
+
+export function buildWriterRequestBody({ authoring, outputMode = 'structured' } = {}) {
+  const rawMode = outputMode === 'raw';
+  const body = {
+    model: process.env.OPENAI_MODEL || 'gpt-5.6-terra',
+    store: false,
+    instructions: rawMode ? rawWriterInstructions(authoring?.instructions || '') : authoring?.instructions || '',
+    input: authoring?.input || '',
+    reasoning: { effort: 'medium' },
+    max_output_tokens: 5600,
+  };
+
+  if (!rawMode) {
+    body.text = {
+      format: {
+        type: 'json_schema',
+        name: 'lumensia_authoring_scene',
+        strict: true,
+        schema: OUTPUT_SCHEMA,
+      },
+    };
+  }
+
+  return body;
+}
+
+function splitLongBlock(text, max = 2600) {
+  const chunks = [];
+  let rest = String(text || '').trim();
+  while (rest.length > max) {
+    let cut = rest.lastIndexOf('\n', max);
+    if (cut < Math.floor(max * 0.55)) cut = rest.lastIndexOf(' ', max);
+    if (cut < Math.floor(max * 0.55)) cut = max;
+    chunks.push(rest.slice(0, cut).trim());
+    rest = rest.slice(cut).trim();
+  }
+  if (rest) chunks.push(rest);
+  return chunks;
+}
+
+export function proseToTurn(text, fallbackScene = {}) {
+  const normalized = String(text || '').replace(/\r\n/g, '\n').trim();
+  if (!normalized) throw new Error('Writer 응답 본문이 비어 있습니다.');
+
+  const blocks = normalized
+    .split(/\n{2,}/)
+    .flatMap((block) => splitLongBlock(block))
+    .filter(Boolean)
+    .slice(0, 48);
+
+  if (!blocks.length) throw new Error('Writer가 표시 가능한 장면 본문을 반환하지 않았습니다.');
+
+  return {
+    scene: blocks.map((block) => ({
+      kind: 'narration',
+      text: block,
+      speaker_key: null,
+      speaker_name: null,
+      expression: null,
+    })),
+    continuity: {
+      date: fallbackScene.date,
+      time: fallbackScene.time,
+      location: fallbackScene.location,
+      situation: fallbackScene.situation,
+      present_character_keys: Array.isArray(fallbackScene.presentCharacterKeys)
+        ? [...fallbackScene.presentCharacterKeys]
+        : [],
+    },
+  };
+}
+
 export function validateTurn(turn, pc, fallbackScene) {
   if (!turn || typeof turn !== 'object' || !Array.isArray(turn.scene) || !turn.scene.length) {
     throw new Error('Writer가 유효한 scene을 반환하지 않았습니다.');
@@ -206,6 +286,8 @@ export default async function handler(req, res) {
     const action = typeof body.action === 'string' ? body.action : '';
     const continueScene = body.continueScene === true;
     const adminScenePreview = body.adminScenePreview === true;
+    const writerOutputMode = body.writerOutputMode === 'raw' ? 'raw' : 'structured';
+    const writerContextMode = body.writerContextMode === 'compact' ? 'compact' : 'full';
 
     if (continueScene && adminScenePreview) {
       return json(res, 400, { error: '이어하기와 Admin Preview를 동시에 사용할 수 없습니다.' });
@@ -222,7 +304,14 @@ export default async function handler(req, res) {
     if (continueScene && !history.length) return json(res, 400, { error: '이어갈 장면이 없습니다.' });
 
     const mode = adminScenePreview ? 'admin' : (continueScene ? 'continue' : 'action');
-    const authoring = assembleAuthoring({ action, pc, scene, history, mode });
+    const authoring = assembleAuthoring({
+      action,
+      pc,
+      scene,
+      history,
+      mode,
+      contextMode: writerContextMode,
+    });
 
     const apiResponse = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -230,22 +319,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || 'gpt-5.6-terra',
-        store: false,
-        instructions: authoring.instructions,
-        input: authoring.input,
-        reasoning: { effort: 'medium' },
-        max_output_tokens: 5600,
-        text: {
-          format: {
-            type: 'json_schema',
-            name: 'lumensia_authoring_scene',
-            strict: true,
-            schema: OUTPUT_SCHEMA,
-          },
-        },
-      }),
+      body: JSON.stringify(buildWriterRequestBody({ authoring, outputMode: writerOutputMode })),
       signal: AbortSignal.timeout(120_000),
     });
 
@@ -266,19 +340,30 @@ export default async function handler(req, res) {
 
     const outputText = extractOutputText(response);
     if (!outputText) throw new Error('Writer 응답 본문이 비어 있습니다.');
-
-    let parsed;
-    try {
-      parsed = JSON.parse(outputText);
-    } catch {
-      throw new Error('Writer structured output을 JSON으로 해석하지 못했습니다.');
+    if (pc.name !== 'Aaa' && /\bAaa\b/.test(outputText)) {
+      throw new Error('Writer가 PC 이름 대신 legacy placeholder Aaa를 사용했습니다.');
     }
 
-    const turn = validateTurn(parsed, pc, scene);
+    let turn;
+    if (writerOutputMode === 'raw') {
+      turn = proseToTurn(outputText, scene);
+    } else {
+      let parsed;
+      try {
+        parsed = JSON.parse(outputText);
+      } catch {
+        throw new Error('Writer structured output을 JSON으로 해석하지 못했습니다.');
+      }
+      turn = validateTurn(parsed, pc, scene);
+    }
+
     return json(res, 200, {
       turn,
       admin_preview: adminScenePreview,
       continue_scene: continueScene,
+      writer_output_mode: writerOutputMode,
+      writer_context_mode: writerContextMode,
+      continuity_frozen_for_parity: writerOutputMode === 'raw',
       model: response?.model || process.env.OPENAI_MODEL || 'gpt-5.6-terra',
       request_id: response?.id || null,
       usage: response?.usage || null,
