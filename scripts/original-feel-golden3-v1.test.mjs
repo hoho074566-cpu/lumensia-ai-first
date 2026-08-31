@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const authoring = JSON.parse(readFileSync(new URL('../data/authoring/lumensia-academy.json', import.meta.url), 'utf8'));
+const presentation = JSON.parse(readFileSync(new URL('../data/canon/characters/presentation.json', import.meta.url), 'utf8'));
 const prompt = String(authoring.prompt_template || '');
 
 assert.equal(authoring.version, 5, 'Golden3 changes Writer behavior without introducing a new authoring pack format');
@@ -20,6 +21,8 @@ assert.match(prompt, /설정집이 비워 둔 사소한 생활·공간·수업·
 assert.match(prompt, /자연스럽게 보완해도 된다/);
 assert.match(prompt, /다음 경로를 바꿀 수 있는 첫 지점에서 넘긴다/);
 assert.match(prompt, /선택지 목록이나 무엇을 할지 묻는 문장으로 반환하지 말고/);
+
+assert.equal(presentation.characters?.serena?.hair, '백발', 'Serena presentation Canon must preserve white hair');
 
 for (const forbidden of [
   /한 장면에.{0,20}(?:명|개)/,
