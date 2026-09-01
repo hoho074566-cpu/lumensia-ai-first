@@ -71,6 +71,7 @@ function makeRunState(pc) {
     knowledgeLevel: 1,
     pc,
     growth: { version: 1, evidence: [], changes: [] },
+    relationships: {},
     scene: {
       date: start.date,
       weekday: start.weekday || '월요일',
@@ -189,6 +190,22 @@ function growthNoticeHtml(turn) {
   }).join('')}</section>`;
 }
 
+function relationshipNoticeHtml(turn) {
+  const changes = Array.isArray(turn?.relationshipChanges) ? turn.relationshipChanges : [];
+  if (!changes.length) return '';
+  return `<section class="relationship-notices">${changes.map((change) => {
+    const name = CHARACTER_NAMES[change?.npc_key] || change?.npc_key || '인물';
+    const state = [change?.after_main, ...(Array.isArray(change?.after_aux) ? change.after_aux : [])]
+      .filter(Boolean)
+      .join(' · ');
+    return `<div class="relationship-notice">
+      <span>관계 변화</span>
+      <div>${escapeHtml(change?.notice || '')}</div>
+      <strong>${escapeHtml(name)} — ${escapeHtml(state)}</strong>
+    </div>`;
+  }).join('')}</section>`;
+}
+
 function render() {
   if (!runState) {
     story.innerHTML = '<div class="empty-state">캐릭터를 생성하면 시작합니다.</div>';
@@ -213,6 +230,7 @@ function render() {
     }
     chunks.push(sceneTurnHtml(turn.scene, 'history', index, turn.mode === 'continue' ? 'continued-scene' : ''));
     chunks.push(growthNoticeHtml(turn));
+    chunks.push(relationshipNoticeHtml(turn));
   });
 
   if (!runState.history.length) {
@@ -304,7 +322,7 @@ adminPreviewBody.addEventListener('click', (event) => {
   if (button) handleCopyClick(button);
 });
 
-async function requestGrowthRecord({ action = '', turn } = {}) {
+async function requestStateRecord({ action = '', turn } = {}) {
   const currentSettings = settings();
   const response = await fetch('/api/state-keeper', {
     method: 'POST',
@@ -380,6 +398,7 @@ async function requestScene({ mode = 'action', action = '', adminRequest = '' } 
       writerOutputMode: payload.writer_output_mode || WRITER_OUTPUT_MODE,
       writerContextMode: payload.writer_context_mode || WRITER_CONTEXT_MODE,
       growthChanges: [],
+      relationshipChanges: [],
       createdAt: new Date().toISOString(),
     };
     runState.history.push(turnRecord);
@@ -399,25 +418,30 @@ async function requestScene({ mode = 'action', action = '', adminRequest = '' } 
 
     setStateKeeperBusy();
     try {
-      const growthPayload = await requestGrowthRecord({
+      const statePayload = await requestStateRecord({
         action: isContinue ? '(이어하기)' : submittedAction,
         turn,
       });
-      if (growthPayload?.pc_patch?.stats && typeof growthPayload.pc_patch.stats === 'object') {
-        runState.pc.stats = growthPayload.pc_patch.stats;
+      if (statePayload?.pc_patch?.stats && typeof statePayload.pc_patch.stats === 'object') {
+        runState.pc.stats = statePayload.pc_patch.stats;
       }
-      if (Array.isArray(growthPayload?.pc_patch?.skills)) {
-        runState.pc.skills = growthPayload.pc_patch.skills;
+      if (Array.isArray(statePayload?.pc_patch?.skills)) {
+        runState.pc.skills = statePayload.pc_patch.skills;
       }
-      if (growthPayload?.growth && typeof growthPayload.growth === 'object') {
-        runState.growth = growthPayload.growth;
+      if (statePayload?.growth && typeof statePayload.growth === 'object') {
+        runState.growth = statePayload.growth;
       }
-      turnRecord.growthChanges = Array.isArray(growthPayload?.changes) ? growthPayload.changes : [];
-      turnRecord.growthObservations = Array.isArray(growthPayload?.observations) ? growthPayload.observations : [];
+      if (statePayload?.relationships && typeof statePayload.relationships === 'object' && !Array.isArray(statePayload.relationships)) {
+        runState.relationships = statePayload.relationships;
+      }
+      turnRecord.growthChanges = Array.isArray(statePayload?.changes) ? statePayload.changes : [];
+      turnRecord.growthObservations = Array.isArray(statePayload?.observations) ? statePayload.observations : [];
+      turnRecord.relationshipChanges = Array.isArray(statePayload?.relationship_changes) ? statePayload.relationship_changes : [];
+      turnRecord.relationshipObservations = Array.isArray(statePayload?.relationship_observations) ? statePayload.relationship_observations : [];
       turnRecord.stateKeeper = {
         status: 'ok',
-        model: growthPayload?.model || null,
-        requestId: growthPayload?.request_id || null,
+        model: statePayload?.model || null,
+        requestId: statePayload?.request_id || null,
       };
       runState.updatedAt = new Date().toISOString();
       saveJson(SAVE_KEY, runState);
@@ -425,7 +449,7 @@ async function requestScene({ mode = 'action', action = '', adminRequest = '' } 
     } catch (stateError) {
       turnRecord.stateKeeper = { status: 'failed', error: stateError?.message || 'State Keeper 오류' };
       saveJson(SAVE_KEY, runState);
-      showError(`장면은 저장됐지만 성장 기록에 실패했습니다. ${stateError?.message || ''}`.trim());
+      showError(`장면은 저장됐지만 상태 기록에 실패했습니다. ${stateError?.message || ''}`.trim());
     }
   } catch (error) {
     showError(error?.message || '장면 생성에 실패했습니다.');
@@ -542,6 +566,9 @@ importInput.addEventListener('change', async () => {
     if (!runState.growth || typeof runState.growth !== 'object') {
       runState.growth = { version: 1, evidence: [], changes: [] };
     }
+    if (!runState.relationships || typeof runState.relationships !== 'object' || Array.isArray(runState.relationships)) {
+      runState.relationships = {};
+    }
     adminPreview = null;
     saveJson(SAVE_KEY, runState);
     showError('');
@@ -557,10 +584,16 @@ async function boot() {
   await loadScenario();
   const saved = loadJson(SAVE_KEY);
   runState = validateImportedRun(saved) ? saved : null;
+  let migrated = false;
   if (runState && (!runState.growth || typeof runState.growth !== 'object')) {
     runState.growth = { version: 1, evidence: [], changes: [] };
-    saveJson(SAVE_KEY, runState);
+    migrated = true;
   }
+  if (runState && (!runState.relationships || typeof runState.relationships !== 'object' || Array.isArray(runState.relationships))) {
+    runState.relationships = {};
+    migrated = true;
+  }
+  if (migrated) saveJson(SAVE_KEY, runState);
   adminPreview = null;
   setSending(false);
   render();
