@@ -18,6 +18,7 @@ const EXPRESSIONS = new Set([
   'smug','annoyed','worried','confused','laugh','flustered',
 ]);
 const TALENT_KEYS = Object.freeze(['magic', 'martial', 'soul', 'knowledge']);
+const STAT_KEYS = Object.freeze(['body', 'mana', 'intelligence', 'holy']);
 const MAX_ACTION_CHARS = 12000;
 const MAX_HISTORY_TURNS = 8;
 const RAW_PROSE_CONTRACT = '응답은 장면 본문만 일반 텍스트로 작성한다. JSON, 상태 메타데이터, 분석, 규칙 설명은 출력하지 않는다.';
@@ -99,6 +100,16 @@ function safeTalents(raw = {}) {
   return talents;
 }
 
+function safeStats(raw = {}) {
+  const source = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const stats = {};
+  for (const key of STAT_KEYS) {
+    const value = cleanText(source[key], 16).trim();
+    if (value) stats[key] = value;
+  }
+  return stats;
+}
+
 export function safePc(raw = {}) {
   const startingGoldNumber = Number(raw.startingGold);
   const pc = {
@@ -115,10 +126,12 @@ export function safePc(raw = {}) {
     realm: cleanText(raw.realm, 120),
     magicCircle: boundedInteger(raw.magicCircle, 0, 9, 'PC 마법 써클', { nullable: true }),
     talents: safeTalents(raw.talents),
+    stats: safeStats(raw.stats),
     traits: cleanList(raw.traits, 16, 220),
     authorities: cleanList(raw.authorities, 16, 220),
     skills: cleanList(raw.skills, 24, 120),
     equipment: cleanList(raw.equipment, 24, 160),
+    conditions: cleanList(raw.conditions, 16, 180),
     startingGold: Number.isFinite(startingGoldNumber) ? Math.max(0, startingGoldNumber) : 0,
   };
   if (!pc.name) throw new Error('PC 이름이 없습니다.');
