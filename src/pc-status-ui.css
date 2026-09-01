@@ -1,0 +1,217 @@
+.status-modal {
+  width: min(720px, calc(100% - 20px));
+}
+
+.status-form-shell {
+  gap: 16px;
+}
+
+.status-summary {
+  display: grid;
+  gap: 14px;
+}
+
+.status-identity-card {
+  padding: 18px;
+  border: 1px solid #493d45;
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(47, 37, 43, .9), rgba(24, 21, 27, .96));
+}
+
+.status-name {
+  color: #f3eadb;
+  font: 800 24px/1.2 Georgia, "Noto Serif KR", serif;
+}
+
+.status-identity-line {
+  margin-top: 8px;
+  color: #d0c5cf;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.status-identity-sub {
+  margin-top: 5px;
+  color: #938995;
+  font-size: 12px;
+}
+
+.status-primary-grid,
+.status-stat-grid,
+.status-talent-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.status-primary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.status-stat-grid,
+.status-talent-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.status-primary-grid article,
+.status-stat-grid article,
+.status-talent-grid article {
+  min-width: 0;
+  padding: 12px 10px;
+  border: 1px solid #39313a;
+  border-radius: 11px;
+  background: rgba(20, 18, 23, .9);
+  text-align: center;
+}
+
+.status-primary-grid span,
+.status-stat-grid span,
+.status-talent-grid span {
+  display: block;
+  color: #8f8591;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.status-primary-grid strong,
+.status-stat-grid strong,
+.status-talent-grid strong {
+  display: block;
+  margin-top: 6px;
+  overflow: hidden;
+  color: #f0e8de;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-section,
+.status-list-section {
+  padding: 13px;
+  border: 1px solid #332d36;
+  border-radius: 12px;
+  background: rgba(16, 15, 19, .72);
+}
+
+.status-section-title {
+  margin-bottom: 9px;
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.status-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.status-chip {
+  max-width: 100%;
+  padding: 7px 9px;
+  border: 1px solid #413842;
+  border-radius: 9px;
+  background: #1d1920;
+  color: #ddd3dc;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.status-condition-section {
+  border-color: #4a3733;
+}
+
+.status-condition-section .status-chip {
+  border-color: #583f38;
+  background: #241b1a;
+  color: #ecd1c8;
+}
+
+.status-empty {
+  color: #77707d;
+  font-size: 12px;
+}
+
+.status-empty-large {
+  padding: 34px 8px;
+  text-align: center;
+}
+
+.status-editor {
+  display: grid;
+  gap: 12px;
+  padding-top: 4px;
+  border-top: 1px dashed #3a333d;
+}
+
+.status-editor[hidden] {
+  display: none;
+}
+
+.status-editor-note {
+  padding: 10px 11px;
+  border: 1px solid #4a4032;
+  border-radius: 9px;
+  background: #211d16;
+  color: #ccb987;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.status-actions {
+  position: sticky;
+  bottom: -20px;
+  margin: 2px -20px -20px;
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid #302a34;
+  background: rgba(21, 19, 25, .97);
+}
+
+@media (max-width: 560px) {
+  .status-modal {
+    width: calc(100% - 12px);
+    max-height: calc(100dvh - 12px);
+  }
+
+  .status-form-shell {
+    padding: 16px;
+  }
+
+  .status-name {
+    font-size: 22px;
+  }
+
+  .status-primary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .status-stat-grid,
+  .status-talent-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .status-primary-grid article,
+  .status-stat-grid article,
+  .status-talent-grid article {
+    padding: 10px 5px;
+  }
+
+  .status-primary-grid strong,
+  .status-stat-grid strong,
+  .status-talent-grid strong {
+    font-size: 13px;
+  }
+
+  .status-chip {
+    font-size: 11.5px;
+  }
+
+  .status-actions {
+    bottom: -16px;
+    margin: 2px -16px -16px;
+    padding-inline: 16px;
+    flex-wrap: wrap;
+  }
+}

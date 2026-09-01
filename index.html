@@ -8,6 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/src/styles.css">
   <link rel="stylesheet" href="/src/original-dialogue-ui.css">
+  <link rel="stylesheet" href="/src/pc-status-ui.css">
   <script>
     (() => {
       const url = new URL(window.location.href);
@@ -34,6 +35,7 @@
       <button id="newGameButton" type="button">새 게임</button>
       <button id="exportButton" type="button">저장</button>
       <button id="importButton" type="button">불러오기</button>
+      <button id="statusButton" type="button">INFO</button>
       <button id="adminButton" type="button">Admin</button>
       <button id="settingsButton" type="button">설정</button>
     </nav>
@@ -81,15 +83,67 @@
           <label>📘 지식<input name="talentKnowledge" type="number" min="1" max="10" value="5"></label>
         </div>
       </fieldset>
+      <fieldset>
+        <legend>초기 스탯 등급</legend>
+        <div class="form-grid four">
+          <label>신체<input name="statBody" maxlength="16" placeholder="예: D / A-"></label>
+          <label>마나<input name="statMana" maxlength="16" placeholder="예: D / B+"></label>
+          <label>지능<input name="statIntelligence" maxlength="16" placeholder="예: C"></label>
+          <label>신성<input name="statHoly" maxlength="16" placeholder="예: F"></label>
+        </div>
+      </fieldset>
       <label>외형<textarea name="appearance" rows="2" maxlength="700" placeholder="외형"></textarea></label>
       <label>배경<textarea name="background" rows="4" maxlength="1400" placeholder="과거, 출신 배경, 중요한 사건"></textarea></label>
       <label>캐릭터 프로필<textarea name="characterProfile" rows="4" maxlength="1600" placeholder="성격 경향, 가치관, 행동 원칙, 능력 제약 등"></textarea></label>
       <label>Trait<textarea name="traits" rows="3" maxlength="1800" placeholder="쉼표 또는 줄바꿈으로 구분. 이름과 효과/제약을 자유롭게 적을 수 있다."></textarea></label>
       <label>Authority<textarea name="authorities" rows="3" maxlength="1800" placeholder="쉼표 또는 줄바꿈으로 구분. 없다면 비워 둔다."></textarea></label>
-      <label>초기 스킬<textarea name="skills" rows="3" maxlength="1800" placeholder="쉼표 또는 줄바꿈으로 구분"></textarea></label>
+      <label>초기 스킬<textarea name="skills" rows="3" maxlength="1800" placeholder="예: 대검술:A++, 오러 운용:A"></textarea></label>
       <label>초기 장비<textarea name="equipment" rows="3" maxlength="1800" placeholder="쉼표 또는 줄바꿈으로 구분"></textarea></label>
+      <label>현재 상태<textarea name="conditions" rows="2" maxlength="1200" placeholder="부상·피로·저주 등. 없다면 비워 둔다."></textarea></label>
       <button class="primary" type="submit">이 캐릭터로 시작</button>
     </form>
+  </dialog>
+
+  <dialog id="statusDialog" class="modal status-modal">
+    <section class="modal-form status-form-shell">
+      <header>
+        <div class="eyebrow">PLAYER STATUS</div>
+        <h2>INFO</h2>
+        <p>현재 세이브에 기록된 PC의 사실 상태다. Writer는 다음 장면부터 이 최신 상태를 읽는다.</p>
+      </header>
+      <section id="statusSummary" class="status-summary"></section>
+      <section id="statusEditor" class="status-editor" hidden>
+        <div class="status-editor-note">Admin 테스트용 수동 편집. 자동 성장 판정은 아직 적용하지 않는다.</div>
+        <div class="form-grid two">
+          <label>무의 경지<input id="statusRealm" maxlength="120"></label>
+          <label>마법 써클<input id="statusMagicCircle" type="number" min="0" max="9" placeholder="0~9"></label>
+          <label>신체<input id="statusBody" maxlength="16"></label>
+          <label>마나<input id="statusMana" maxlength="16"></label>
+          <label>지능<input id="statusIntelligence" maxlength="16"></label>
+          <label>신성<input id="statusHoly" maxlength="16"></label>
+          <label>금화<input id="statusGold" type="number" min="0" step="1"></label>
+        </div>
+        <fieldset>
+          <legend>재능 1~10</legend>
+          <div class="form-grid four">
+            <label>🔮 마법<input id="statusTalentMagic" type="number" min="1" max="10"></label>
+            <label>⚔️ 무<input id="statusTalentMartial" type="number" min="1" max="10"></label>
+            <label>🌟 영혼<input id="statusTalentSoul" type="number" min="1" max="10"></label>
+            <label>📘 지식<input id="statusTalentKnowledge" type="number" min="1" max="10"></label>
+          </div>
+        </fieldset>
+        <label>스킬<textarea id="statusSkills" rows="5" maxlength="3000" placeholder="한 줄에 하나. 예: 대검술:A++"></textarea></label>
+        <label>Trait<textarea id="statusTraits" rows="4" maxlength="3000"></textarea></label>
+        <label>Authority<textarea id="statusAuthorities" rows="4" maxlength="3000"></textarea></label>
+        <label>장비 / 소지품<textarea id="statusEquipment" rows="4" maxlength="3000"></textarea></label>
+        <label>현재 상태<textarea id="statusConditions" rows="4" maxlength="2400" placeholder="부상·피로·저주 등"></textarea></label>
+      </section>
+      <div class="button-row status-actions">
+        <button id="statusEditButton" type="button">상태 편집 (Admin)</button>
+        <button id="statusCloseButton" type="button">닫기</button>
+        <button id="statusSaveButton" class="primary" type="button" hidden>상태 저장</button>
+      </div>
+    </section>
   </dialog>
 
   <dialog id="adminDialog" class="modal admin-modal">
@@ -128,6 +182,7 @@
   </dialog>
 
   <script type="module" src="/src/client.js"></script>
+  <script type="module" src="/src/pc-status-ui.js"></script>
   <script type="module" src="/src/original-dialogue-ui.js"></script>
 </body>
 </html>
