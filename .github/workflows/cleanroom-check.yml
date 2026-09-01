@@ -54,3 +54,5 @@ jobs:
         run: node scripts/pc-pressure-boundary.test.mjs
       - name: Run PC paste-settings invariants
         run: node scripts/pc-paste-import.test.mjs
+      - name: Run procedural interrogation boundary invariants
+        run: node scripts/procedural-interrogation-boundary.test.mjs
