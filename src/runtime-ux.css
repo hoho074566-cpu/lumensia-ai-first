@@ -72,6 +72,57 @@
   line-height: 1.55;
 }
 
+.pc-paste-shell {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #443b48;
+  border-radius: 12px;
+  background: rgba(24, 21, 27, .72);
+}
+
+.pc-paste-toggle {
+  min-height: 42px;
+  border-color: #5a4c39;
+  background: #251f17;
+  color: #e7cf9b;
+  font-weight: 850;
+}
+
+.pc-paste-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.pc-paste-panel[hidden] {
+  display: none;
+}
+
+.pc-paste-panel textarea {
+  min-height: 180px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.pc-paste-status {
+  color: #aaa0ad;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.pc-paste-status[data-tone="success"] {
+  color: #cfbb82;
+}
+
+.pc-paste-status[data-tone="error"] {
+  color: #e5a7a7;
+}
+
+.pc-paste-actions {
+  justify-content: flex-end;
+}
+
 @media (max-width: 560px) {
   .composer-actions {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -89,5 +140,13 @@
   .situation-context,
   .growth-traces {
     margin-inline: 0;
+  }
+
+  .pc-paste-shell {
+    padding: 10px;
+  }
+
+  .pc-paste-panel textarea {
+    min-height: 220px;
   }
 }
