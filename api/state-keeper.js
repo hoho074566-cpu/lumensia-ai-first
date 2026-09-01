@@ -6,7 +6,6 @@ export const GRADE_LADDER = Object.freeze([
 ]);
 
 const STAT_KEYS = Object.freeze(['body', 'mana', 'intelligence', 'holy']);
-const STAT_LABELS = Object.freeze({ body: '신체', mana: '마나', intelligence: '지능', holy: '신성' });
 const SIGNIFICANCE = new Set(['minor', 'meaningful', 'breakthrough']);
 const MAX_SCENE_CHARS = 16000;
 const MAX_ACTION_CHARS = 12000;
@@ -197,6 +196,11 @@ export function applyGrowthDecision({ pc = {}, growth = {}, decision = {}, date 
     skills: Array.isArray(pc.skills) ? [...pc.skills] : [],
   };
   const nextGrowth = normalizeGrowth(growth);
+  const priorUnconsumedKeys = new Set(
+    nextGrowth.evidence
+      .filter((row) => !row.consumed)
+      .map((row) => `${row.domain}:${row.target}`),
+  );
   const observations = (Array.isArray(decision?.observations) ? decision.observations : [])
     .map((row) => normalizedObservation(row, nextPc))
     .filter(Boolean)
@@ -204,8 +208,9 @@ export function applyGrowthDecision({ pc = {}, growth = {}, decision = {}, date 
 
   const currentObservationKeys = new Set();
   let sequence = nextGrowth.evidence.length + nextGrowth.changes.length + 1;
+  const batchId = Date.now().toString(36);
   for (const row of observations) {
-    const id = `ev-${Date.now().toString(36)}-${sequence++}`;
+    const id = `ev-${batchId}-${sequence++}`;
     nextGrowth.evidence.push({
       id,
       domain: row.domain,
@@ -237,10 +242,9 @@ export function applyGrowthDecision({ pc = {}, growth = {}, decision = {}, date 
     if (!before || proposedFrom !== before || proposedTo !== nextGrade(before) || proposedTo === before) continue;
 
     const currentObs = observations.find((row) => row.domain === domain && row.target === target);
-    const priorEvidence = nextGrowth.evidence.some((row) => !row.consumed && row.domain === domain && row.target === target && !String(row.id).startsWith('ev-' + Date.now().toString(36)));
-    if (currentObs?.significance !== 'breakthrough' && !priorEvidence) continue;
+    if (currentObs?.significance !== 'breakthrough' && !priorUnconsumedKeys.has(key)) continue;
 
-    const changeId = `chg-${Date.now().toString(36)}-${sequence++}`;
+    const changeId = `chg-${batchId}-${sequence++}`;
     if (domain === 'stat') {
       nextPc.stats[target] = proposedTo;
     } else {
