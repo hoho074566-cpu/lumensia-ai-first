@@ -162,8 +162,58 @@ function pcStatsLine(stats = {}) {
     .join(' / ');
 }
 
-function currentRuntimeState(pc = {}, scene = {}) {
+function relationAux(value = [], main = '') {
+  const out = [];
+  for (const item of Array.isArray(value) ? value : []) {
+    const tag = cleanText(item, 20);
+    if (!tag || tag === main || out.includes(tag)) continue;
+    out.push(tag);
+    if (out.length >= 3) break;
+  }
+  return out;
+}
+
+function playerRelationshipState(relationships = {}) {
+  if (!relationships || typeof relationships !== 'object' || Array.isArray(relationships)) return '';
+  const rows = Object.entries(relationships).map(([key, raw]) => {
+    if (!CHARACTERS[key] || !raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+    const main = cleanText(raw.main, 24) || '아는 사이';
+    const aux = relationAux(raw.aux, main);
+    const evidence = (Array.isArray(raw.evidence) ? raw.evidence : [])
+      .slice(-2)
+      .map((row) => cleanText(row?.note, 260))
+      .filter(Boolean);
+    const meaningful = main !== '아는 사이' || aux.length > 0 || (Array.isArray(raw.evidence) && raw.evidence.some((row) => row?.significance === 'meaningful' || row?.significance === 'milestone'));
+    return {
+      key,
+      name: CHARACTERS[key].name || key,
+      main,
+      aux,
+      evidence,
+      meaningful,
+      updatedAt: cleanText(raw.updatedAt, 32),
+    };
+  }).filter(Boolean);
+  if (!rows.length) return '';
+
+  rows.sort((a, b) => {
+    if (a.meaningful !== b.meaningful) return a.meaningful ? -1 : 1;
+    return b.updatedAt.localeCompare(a.updatedAt);
+  });
+  const selected = rows.slice(0, 20);
+  return [
+    'PC와 등록 인물의 현재 관계 — 작가용 현재 사실이다. 등장인물이 main/aux 태그나 시스템 용어를 자동으로 알고 그대로 발화하는 정보가 아니며, 각 인물의 성격과 실제 경험에 맞춰 말투·거리감·행동에 자연스럽게 반영한다.',
+    ...selected.map((row) => {
+      const label = [row.main, ...row.aux].join(' · ');
+      const reason = row.evidence.length ? ` 최근 근거: ${row.evidence.join(' / ')}.` : '';
+      return `- ${row.key} / ${row.name}: ${label}.${reason}`;
+    }),
+  ].join('\n');
+}
+
+function currentRuntimeState(pc = {}, scene = {}, relationships = {}) {
   const stats = pcStatsLine(pc.stats);
+  const relationState = playerRelationshipState(relationships);
   const lines = [
     `현재 날짜와 시각: ${cleanText(scene.date, 10)} ${cleanText(scene.time, 5)}.`,
     `현재 장소: ${cleanText(scene.location, 220)}.`,
@@ -185,6 +235,7 @@ function currentRuntimeState(pc = {}, scene = {}) {
     pc.equipment?.length ? `현재 장비: ${pc.equipment.map((item) => cleanText(item, 180)).join(' / ')}.` : '',
     pc.conditions?.length ? `현재 상태: ${pc.conditions.map((item) => cleanText(item, 180)).join(' / ')}.` : '',
     Number.isFinite(Number(pc.startingGold)) ? `현재 기준 금화: ${Math.max(0, Number(pc.startingGold))}.` : '',
+    relationState,
     scene.presentCharacterKeys?.length ? `현재 장면에 이어져 있는 등록 인물 key: ${scene.presentCharacterKeys.join(', ')}.` : '',
   ];
   return lines.filter(Boolean).join('\n');
@@ -233,7 +284,7 @@ function exactUserEnvelope(mode, action) {
   return `EXACT USER INPUT\n${action}`;
 }
 
-export function assembleAuthoring({ action = '', pc = {}, scene = {}, history = [], mode = 'action', contextMode = 'full' } = {}) {
+export function assembleAuthoring({ action = '', pc = {}, scene = {}, relationships = {}, history = [], mode = 'action', contextMode = 'full' } = {}) {
   const normalizedContextMode = contextMode === 'compact' ? 'compact' : 'full';
   const start = startSettings(scene, history, mode);
   const sourcebook = knowledgeBase(normalizedContextMode);
@@ -242,7 +293,7 @@ export function assembleAuthoring({ action = '', pc = {}, scene = {}, history = 
     `KNOWLEDGE BASE\n${sourcebook.text}`,
     start ? `START SETTINGS\n${start}` : '',
     `DEVELOPMENT EXAMPLES\n${developmentExamples()}`,
-    `RUNTIME STATE\n${currentRuntimeState(pc, scene)}`,
+    `RUNTIME STATE\n${currentRuntimeState(pc, scene, relationships)}`,
     `RECENT CHAT\n${recentChat(history)}`,
     exactUserEnvelope(mode, action),
   ].filter(Boolean);

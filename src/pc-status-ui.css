@@ -119,6 +119,45 @@
   overflow-wrap: anywhere;
 }
 
+.status-relationship-section {
+  border-color: #4a4032;
+}
+
+.status-relationship-list {
+  display: grid;
+  gap: 7px;
+}
+
+.status-relationship-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 10px;
+  border: 1px solid #3e3540;
+  border-radius: 9px;
+  background: #19161c;
+}
+
+.status-relationship-row > span {
+  min-width: 72px;
+  color: #c9c0ca;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.status-relationship-row > strong {
+  color: #f0e4c9;
+  font-size: 12.5px;
+  text-align: right;
+}
+
+.status-relationship-row small {
+  color: #b9a9bb;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
 .status-condition-section {
   border-color: #4a3733;
 }
@@ -169,7 +208,8 @@
   background: rgba(21, 19, 25, .97);
 }
 
-.growth-notices {
+.growth-notices,
+.relationship-notices {
   display: grid;
   gap: 7px;
   margin: -2px 0 24px;
@@ -194,6 +234,36 @@
 
 .growth-notice strong {
   color: #f1dfb5;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.relationship-notice {
+  padding: 11px 13px;
+  border: 1px solid #4d3d55;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(47, 34, 51, .88), rgba(27, 22, 30, .78));
+}
+
+.relationship-notice > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #c9a7d1;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.relationship-notice > div {
+  margin-bottom: 6px;
+  color: #ddd1df;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.relationship-notice > strong {
+  display: block;
+  color: #f1deef;
   font-size: 13px;
   font-weight: 800;
 }
@@ -237,6 +307,14 @@
     font-size: 11.5px;
   }
 
+  .status-relationship-row {
+    align-items: flex-start;
+  }
+
+  .status-relationship-row > strong {
+    max-width: 68%;
+  }
+
   .status-actions {
     bottom: -16px;
     margin: 2px -16px -16px;
@@ -244,11 +322,13 @@
     flex-wrap: wrap;
   }
 
-  .growth-notices {
+  .growth-notices,
+  .relationship-notices {
     margin-inline: 0;
   }
 
-  .growth-notice {
+  .growth-notice,
+  .relationship-notice {
     margin-inline: 0;
   }
 }

@@ -32,6 +32,7 @@ const input = buildStateKeeperInput({
     evidence: [{ id: 'old-1', domain: 'skill', target: '대검술', note: '자세 교정을 이해했다.', significance: 'meaningful', consumed: false }],
     changes: [],
   },
+  relationships: {},
   action: '교정받은 자세로 다시 벤다.',
   turn: { scene: [{ text: '발 위치를 고친 뒤 같은 궤적을 흔들림 없이 재현했다.' }] },
   scene: { date: '1285-03-04', time: '14:10' },
@@ -114,12 +115,12 @@ assert.deepEqual(consumedCannotChain.pc_patch.skills, ['대검술:B+', '오러 �
 assert.match(stateKeeper, /GROWTH-01A 범위는 기존 스킬 숙련 등급과 신체\/마나\/지능\/신성/, 'State Keeper scope must remain narrow');
 assert.match(stateKeeper, /사용자 입력은 시도\/선언일 뿐/, 'user claims must not become growth facts');
 assert.doesNotMatch(stateKeeper, /hiddenXp|stat_progress|skill_experience/, 'old deterministic XP/progress engine must not return');
-assert.match(client, /fetch\('\/api\/state-keeper'/, 'normal turns must call the separate State Keeper');
-assert.match(client, /saveJson\(SAVE_KEY, runState\);[\s\S]*render\(\);[\s\S]*await requestGrowthRecord/, 'Writer scene must be saved/rendered before State Keeper bookkeeping finishes');
-assert.match(client, /growthPayload\.pc_patch\.stats/, 'client may apply only the State Keeper stat patch');
-assert.match(client, /growthPayload\.pc_patch\.skills/, 'client may apply only the State Keeper skill patch');
+assert.match(client, /fetch\('\/api\/state-keeper'/, 'normal turns must call the unified State Keeper');
+assert.match(client, /saveJson\(SAVE_KEY, runState\);[\s\S]*render\(\);[\s\S]*await requestStateRecord/, 'Writer scene must be saved/rendered before State Keeper bookkeeping finishes');
+assert.match(client, /statePayload\.pc_patch\.stats/, 'client may apply the State Keeper stat patch');
+assert.match(client, /statePayload\.pc_patch\.skills/, 'client may apply the State Keeper skill patch');
 assert.equal((writer.match(/https:\/\/api\.openai\.com\/v1\/responses/g) || []).length, 1, 'Golden3 Writer endpoint must remain one narrative model call');
 assert.match(stateKeeper, /https:\/\/api\.openai\.com\/v1\/responses/, 'State Keeper is a separate non-narrative model call');
-assert.equal(readFileSync('data/authoring/lumensia-academy.json', 'utf8'), authoringJson, 'growth work must not rewrite the Writer authoring file');
+assert.equal(readFileSync('data/authoring/lumensia-academy.json', 'utf8'), authoringJson, 'relationship work must not rewrite the Writer authoring file');
 
 console.log('PASS GROWTH-01A AI-first evidence -> one-step durable growth contract');

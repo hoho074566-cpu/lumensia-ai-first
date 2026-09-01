@@ -64,6 +64,7 @@ const authoring = assembleAuthoring({
     situation: '정규 훈련 시간.',
     presentCharacterKeys: [],
   },
+  relationships: {},
   history: [],
   mode: 'action',
   contextMode: 'compact',
@@ -78,7 +79,7 @@ assert.match(authoring.input, /현재 상태: 오른쪽 손목 경미한 타박\
 assert.match(authoring.input, /현재 기준 금화: 27\./, 'latest gold must reach Writer runtime input');
 
 assert.equal(AUTHORING_DATA.prompt_template, authoringJson.prompt_template, 'PC-STATUS-01 must not replace or fork the Golden3 Writer prompt');
-assert.match(authoringRuntime, /RUNTIME STATE\\n\$\{currentRuntimeState\(pc, scene\)\}/, 'status must enter through runtime facts, not prompt rules');
+assert.match(authoringRuntime, /RUNTIME STATE\\n\$\{currentRuntimeState\(pc, scene, relationships\)\}/, 'status and relationships must enter through runtime facts, not prompt rules');
 assert.equal((writer.match(/https:\/\/api\.openai\.com\/v1\/responses/g) || []).length, 1, 'PC status work must preserve the one Writer call architecture');
 
 console.log('PASS PC-STATUS-01 durable status -> Writer runtime contract');
