@@ -1,0 +1,93 @@
+.composer-actions {
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+
+.situation-button {
+  border-color: #4b4258;
+  background: #211d28;
+  color: #cbbbd9;
+  font-weight: 750;
+}
+
+.situation-button.is-active,
+.situation-button[aria-pressed="true"] {
+  border-color: #80648f;
+  background: #382844;
+  color: #f0dff8;
+  box-shadow: inset 0 0 0 1px rgba(205, 167, 226, .12);
+}
+
+.situation-context {
+  margin: 28px 0 22px;
+  padding: 12px 14px;
+  border: 1px dashed #554862;
+  border-radius: 12px;
+  background: rgba(37, 29, 43, .72);
+  color: #ddd2e2;
+  font: 400 14px/1.75 Georgia, "Noto Serif KR", serif;
+  white-space: pre-wrap;
+}
+
+.situation-label {
+  margin-bottom: 5px;
+  color: #bda1ca;
+  font-family: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.growth-traces {
+  display: grid;
+  gap: 7px;
+  margin: -2px 0 12px;
+}
+
+.growth-trace {
+  padding: 10px 12px;
+  border: 1px solid #4b4330;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(41, 36, 25, .82), rgba(25, 22, 20, .66));
+}
+
+.growth-trace > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #bca266;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.growth-trace > strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #eadcb4;
+  font-size: 12.5px;
+}
+
+.growth-trace > div {
+  color: #cfc5aa;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+@media (max-width: 560px) {
+  .composer-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: none;
+  }
+
+  .situation-button,
+  .continue-button,
+  .send-button {
+    min-height: 42px;
+    min-width: 0;
+    padding-inline: 8px;
+  }
+
+  .situation-context,
+  .growth-traces {
+    margin-inline: 0;
+  }
+}
