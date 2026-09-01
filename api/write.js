@@ -313,6 +313,9 @@ export default async function handler(req, res) {
     const runState = body.runState && typeof body.runState === 'object' ? body.runState : {};
     const pc = safePc(runState.pc || {});
     const scene = safeScene(runState.scene || {});
+    const relationships = runState.relationships && typeof runState.relationships === 'object' && !Array.isArray(runState.relationships)
+      ? runState.relationships
+      : {};
     const history = Array.isArray(runState.history) ? runState.history.slice(-MAX_HISTORY_TURNS) : [];
     if (continueScene && !history.length) return json(res, 400, { error: '이어갈 장면이 없습니다.' });
 
@@ -321,6 +324,7 @@ export default async function handler(req, res) {
       action,
       pc,
       scene,
+      relationships,
       history,
       mode,
       contextMode: writerContextMode,
