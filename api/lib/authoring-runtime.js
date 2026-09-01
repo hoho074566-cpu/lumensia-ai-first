@@ -169,6 +169,7 @@ function currentRuntimeState(pc = {}, scene = {}, relationships = {}, continuity
     `현재 날짜와 시각: ${cleanText(scene.date, 10)} ${cleanText(scene.time, 5)}.`,
     `현재 장소: ${cleanText(scene.location, 220)}.`,
     scene.situation ? `현재 상황: ${cleanText(scene.situation, 700)}.` : '',
+    'PC의 강한 능력·비범한 과거·희귀 장비는 PC의 현재 가능성과 과거를 판정하기 위한 사실이지, 그에 비례하는 적·추적자·재앙·운명적 사건을 현재 장면에 즉시 생성하라는 지시가 아니다. 현재 장면, 사용자가 제공한 상황, 지속 연속성의 미해결 흐름에 실제 근거가 없다면 평범한 일상과 기존 흐름을 그대로 존중하고, PC 설정을 회수하려고 새 위협이나 과거의 적 흔적을 억지로 소환하지 않는다.',
     `player: ${cleanText(pc.name, 80)}, ${Number.isFinite(Number(pc.age)) ? `${Number(pc.age)}세` : '나이 미상'}${pc.gender ? `, ${cleanText(pc.gender, 40)}` : ''}${pc.department ? `, ${cleanText(pc.department, 80)}` : ''}.`,
     pc.origin ? `출신: ${cleanText(pc.origin, 220)}.` : '',
     pc.socialStatus ? `신분: ${cleanText(pc.socialStatus, 140)}.` : '',
