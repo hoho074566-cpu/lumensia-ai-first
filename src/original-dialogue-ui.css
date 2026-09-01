@@ -21,14 +21,13 @@
   object-fit: cover;
   object-position: center 18%;
   background: #09090b;
-  opacity: 0;
-  transform: scale(1.008);
-  transition: opacity .18s ease, transform .22s ease;
+  opacity: 1;
+  transform: none;
 }
 
 .original-character-image.is-loaded {
   opacity: 1;
-  transform: scale(1);
+  transform: none;
 }
 
 .original-dialogue-copy {
