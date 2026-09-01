@@ -1,6 +1,6 @@
 PR #42 current acceptance head
 
-HEAD=b326c7abc33c87b5b01e5e91f09aedcedb732b82
+HEAD=9f562bf64dfead745560cba78dd90726a14f2086
 
 Includes:
 - semantic continuity memory + scene state
@@ -10,6 +10,6 @@ Includes:
 - local character-creator paste-settings (text + JSON/exported pc)
 
 Validation:
-- GitHub Actions run #328 PASS
+- GitHub Actions run #330 PASS
 - Vercel exact-head PASS
 - Draft / human gameplay gate required
