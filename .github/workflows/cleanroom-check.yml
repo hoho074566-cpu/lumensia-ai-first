@@ -56,3 +56,5 @@ jobs:
         run: node scripts/pc-paste-import.test.mjs
       - name: Run procedural interrogation boundary invariants
         run: node scripts/procedural-interrogation-boundary.test.mjs
+      - name: Run exceptional PC premise normalization invariants
+        run: node scripts/pc-premise-normalization.test.mjs
