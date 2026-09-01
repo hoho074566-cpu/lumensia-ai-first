@@ -50,3 +50,5 @@ jobs:
         run: node scripts/continuity-persist-01.test.mjs
       - name: Run runtime situation/growth UX invariants
         run: node scripts/runtime-ux-01.test.mjs
+      - name: Run PC pressure boundary invariants
+        run: node scripts/pc-pressure-boundary.test.mjs
