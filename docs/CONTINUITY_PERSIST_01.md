@@ -7,6 +7,7 @@
 - Situation/narration composer input distinct from PC intent.
 - Visible semantic growth traces before rank-up.
 - Minimal PC-intensity authority boundary: strong/bizarre PC facts do not automatically summon proportional threats or backstory echoes.
+- Procedural interrogation compression: once core factual information is sufficient, routine identity/registration/reporting questions compress instead of consuming one user turn per detail; genuinely consequential questions may still deepen normally.
 - Local PC creator `설정 붙여넣기`: human-readable setting blocks or JSON/exported save `pc` data can populate creator fields without any model/server call.
 
 ## Paste-settings format
@@ -37,4 +38,4 @@ Only recognized fields overwrite the current creator form, so partial paste is a
 - One Writer narrative call.
 - One unified State Keeper bookkeeping call.
 - Paste-settings is local browser parsing only.
-- No Director, event stage, scheduler, threat scaler, NPC selector, numeric XP/affection engine, or extra model call.
+- No Director, event stage, scheduler, threat scaler, interrogation counter/stage, NPC selector, numeric XP/affection engine, or extra model call.
