@@ -1,3 +1,5 @@
+import { CHARACTER_NAMES } from '/assets/manifest.js';
+
 const SAVE_KEY = 'lumensia.ai-first.v0.save.1';
 const STAT_KEYS = Object.freeze(['body', 'mana', 'intelligence', 'holy']);
 const STAT_LABELS = Object.freeze({ body: '신체', mana: '마나', intelligence: '지능', holy: '신성' });
@@ -81,6 +83,34 @@ function listSection(title, values, extraClass = '') {
   </section>`;
 }
 
+function relationshipSection(raw = {}) {
+  const source = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const rows = Object.entries(source).map(([key, relation]) => {
+    if (!relation || typeof relation !== 'object' || Array.isArray(relation)) return null;
+    const main = String(relation.main || '아는 사이').trim().slice(0, 24) || '아는 사이';
+    const aux = normalizeList(relation.aux, 3, 20).filter((tag) => tag !== main);
+    return {
+      key,
+      name: CHARACTER_NAMES[key] || key,
+      main,
+      aux,
+      updatedAt: String(relation.updatedAt || ''),
+    };
+  }).filter(Boolean);
+
+  rows.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  return `<section class="status-list-section status-relationship-section">
+    <div class="status-section-title">RELATIONSHIP</div>
+    ${rows.length
+      ? `<div class="status-relationship-list">${rows.map((row) => `
+        <article class="status-relationship-row">
+          <span>${escapeHtml(row.name)}</span>
+          <strong>${escapeHtml(row.main)}${row.aux.length ? `<small> · ${escapeHtml(row.aux.join(' · '))}</small>` : ''}</strong>
+        </article>`).join('')}</div>`
+      : '<div class="status-empty">아직 기록된 관계 없음</div>'}
+  </section>`;
+}
+
 function renderStatusSummary(run = loadRun()) {
   if (!run) {
     statusSummary.innerHTML = '<div class="status-empty status-empty-large">현재 PC 세이브가 없습니다.</div>';
@@ -120,6 +150,7 @@ function renderStatusSummary(run = loadRun()) {
       </div>
     </section>
 
+    ${relationshipSection(run.relationships)}
     ${listSection('SKILL', pc.skills)}
     ${listSection('TRAIT', pc.traits)}
     ${listSection('AUTHORITY', pc.authorities)}
@@ -247,4 +278,4 @@ pcForm?.addEventListener('submit', () => {
   }, 0);
 });
 
-export { normalizeStats, splitEditorLines };
+export { normalizeStats, splitEditorLines, relationshipSection };
