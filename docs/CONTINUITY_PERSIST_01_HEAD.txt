@@ -1,0 +1,15 @@
+PR #42 current acceptance head
+
+HEAD=b326c7abc33c87b5b01e5e91f09aedcedb732b82
+
+Includes:
+- semantic continuity memory + scene state
+- situation/narration input
+- visible growth traces
+- PC intensity boundary
+- local character-creator paste-settings (text + JSON/exported pc)
+
+Validation:
+- GitHub Actions run #328 PASS
+- Vercel exact-head PASS
+- Draft / human gameplay gate required
