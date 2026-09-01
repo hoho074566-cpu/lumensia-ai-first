@@ -70,6 +70,7 @@ function makeRunState(pc) {
     scenarioId: scenario.scenario_id || 'academy-1285-03-01',
     knowledgeLevel: 1,
     pc,
+    growth: { version: 1, evidence: [], changes: [] },
     scene: {
       date: start.date,
       weekday: start.weekday || '월요일',
@@ -177,6 +178,17 @@ function sceneTurnHtml(scene, source, index = 0, extraClass = '') {
   return `<article class="scene-turn ${escapeHtml(extraClass)}">${(scene || []).map(beatHtml).join('')}${copyButtonHtml(source, index)}</article>`;
 }
 
+function growthNoticeHtml(turn) {
+  const changes = Array.isArray(turn?.growthChanges) ? turn.growthChanges : [];
+  if (!changes.length) return '';
+  return `<section class="growth-notices">${changes.map((change) => {
+    const label = change?.domain === 'stat'
+      ? ({ body: '신체', mana: '마나', intelligence: '지능', holy: '신성' }[change?.target] || change?.target)
+      : change?.target;
+    return `<div class="growth-notice"><span>성장</span><strong>${escapeHtml(label || '')} ${escapeHtml(change?.before || '')} → ${escapeHtml(change?.after || '')}</strong></div>`;
+  }).join('')}</section>`;
+}
+
 function render() {
   if (!runState) {
     story.innerHTML = '<div class="empty-state">캐릭터를 생성하면 시작합니다.</div>';
@@ -200,6 +212,7 @@ function render() {
       chunks.push(`<section class="player-action"><div class="player-label">${escapeHtml(runState.pc.name)}</div><div>${escapeHtml(turn.action)}</div></section>`);
     }
     chunks.push(sceneTurnHtml(turn.scene, 'history', index, turn.mode === 'continue' ? 'continued-scene' : ''));
+    chunks.push(growthNoticeHtml(turn));
   });
 
   if (!runState.history.length) {
@@ -237,6 +250,11 @@ function setSending(value) {
   sendButton.textContent = value ? '생성 중…' : '보내기';
   continueButton.textContent = value ? '…' : '이어하기';
   el('adminPreviewButton').disabled = value || !runState;
+}
+
+function setStateKeeperBusy() {
+  sendButton.textContent = '상태 기록 중…';
+  continueButton.textContent = '…';
 }
 
 async function writeClipboard(text) {
@@ -285,6 +303,24 @@ adminPreviewBody.addEventListener('click', (event) => {
   const button = event.target.closest('.copy-block-button');
   if (button) handleCopyClick(button);
 });
+
+async function requestGrowthRecord({ action = '', turn } = {}) {
+  const currentSettings = settings();
+  const response = await fetch('/api/state-keeper', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Lumensia-Token': currentSettings.accessToken || '',
+    },
+    body: JSON.stringify({ action, turn, runState }),
+  });
+  const raw = await response.text();
+  let payload = {};
+  try { payload = raw ? JSON.parse(raw) : {}; }
+  catch { throw new Error(`State Keeper가 JSON이 아닌 응답을 반환했습니다. HTTP ${response.status}`); }
+  if (!response.ok) throw new Error(payload.error || `State Keeper HTTP ${response.status}`);
+  return payload;
+}
 
 async function requestScene({ mode = 'action', action = '', adminRequest = '' } = {}) {
   if (sending || !runState) return;
@@ -336,15 +372,17 @@ async function requestScene({ mode = 'action', action = '', adminRequest = '' } 
       return;
     }
 
-    runState.history.push({
+    const turnRecord = {
       action: isContinue ? '' : submittedAction,
       mode: isContinue ? 'continue' : 'action',
       scene: turn.scene,
       continuity,
       writerOutputMode: payload.writer_output_mode || WRITER_OUTPUT_MODE,
       writerContextMode: payload.writer_context_mode || WRITER_CONTEXT_MODE,
+      growthChanges: [],
       createdAt: new Date().toISOString(),
-    });
+    };
+    runState.history.push(turnRecord);
     runState.history = runState.history.slice(-40);
     runState.scene = {
       ...runState.scene,
@@ -358,6 +396,37 @@ async function requestScene({ mode = 'action', action = '', adminRequest = '' } 
     saveJson(SAVE_KEY, runState);
     if (!isContinue) actionInput.value = '';
     render();
+
+    setStateKeeperBusy();
+    try {
+      const growthPayload = await requestGrowthRecord({
+        action: isContinue ? '(이어하기)' : submittedAction,
+        turn,
+      });
+      if (growthPayload?.pc_patch?.stats && typeof growthPayload.pc_patch.stats === 'object') {
+        runState.pc.stats = growthPayload.pc_patch.stats;
+      }
+      if (Array.isArray(growthPayload?.pc_patch?.skills)) {
+        runState.pc.skills = growthPayload.pc_patch.skills;
+      }
+      if (growthPayload?.growth && typeof growthPayload.growth === 'object') {
+        runState.growth = growthPayload.growth;
+      }
+      turnRecord.growthChanges = Array.isArray(growthPayload?.changes) ? growthPayload.changes : [];
+      turnRecord.growthObservations = Array.isArray(growthPayload?.observations) ? growthPayload.observations : [];
+      turnRecord.stateKeeper = {
+        status: 'ok',
+        model: growthPayload?.model || null,
+        requestId: growthPayload?.request_id || null,
+      };
+      runState.updatedAt = new Date().toISOString();
+      saveJson(SAVE_KEY, runState);
+      render();
+    } catch (stateError) {
+      turnRecord.stateKeeper = { status: 'failed', error: stateError?.message || 'State Keeper 오류' };
+      saveJson(SAVE_KEY, runState);
+      showError(`장면은 저장됐지만 성장 기록에 실패했습니다. ${stateError?.message || ''}`.trim());
+    }
   } catch (error) {
     showError(error?.message || '장면 생성에 실패했습니다.');
   } finally {
@@ -470,6 +539,9 @@ importInput.addEventListener('change', async () => {
     const parsed = JSON.parse(await file.text());
     if (!validateImportedRun(parsed)) throw new Error('Lumensia 세이브 형식이 아닙니다.');
     runState = parsed;
+    if (!runState.growth || typeof runState.growth !== 'object') {
+      runState.growth = { version: 1, evidence: [], changes: [] };
+    }
     adminPreview = null;
     saveJson(SAVE_KEY, runState);
     showError('');
@@ -485,6 +557,10 @@ async function boot() {
   await loadScenario();
   const saved = loadJson(SAVE_KEY);
   runState = validateImportedRun(saved) ? saved : null;
+  if (runState && (!runState.growth || typeof runState.growth !== 'object')) {
+    runState.growth = { version: 1, evidence: [], changes: [] };
+    saveJson(SAVE_KEY, runState);
+  }
   adminPreview = null;
   setSending(false);
   render();
