@@ -52,3 +52,5 @@ jobs:
         run: node scripts/runtime-ux-01.test.mjs
       - name: Run PC pressure boundary invariants
         run: node scripts/pc-pressure-boundary.test.mjs
+      - name: Run PC paste-settings invariants
+        run: node scripts/pc-paste-import.test.mjs
