@@ -19,6 +19,7 @@ const CHARACTER_STATE = characterStateData.characters || {};
 const RELATIONSHIPS = relationshipsData.relationships || [];
 const GROUP_ATTITUDES = groupAttitudesData.attitudes || [];
 const ACADEMY_PRESENCE = new Set(['academy_student', 'academy_faculty', 'academy_guest']);
+const PC_STAT_LABELS = Object.freeze({ body: '신체', mana: '마나', intelligence: '지능', holy: '신성' });
 
 function cleanText(value, max = 4000) {
   const text = String(value ?? '').trim();
@@ -150,7 +151,19 @@ function knowledgeBase(contextMode = 'full') {
   return { text, characterKeys };
 }
 
+function pcStatsLine(stats = {}) {
+  if (!stats || typeof stats !== 'object' || Array.isArray(stats)) return '';
+  return Object.entries(PC_STAT_LABELS)
+    .map(([key, label]) => {
+      const value = cleanText(stats[key], 16);
+      return value ? `${label} ${value}` : '';
+    })
+    .filter(Boolean)
+    .join(' / ');
+}
+
 function currentRuntimeState(pc = {}, scene = {}) {
+  const stats = pcStatsLine(pc.stats);
   const lines = [
     `현재 날짜와 시각: ${cleanText(scene.date, 10)} ${cleanText(scene.time, 5)}.`,
     `현재 장소: ${cleanText(scene.location, 220)}.`,
@@ -165,10 +178,12 @@ function currentRuntimeState(pc = {}, scene = {}) {
     pc.background ? `배경: ${cleanText(pc.background, 1000)}.` : '',
     pc.characterProfile ? `성격/행동 프로필: ${cleanText(pc.characterProfile, 1000)}.` : '',
     pc.talents && Object.keys(pc.talents).length ? `재능: ${plainValue(pc.talents)}.` : '',
+    stats ? `스탯: ${stats}.` : '',
     pc.traits?.length ? `Trait: ${pc.traits.map((item) => cleanText(item, 240)).join(' / ')}.` : '',
     pc.authorities?.length ? `Authority: ${pc.authorities.map((item) => cleanText(item, 240)).join(' / ')}.` : '',
     pc.skills?.length ? `현재 스킬: ${pc.skills.map((item) => cleanText(item, 160)).join(' / ')}.` : '',
     pc.equipment?.length ? `현재 장비: ${pc.equipment.map((item) => cleanText(item, 180)).join(' / ')}.` : '',
+    pc.conditions?.length ? `현재 상태: ${pc.conditions.map((item) => cleanText(item, 180)).join(' / ')}.` : '',
     Number.isFinite(Number(pc.startingGold)) ? `현재 기준 금화: ${Math.max(0, Number(pc.startingGold))}.` : '',
     scene.presentCharacterKeys?.length ? `현재 장면에 이어져 있는 등록 인물 key: ${scene.presentCharacterKeys.join(', ')}.` : '',
   ];
