@@ -22,6 +22,7 @@ const composer = el('composer');
 const actionInput = el('actionInput');
 const sendButton = el('sendButton');
 const continueButton = el('continueButton');
+const situationButton = el('situationButton');
 const statusText = el('statusText');
 const errorBox = el('errorBox');
 const pcDialog = el('pcDialog');
@@ -39,6 +40,11 @@ let scenario = FALLBACK_SCENARIO;
 let runState = null;
 let sending = false;
 let adminPreview = null;
+let composerInputKind = 'intent';
+
+function emptyContinuityMemory() {
+  return { version: 1, facts: [], exchanges: [], openThreads: [], updatedAt: '' };
+}
 
 function loadJson(key) {
   try { return JSON.parse(localStorage.getItem(key) || 'null'); }
@@ -72,6 +78,7 @@ function makeRunState(pc) {
     pc,
     growth: { version: 1, evidence: [], changes: [] },
     relationships: {},
+    continuityMemory: emptyContinuityMemory(),
     scene: {
       date: start.date,
       weekday: start.weekday || '월요일',
@@ -87,11 +94,7 @@ function makeRunState(pc) {
 }
 
 function splitList(value) {
-  return String(value || '')
-    .split(/[\n,]/)
-    .map((x) => x.trim())
-    .filter(Boolean)
-    .slice(0, 24);
+  return String(value || '').split(/[\n,]/).map((x) => x.trim()).filter(Boolean).slice(0, 24);
 }
 
 function readPcForm() {
@@ -128,9 +131,7 @@ function validateImportedRun(value) {
 }
 
 function escapeHtml(value) {
-  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[char]));
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 }
 
 function expressionUrl(key, expression) {
@@ -143,13 +144,7 @@ function dialogueHtml(beat) {
   const key = beat.speaker_key;
   const name = CHARACTER_NAMES[key] || beat.speaker_name || key || 'NPC';
   const url = key ? expressionUrl(key, beat.expression || 'default') : '';
-  return `<section class="dialogue-card">
-    ${url ? `<img class="portrait" src="${escapeHtml(url)}" alt="${escapeHtml(name)}" loading="lazy" onerror="this.hidden=true">` : ''}
-    <div class="dialogue-body">
-      <div class="speaker-name">${escapeHtml(name)}</div>
-      <div class="dialogue-text">${escapeHtml(beat.text)}</div>
-    </div>
-  </section>`;
+  return `<section class="dialogue-card">${url ? `<img class="portrait" src="${escapeHtml(url)}" alt="${escapeHtml(name)}" loading="lazy" onerror="this.hidden=true">` : ''}<div class="dialogue-body"><div class="speaker-name">${escapeHtml(name)}</div><div class="dialogue-text">${escapeHtml(beat.text)}</div></div></section>`;
 }
 
 function beatHtml(beat) {
@@ -168,26 +163,30 @@ function scenePlainText(scene = []) {
 }
 
 function copyButtonHtml(source, index = 0) {
-  return `<div class="scene-block-tools">
-    <button type="button" class="copy-block-button" data-copy-source="${escapeHtml(source)}" data-copy-index="${index}" aria-label="이 장면 복사" title="복사">
-      <span class="copy-icon" aria-hidden="true"></span>
-    </button>
-  </div>`;
+  return `<div class="scene-block-tools"><button type="button" class="copy-block-button" data-copy-source="${escapeHtml(source)}" data-copy-index="${index}" aria-label="이 장면 복사" title="복사"><span class="copy-icon" aria-hidden="true"></span></button></div>`;
 }
 
 function sceneTurnHtml(scene, source, index = 0, extraClass = '') {
   return `<article class="scene-turn ${escapeHtml(extraClass)}">${(scene || []).map(beatHtml).join('')}${copyButtonHtml(source, index)}</article>`;
 }
 
+function growthLabel(row) {
+  return row?.domain === 'stat' ? ({ body: '신체', mana: '마나', intelligence: '지능', holy: '신성' }[row?.target] || row?.target) : row?.target;
+}
+
 function growthNoticeHtml(turn) {
   const changes = Array.isArray(turn?.growthChanges) ? turn.growthChanges : [];
   if (!changes.length) return '';
-  return `<section class="growth-notices">${changes.map((change) => {
-    const label = change?.domain === 'stat'
-      ? ({ body: '신체', mana: '마나', intelligence: '지능', holy: '신성' }[change?.target] || change?.target)
-      : change?.target;
-    return `<div class="growth-notice"><span>성장</span><strong>${escapeHtml(label || '')} ${escapeHtml(change?.before || '')} → ${escapeHtml(change?.after || '')}</strong></div>`;
-  }).join('')}</section>`;
+  return `<section class="growth-notices">${changes.map((change) => `<div class="growth-notice"><span>숙련 상승</span><strong>${escapeHtml(growthLabel(change) || '')} ${escapeHtml(change?.before || '')} → ${escapeHtml(change?.after || '')}</strong></div>`).join('')}</section>`;
+}
+
+function growthTraceHtml(turn) {
+  const promoted = new Set((Array.isArray(turn?.growthChanges) ? turn.growthChanges : []).map((row) => `${row?.domain}:${row?.target}`));
+  const traces = (Array.isArray(turn?.growthObservations) ? turn.growthObservations : [])
+    .filter((row) => (row?.significance === 'meaningful' || row?.significance === 'breakthrough') && !promoted.has(`${row?.domain}:${row?.target}`))
+    .slice(0, 2);
+  if (!traces.length) return '';
+  return `<section class="growth-traces">${traces.map((row) => `<div class="growth-trace"><span>성장 흔적</span><strong>${escapeHtml(growthLabel(row) || '')}</strong><div>${escapeHtml(row?.evidence || '')}</div></div>`).join('')}</section>`;
 }
 
 function relationshipNoticeHtml(turn) {
@@ -195,15 +194,15 @@ function relationshipNoticeHtml(turn) {
   if (!changes.length) return '';
   return `<section class="relationship-notices">${changes.map((change) => {
     const name = CHARACTER_NAMES[change?.npc_key] || change?.npc_key || '인물';
-    const state = [change?.after_main, ...(Array.isArray(change?.after_aux) ? change.after_aux : [])]
-      .filter(Boolean)
-      .join(' · ');
-    return `<div class="relationship-notice">
-      <span>관계 변화</span>
-      <div>${escapeHtml(change?.notice || '')}</div>
-      <strong>${escapeHtml(name)} — ${escapeHtml(state)}</strong>
-    </div>`;
+    const state = [change?.after_main, ...(Array.isArray(change?.after_aux) ? change.after_aux : [])].filter(Boolean).join(' · ');
+    return `<div class="relationship-notice"><span>관계 변화</span><div>${escapeHtml(change?.notice || '')}</div><strong>${escapeHtml(name)} — ${escapeHtml(state)}</strong></div>`;
   }).join('')}</section>`;
+}
+
+function stripSituationMarkers(value) {
+  const text = String(value || '').trim();
+  if (text.startsWith('**') && text.endsWith('**') && text.length >= 4) return text.slice(2, -2).trim();
+  return text;
 }
 
 function render() {
@@ -213,30 +212,20 @@ function render() {
     continueButton.disabled = true;
     return;
   }
-
   const scene = runState.scene;
   statusText.textContent = `${scene.date} · ${scene.time} · ${scene.location} · ${PARITY_LABEL}`;
-  const chunks = [
-    `<section class="opening-state">
-      <div class="opening-kicker">${escapeHtml(scene.date)} · ${escapeHtml(scene.time)}</div>
-      <h2>${escapeHtml(scene.location)}</h2>
-      <p>${escapeHtml(runState.history.length ? '' : scene.situation)}</p>
-    </section>`,
-  ];
-
+  const chunks = [`<section class="opening-state"><div class="opening-kicker">${escapeHtml(scene.date)} · ${escapeHtml(scene.time)}</div><h2>${escapeHtml(scene.location)}</h2><p>${escapeHtml(runState.history.length ? '' : scene.situation)}</p></section>`];
   runState.history.forEach((turn, index) => {
     if (turn.mode !== 'continue' && String(turn.action || '').trim()) {
-      chunks.push(`<section class="player-action"><div class="player-label">${escapeHtml(runState.pc.name)}</div><div>${escapeHtml(turn.action)}</div></section>`);
+      if (turn.inputKind === 'situation') chunks.push(`<section class="situation-context"><div class="situation-label">상황</div><div>${escapeHtml(stripSituationMarkers(turn.action))}</div></section>`);
+      else chunks.push(`<section class="player-action"><div class="player-label">${escapeHtml(runState.pc.name)}</div><div>${escapeHtml(turn.action)}</div></section>`);
     }
     chunks.push(sceneTurnHtml(turn.scene, 'history', index, turn.mode === 'continue' ? 'continued-scene' : ''));
+    chunks.push(growthTraceHtml(turn));
     chunks.push(growthNoticeHtml(turn));
     chunks.push(relationshipNoticeHtml(turn));
   });
-
-  if (!runState.history.length) {
-    chunks.push('<p class="start-hint">세계는 이미 움직이고 있다. 무엇을 할지는 직접 입력하면 된다.</p>');
-  }
-
+  if (!runState.history.length) chunks.push('<p class="start-hint">세계는 이미 움직이고 있다. 무엇을 할지는 직접 입력하면 된다.</p>');
   story.innerHTML = chunks.join('');
   continueButton.disabled = sending || !runState || !runState.history.length;
 }
@@ -259,15 +248,27 @@ function showError(message = '') {
   errorBox.hidden = !message;
 }
 
+function updateSituationButton() {
+  if (!situationButton) return;
+  situationButton.classList.toggle('is-active', composerInputKind === 'situation');
+  situationButton.setAttribute('aria-pressed', composerInputKind === 'situation' ? 'true' : 'false');
+  situationButton.textContent = composerInputKind === 'situation' ? '상황 입력 중' : '상황 추가';
+  actionInput.placeholder = composerInputKind === 'situation'
+    ? '상황/서술 전제를 입력한다. ** 사이의 내용은 PC 대사로 취급하지 않는다.'
+    : '무엇을 할지 직접 입력한다. (Ctrl+Enter 전송)';
+}
+
 function setSending(value) {
   sending = value;
   sendButton.disabled = value || !runState;
   continueButton.disabled = value || !runState || !runState.history.length;
   actionInput.disabled = value || !runState;
+  if (situationButton) situationButton.disabled = value || !runState;
   composer.classList.toggle('is-sending', value);
   sendButton.textContent = value ? '생성 중…' : '보내기';
   continueButton.textContent = value ? '…' : '이어하기';
   el('adminPreviewButton').disabled = value || !runState;
+  if (!value) updateSituationButton();
 }
 
 function setStateKeeperBusy() {
@@ -275,11 +276,37 @@ function setStateKeeperBusy() {
   continueButton.textContent = '…';
 }
 
-async function writeClipboard(text) {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
+function isSituationWrapped(value) {
+  const text = String(value || '').trim();
+  return text.length >= 4 && text.startsWith('**') && text.endsWith('**');
+}
+
+function situationPayload(value) {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  return isSituationWrapped(text) ? text : `**${text}**`;
+}
+
+function setComposerInputKind(kind, { prepare = false } = {}) {
+  composerInputKind = kind === 'situation' ? 'situation' : 'intent';
+  updateSituationButton();
+  if (!prepare || composerInputKind !== 'situation') return;
+  const current = actionInput.value;
+  if (!current.trim()) {
+    actionInput.value = '****';
+    actionInput.focus();
+    actionInput.setSelectionRange(2, 2);
     return;
   }
+  if (!isSituationWrapped(current)) {
+    actionInput.value = `**${current}**`;
+    actionInput.focus();
+    actionInput.setSelectionRange(2, actionInput.value.length - 2);
+  }
+}
+
+async function writeClipboard(text) {
+  if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(text); return; }
   const area = document.createElement('textarea');
   area.value = text;
   area.setAttribute('readonly', '');
@@ -303,34 +330,25 @@ async function handleCopyClick(button) {
     await writeClipboard(text);
     button.classList.add('is-copied');
     button.title = '복사됨';
-    window.setTimeout(() => {
-      button.classList.remove('is-copied');
-      button.title = '복사';
-    }, 1200);
-  } catch (error) {
-    showError(error?.message || '복사에 실패했습니다.');
-  }
+    window.setTimeout(() => { button.classList.remove('is-copied'); button.title = '복사'; }, 1200);
+  } catch (error) { showError(error?.message || '복사에 실패했습니다.'); }
 }
 
 story.addEventListener('click', (event) => {
   const button = event.target.closest('.copy-block-button');
   if (button) handleCopyClick(button);
 });
-
 adminPreviewBody.addEventListener('click', (event) => {
   const button = event.target.closest('.copy-block-button');
   if (button) handleCopyClick(button);
 });
 
-async function requestStateRecord({ action = '', turn } = {}) {
+async function requestStateRecord({ action = '', turn, inputKind = 'intent' } = {}) {
   const currentSettings = settings();
   const response = await fetch('/api/state-keeper', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Lumensia-Token': currentSettings.accessToken || '',
-    },
-    body: JSON.stringify({ action, turn, runState }),
+    headers: { 'Content-Type': 'application/json', 'X-Lumensia-Token': currentSettings.accessToken || '' },
+    body: JSON.stringify({ action, turn, inputKind, runState }),
   });
   const raw = await response.text();
   let payload = {};
@@ -340,26 +358,23 @@ async function requestStateRecord({ action = '', turn } = {}) {
   return payload;
 }
 
-async function requestScene({ mode = 'action', action = '', adminRequest = '' } = {}) {
+async function requestScene({ mode = 'action', action = '', adminRequest = '', inputKind = 'intent' } = {}) {
   if (sending || !runState) return;
   const isContinue = mode === 'continue';
   const isAdmin = mode === 'admin';
-  const submittedAction = isAdmin ? String(adminRequest || '').trim() : String(action || '');
+  const submittedInputKind = isAdmin || isContinue ? 'intent' : (inputKind === 'situation' ? 'situation' : 'intent');
+  const submittedAction = isAdmin ? String(adminRequest || '').trim() : (submittedInputKind === 'situation' ? situationPayload(action) : String(action || ''));
   if (!isContinue && !submittedAction.trim()) return;
-
   showError('');
   setSending(true);
-
   try {
     const currentSettings = settings();
     const response = await fetch('/api/write', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Lumensia-Token': currentSettings.accessToken || '',
-      },
+      headers: { 'Content-Type': 'application/json', 'X-Lumensia-Token': currentSettings.accessToken || '' },
       body: JSON.stringify({
         action: submittedAction,
+        inputKind: submittedInputKind,
         runState,
         continueScene: isContinue,
         adminScenePreview: isAdmin,
@@ -372,10 +387,8 @@ async function requestScene({ mode = 'action', action = '', adminRequest = '' } 
     try { payload = raw ? JSON.parse(raw) : {}; }
     catch { throw new Error(`서버가 JSON이 아닌 응답을 반환했습니다. HTTP ${response.status}`); }
     if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`);
-
     const turn = payload.turn;
     const continuity = turn.continuity;
-
     if (isAdmin || payload.admin_preview === true) {
       adminPreview = {
         request: submittedAction,
@@ -389,16 +402,15 @@ async function requestScene({ mode = 'action', action = '', adminRequest = '' } 
       renderAdminPreview();
       return;
     }
-
     const turnRecord = {
       action: isContinue ? '' : submittedAction,
+      inputKind: isContinue ? 'continue' : submittedInputKind,
       mode: isContinue ? 'continue' : 'action',
       scene: turn.scene,
       continuity,
       writerOutputMode: payload.writer_output_mode || WRITER_OUTPUT_MODE,
       writerContextMode: payload.writer_context_mode || WRITER_CONTEXT_MODE,
-      growthChanges: [],
-      relationshipChanges: [],
+      growthChanges: [], growthObservations: [], relationshipChanges: [], relationshipObservations: [],
       createdAt: new Date().toISOString(),
     };
     runState.history.push(turnRecord);
@@ -413,36 +425,35 @@ async function requestScene({ mode = 'action', action = '', adminRequest = '' } 
     };
     runState.updatedAt = new Date().toISOString();
     saveJson(SAVE_KEY, runState);
-    if (!isContinue) actionInput.value = '';
+    if (!isContinue) {
+      actionInput.value = '';
+      setComposerInputKind('intent');
+    }
     render();
-
     setStateKeeperBusy();
     try {
-      const statePayload = await requestStateRecord({
-        action: isContinue ? '(이어하기)' : submittedAction,
-        turn,
-      });
-      if (statePayload?.pc_patch?.stats && typeof statePayload.pc_patch.stats === 'object') {
-        runState.pc.stats = statePayload.pc_patch.stats;
-      }
-      if (Array.isArray(statePayload?.pc_patch?.skills)) {
-        runState.pc.skills = statePayload.pc_patch.skills;
-      }
-      if (statePayload?.growth && typeof statePayload.growth === 'object') {
-        runState.growth = statePayload.growth;
-      }
-      if (statePayload?.relationships && typeof statePayload.relationships === 'object' && !Array.isArray(statePayload.relationships)) {
-        runState.relationships = statePayload.relationships;
+      const statePayload = await requestStateRecord({ action: isContinue ? '(이어하기)' : submittedAction, turn, inputKind: submittedInputKind });
+      if (statePayload?.pc_patch?.stats && typeof statePayload.pc_patch.stats === 'object') runState.pc.stats = statePayload.pc_patch.stats;
+      if (Array.isArray(statePayload?.pc_patch?.skills)) runState.pc.skills = statePayload.pc_patch.skills;
+      if (statePayload?.growth && typeof statePayload.growth === 'object') runState.growth = statePayload.growth;
+      if (statePayload?.relationships && typeof statePayload.relationships === 'object' && !Array.isArray(statePayload.relationships)) runState.relationships = statePayload.relationships;
+      if (statePayload?.continuity_memory && typeof statePayload.continuity_memory === 'object' && !Array.isArray(statePayload.continuity_memory)) runState.continuityMemory = statePayload.continuity_memory;
+      if (statePayload?.scene_state && typeof statePayload.scene_state === 'object') {
+        runState.scene = {
+          ...runState.scene,
+          date: statePayload.scene_state.date || runState.scene.date,
+          time: statePayload.scene_state.time || runState.scene.time,
+          location: statePayload.scene_state.location || runState.scene.location,
+          situation: statePayload.scene_state.situation || runState.scene.situation,
+          presentCharacterKeys: Array.isArray(statePayload.scene_state.present_character_keys) ? statePayload.scene_state.present_character_keys : runState.scene.presentCharacterKeys,
+        };
       }
       turnRecord.growthChanges = Array.isArray(statePayload?.changes) ? statePayload.changes : [];
       turnRecord.growthObservations = Array.isArray(statePayload?.observations) ? statePayload.observations : [];
       turnRecord.relationshipChanges = Array.isArray(statePayload?.relationship_changes) ? statePayload.relationship_changes : [];
       turnRecord.relationshipObservations = Array.isArray(statePayload?.relationship_observations) ? statePayload.relationship_observations : [];
-      turnRecord.stateKeeper = {
-        status: 'ok',
-        model: statePayload?.model || null,
-        requestId: statePayload?.request_id || null,
-      };
+      turnRecord.persistedSceneState = statePayload?.scene_state || null;
+      turnRecord.stateKeeper = { status: 'ok', model: statePayload?.model || null, requestId: statePayload?.request_id || null };
       runState.updatedAt = new Date().toISOString();
       saveJson(SAVE_KEY, runState);
       render();
@@ -459,7 +470,9 @@ async function requestScene({ mode = 'action', action = '', adminRequest = '' } 
 }
 
 function sendAction() {
-  return requestScene({ mode: 'action', action: actionInput.value });
+  const raw = actionInput.value;
+  const kind = composerInputKind === 'situation' || isSituationWrapped(raw) ? 'situation' : 'intent';
+  return requestScene({ mode: 'action', action: raw, inputKind: kind });
 }
 
 function continueScene() {
@@ -480,23 +493,24 @@ pcForm.addEventListener('submit', (event) => {
   saveJson(SAVE_KEY, runState);
   pcDialog.close();
   showError('');
+  setComposerInputKind('intent');
   setSending(false);
   render();
   renderAdminPreview();
 });
 
-composer.addEventListener('submit', (event) => {
-  event.preventDefault();
-  sendAction();
-});
-
+composer.addEventListener('submit', (event) => { event.preventDefault(); sendAction(); });
 continueButton.addEventListener('click', continueScene);
-
+situationButton?.addEventListener('click', () => {
+  if (sending || !runState) return;
+  if (composerInputKind === 'situation') {
+    if (actionInput.value === '****') actionInput.value = '';
+    setComposerInputKind('intent');
+    actionInput.focus();
+  } else setComposerInputKind('situation', { prepare: true });
+});
 actionInput.addEventListener('keydown', (event) => {
-  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-    event.preventDefault();
-    sendAction();
-  }
+  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); sendAction(); }
 });
 
 el('newGameButton').addEventListener('click', () => {
@@ -504,6 +518,7 @@ el('newGameButton').addEventListener('click', () => {
   localStorage.removeItem(SAVE_KEY);
   runState = null;
   adminPreview = null;
+  setComposerInputKind('intent');
   render();
   renderAdminPreview();
   openPcDialog();
@@ -514,32 +529,16 @@ el('adminButton').addEventListener('click', () => {
   renderAdminPreview();
   adminDialog.showModal();
 });
-
 adminForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const request = adminRequestInput.value.trim();
   if (!request) return;
   requestScene({ mode: 'admin', adminRequest: request });
 });
-
-el('adminClearButton').addEventListener('click', () => {
-  adminPreview = null;
-  adminRequestInput.value = '';
-  renderAdminPreview();
-});
-
+el('adminClearButton').addEventListener('click', () => { adminPreview = null; adminRequestInput.value = ''; renderAdminPreview(); });
 el('adminCloseButton').addEventListener('click', () => adminDialog.close());
-
-el('settingsButton').addEventListener('click', () => {
-  tokenInput.value = settings().accessToken || '';
-  settingsDialog.showModal();
-});
-
-el('settingsSaveButton').addEventListener('click', () => {
-  saveJson(SETTINGS_KEY, { accessToken: tokenInput.value.trim() });
-  settingsDialog.close();
-});
-
+el('settingsButton').addEventListener('click', () => { tokenInput.value = settings().accessToken || ''; settingsDialog.showModal(); });
+el('settingsSaveButton').addEventListener('click', () => { saveJson(SETTINGS_KEY, { accessToken: tokenInput.value.trim() }); settingsDialog.close(); });
 el('settingsCloseButton').addEventListener('click', () => settingsDialog.close());
 
 el('exportButton').addEventListener('click', () => {
@@ -554,7 +553,6 @@ el('exportButton').addEventListener('click', () => {
 });
 
 el('importButton').addEventListener('click', () => importInput.click());
-
 importInput.addEventListener('change', async () => {
   const file = importInput.files?.[0];
   importInput.value = '';
@@ -563,21 +561,17 @@ importInput.addEventListener('change', async () => {
     const parsed = JSON.parse(await file.text());
     if (!validateImportedRun(parsed)) throw new Error('Lumensia 세이브 형식이 아닙니다.');
     runState = parsed;
-    if (!runState.growth || typeof runState.growth !== 'object') {
-      runState.growth = { version: 1, evidence: [], changes: [] };
-    }
-    if (!runState.relationships || typeof runState.relationships !== 'object' || Array.isArray(runState.relationships)) {
-      runState.relationships = {};
-    }
+    if (!runState.growth || typeof runState.growth !== 'object') runState.growth = { version: 1, evidence: [], changes: [] };
+    if (!runState.relationships || typeof runState.relationships !== 'object' || Array.isArray(runState.relationships)) runState.relationships = {};
+    if (!runState.continuityMemory || typeof runState.continuityMemory !== 'object' || Array.isArray(runState.continuityMemory)) runState.continuityMemory = emptyContinuityMemory();
     adminPreview = null;
     saveJson(SAVE_KEY, runState);
     showError('');
+    setComposerInputKind('intent');
     setSending(false);
     render();
     renderAdminPreview();
-  } catch (error) {
-    showError(error?.message || '세이브를 불러오지 못했습니다.');
-  }
+  } catch (error) { showError(error?.message || '세이브를 불러오지 못했습니다.'); }
 });
 
 async function boot() {
@@ -585,16 +579,12 @@ async function boot() {
   const saved = loadJson(SAVE_KEY);
   runState = validateImportedRun(saved) ? saved : null;
   let migrated = false;
-  if (runState && (!runState.growth || typeof runState.growth !== 'object')) {
-    runState.growth = { version: 1, evidence: [], changes: [] };
-    migrated = true;
-  }
-  if (runState && (!runState.relationships || typeof runState.relationships !== 'object' || Array.isArray(runState.relationships))) {
-    runState.relationships = {};
-    migrated = true;
-  }
+  if (runState && (!runState.growth || typeof runState.growth !== 'object')) { runState.growth = { version: 1, evidence: [], changes: [] }; migrated = true; }
+  if (runState && (!runState.relationships || typeof runState.relationships !== 'object' || Array.isArray(runState.relationships))) { runState.relationships = {}; migrated = true; }
+  if (runState && (!runState.continuityMemory || typeof runState.continuityMemory !== 'object' || Array.isArray(runState.continuityMemory))) { runState.continuityMemory = emptyContinuityMemory(); migrated = true; }
   if (migrated) saveJson(SAVE_KEY, runState);
   adminPreview = null;
+  setComposerInputKind('intent');
   setSending(false);
   render();
   renderAdminPreview();
