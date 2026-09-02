@@ -6,9 +6,7 @@
 - Scene-state persistence for date/time/location/situation/present registered cast.
 - Situation/narration composer input distinct from PC intent.
 - Visible semantic growth traces before rank-up.
-- Minimal PC-intensity authority boundary: strong/bizarre PC facts do not automatically summon proportional threats or backstory echoes.
-- Procedural interrogation boundary: once core safety facts are known, routine intake/reporting questions compress instead of consuming one turn each.
-- Exceptional-PC premise normalization: unusual origin/status/equipment are a playable starting premise, not an automatic long-running investigation or containment arc. If there is no current threat and the user is not choosing to investigate the mystery, routine checks move offscreen and academy life becomes accessible.
+- One consolidated PC premise authority principle: PC settings, abilities, origin, and demonstrated actions are world facts rather than automatic plot commands. NPC/world reactions depend on observable facts plus their own knowledge, experience, and personality; new evidence updates prior judgments, distance, and role assumptions. Strong or unusual PCs do not automatically escalate danger, investigation, isolation, interrogation, or research, and procedures compress once their purpose is satisfied so ordinary life/story flow can resume.
 - Local PC creator `설정 붙여넣기`: human-readable setting blocks or JSON/exported save `pc` data can populate creator fields without any model/server call.
 
 ## Paste-settings format
