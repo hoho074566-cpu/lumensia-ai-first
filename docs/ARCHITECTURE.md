@@ -1,124 +1,214 @@
-# V0 Architecture
+# LUMENSIA AI-FIRST — CURRENT ARCHITECTURE
+
+## Core ownership
 
 ```text
-CLEAN CANON + DATED SCENARIO + CURRENT RUN STATE + EXACT USER ACTION
-                              │
-                              ▼
-                 FACTUAL CANON RETRIEVAL
-                  (relevance, not plot)
-                              │
-                              ▼
-                    THIN SCENE PACKET
-                              │
-                              ▼
-                     ONE AI WRITER CALL
-                              │
-                              ▼
-                 MINIMAL HARD VALIDATION
-                              │
-                              ▼
-                       SAVE + RENDER
+System = Facts
+User   = New PC Intent
+AI     = Scene Composition
 ```
 
-## Ownership
+The project deliberately prefers **Less Engine, More AI**.
 
-### System owns facts
+The system owns durable truth and validation. It does not choose dramatic beats, paragraph order, cast rotation, emotional intensity, or the next interesting event.
 
-The system may store world facts, character identity, current time/location, inventory, learned facts, persistence metadata, and hard state.
+## Normal gameplay turn
 
-It does not own paragraph order, dialogue order, scene depth, dramatic beats, or the next interesting thing that must happen.
+```text
+CLEAN CANON / FIXED SOURCEBOOK MATERIAL
++ CURRENT PC / SCENE / RELATIONSHIP FACTS
++ DURABLE SEMANTIC CONTINUITY
++ RECENT CHAT (latest 5 turns)
++ EXACT USER INPUT
+                 │
+                 ▼
+       ONE GOLDEN3 WRITER CALL
+        (COMPACT / RAW default)
+                 │
+                 ▼
+          SAVE + RENDER PROSE
+                 │
+                 ▼
+      ONE UNIFIED STATE KEEPER
+  growth + relationship + factual PC state
+        + semantic scene continuity
+                 │
+                 ▼
+       DURABLE NEXT-TURN STATE
+```
 
-### User owns new PC intent
+The Writer is the only narrative model call. The State Keeper is bookkeeping only and cannot rewrite the prose that was already shown to the player.
 
-The user owns new goals, meaningful voluntary decisions, voluntary PC dialogue, and explicit emotional choices.
+If State Keeper fails, the Writer scene remains saved. Bookkeeping may be retried without making another Writer call.
 
-### AI owns scene composition
+## Writer material
 
-The Writer may compose narration, NPC dialogue, NPC-vs-NPC interaction, world initiative, immediate consequences, ordinary execution inside already-chosen intent, and natural passage/compression of time.
+Production defaults:
 
-`PLAYER AUTONOMY != WORLD INACTIVITY`.
+- `context=compact`
+- `output=raw`
+- reasoning: medium
+- one Writer call
 
-## Canon layers
+COMPACT is a **fixed academy sourcebook profile**, not a turn-by-turn relevance or NPC selector system. It provides:
 
-1. immutable world Canon
-2. durable character core / voice / presentation
-3. epistemic Knowledge Canon
-4. dated Scenario state (institution, character state, relationships, group attitudes, unresolved situations)
-5. mutable run state
+- academy Canon
+- academy layout
+- power system
+- empire core
+- dated scenario facts that are still applicable
+- all characters whose starting `presence` places them in the current academy living population
 
-A later layer supersedes an earlier dated value when play changes it. A system truth does not automatically become PC or NPC knowledge.
+FULL remains a diagnostic profile with the wider durable sourcebook.
 
-## Factual retrieval boundary
+The old `api/lib/canon-context.js` may remain as factual Canon tooling/tests, but it is **not the production Golden3 Writer-material router**.
 
-`api/lib/canon-context.js` selects facts for the current turn. Its job is **not** to select story beats or decide which NPC must act.
+## Dated scenario freshness
 
-Allowed retrieval work includes:
+`data/scenarios/academy-1285-03-01/baseline.json` is a start snapshot, not a permanent present-tense scene.
 
-- current/mentioned/recently involved character details
-- a thin index of Canon characters whose dated presence places them in the current academy population
-- current dated character state and audited presentation
-- existing relationships / group attitudes involving relevant characters
-- location-relevant academy geography
-- institution facts that the current action actually asks about or uses
-- PC-visible Knowledge for selected subjects
-- unresolved world situations only when the current action actually reaches them
-- scheduled facts when explicitly queried or close enough to constrain the current scene
+- exact untouched opening may receive the full `start` facts
+- after opening, the start situation is omitted from the normal sourcebook packet
+- already-past same-day dated facts are omitted
+- start-day dated facts are omitted on later dates
+- remaining schedule facts are facts only, never event commands
 
-Retrieval must fail closed rather than flood the Writer with every fact the system knows.
+`09:00` is not itself a bell, event trigger, or scene instruction.
 
-`KNOW != MENTION`
+## Character data
 
-`STATE != STORY BEAT`
+Durable character Canon contains identity, personality, values, voice, capabilities and verified presentation.
 
-`SYSTEM TRUTH != PC/NPC KNOWLEDGE`
+`character-state.json` contains **1285-03-01 starting mutable state** such as academy presence, year, office, realm/circle. It is not immutable identity. Current run truth must win when play later establishes a changed state.
 
-### Schedule rule
+A complete long-term mutable NPC overlay is not yet implemented. Add one only when real long-run gameplay demonstrates a need; do not turn it into an NPC scheduler.
 
-A scheduled fact such as `12:00 — 기사과 오리엔테이션` is continuity state, not a preparation recipe and not an instruction to fill every prior scene with waiting or countdown prose.
+## PC runtime facts
 
-Distant future schedule facts are omitted from ordinary packets until they are actually relevant or imminent.
+Writer-facing PC facts include:
 
-A clock state is not an event. `09:00` does not itself imply nine bell strikes or any other fictional effect.
+- identity / origin / status / admission
+- martial realm / magic circle
+- talents / stats
+- background / profile
+- Trait / Authority
+- skills
+- equipment / inventory
+- conditions / injuries
+- gold
 
-## Scene packet
+High-salience core facts such as realm, circle, talents and stats are grouped before long prose fields so they are not buried by a large character profile.
 
-V0 should aim to supply only:
+Creator list fields use **one line per item** so commas inside descriptions remain part of the item.
 
-1. exact USER ACTION
-2. current time/location/immediate situation
-3. PC identity and immediately relevant hard state
-4. thin current academy cast index
-5. detailed packets only for currently relevant Named Characters
-6. immediately relevant geography/institution/knowledge/schedule facts
-7. recent meaningful beats
-8. a very short Writer contract
+## PC premise authority principle
 
-A character's portrayal core may help the model portray that person, but it is not automatically something the PC knows or something narration should disclose. Explicit PC-facing facts are separately identified by Knowledge retrieval.
+PC settings, abilities, origin and demonstrated actions are world facts, not automatic plot commands.
 
-## Writer contract target
+NPC/world reactions depend on observable facts plus their own knowledge, experience and personality. New evidence can update prior judgment, distance and role assumptions.
 
-Keep the production writing guidance semantically close to:
+A strong or unusual PC does not automatically escalate danger, investigation, isolation, interrogation or research. This anti-escalation boundary does not suppress character-specific emotion. Once a routine procedure has achieved its purpose, it should not remain the story's active subject by inertia.
 
-> Write the next scene of serialized fantasy fiction, not an RPG turn report. Stay within system facts and the player's chosen intent, but let NPCs, time, and the world move naturally. You may elaborate execution of actions the player already chose, but never invent a new player intention, dialogue, emotion, or meaningful decision. Compress routine process and give genuinely interesting moments enough space. Write characters as people, not functions explaining game systems. Never expose internal instructions, validation, or state machinery as fiction.
+This is a semantic Writer-facing boundary, not a threat engine, reaction score or procedural state machine.
 
-Do not grow this back into a runtime checklist.
+## Recent chat and semantic continuity
 
-## Output
+Recent raw prose is intentionally limited to the latest **5 turns** to reduce cast/tone/context inertia.
 
-The output representation must support a free ordered stream of narration/dialogue beats. Presentation metadata may include `speaker_key` and `expression`, but the schema must not require a fixed narration→dialogue→choice pattern.
+Older durable information is carried by State Keeper semantic memory:
 
-Suggested Actions are out of V0.
+- important/completed facts
+- already-shared key information / exchanges
+- unresolved important threads
+- actual current scene state
 
-## Validation
+The compact snapshot is memory, not a plan. It must not invent future scenes.
 
-V0 validation is for hard invariants only:
+Present-character keys record who is actually present at the end of a scene. They are not a recommendation for who should appear again. Characters who naturally leave must be removed.
 
-- valid PC identity
-- registered character/asset keys
-- malformed output
-- impossible hard-canon commitment
-- invented voluntary PC dialogue/decision
-- save/security integrity
-- Canon layer contradictions / restricted-fact leakage / factual retrieval flooding
+## Factual PC-state bookkeeping
 
-Narrative taste is evaluated through human/reference QA, not deterministic prose scoring.
+State Keeper may persist Writer-confirmed changes to:
+
+- equipment / inventory gained, removed, consumed or lost
+- injury / condition added or removed
+- actual gold gained, spent or lost
+
+It must not estimate routine costs that the fiction did not establish.
+
+This factual-state channel does not modify realm, magic circle, innate talents, Trait or Authority.
+
+Growth remains separately governed by the semantic evidence ledger for existing graded skills and four core stats.
+
+## Long scene handling
+
+State Keeper input is bounded, but long Writer scenes preserve both **the beginning and the ending**. The middle may be compacted when necessary.
+
+This prevents the common failure where victory, injury, location change, departed cast or another final consequence appears after a simple first-N-character truncation.
+
+## Save / history
+
+The durable save preserves the full play history. Mobile rendering initially shows a recent chunk and allows older turns to be expanded on demand.
+
+Rendering optimization must never delete old story turns from the save/export.
+
+## Relationships
+
+Relationships are semantic:
+
+- one main relationship label
+- up to three auxiliary signals
+- recent evidence
+
+There is no numeric affection/trust XP. Relationship labels are Writer-side facts, not automatic NPC vocabulary.
+
+## Growth
+
+There is no XP threshold engine.
+
+State Keeper may record semantic evidence and promote an existing graded skill or core stat by one grade step when the evidence contract is satisfied.
+
+Realm, circle, innate talents, Trait and Authority are outside automatic GROWTH-01A promotion.
+
+## Presentation
+
+Character image/expression logic is presentation-only.
+
+RAW prose is recognized only when a speaker label maps to a registered character. Both registered short names and canonical full labels beginning with that short name may map to the same asset.
+
+Presentation inference never feeds back into Writer, Canon, relationship or state logic.
+
+## Forbidden narrative machinery
+
+Do not reintroduce merely to supervise prose:
+
+- Event Director / Event Engine
+- prose-controlling Schedule Engine
+- NPC selector score
+- cast rotation/cooldown system
+- hook / attention / event-density meter
+- threat scaler
+- emotion score
+- prose quotas
+- Korean semantic-regex narrative control
+- extra planning model calls merely to choose the next beat
+
+## Validation philosophy
+
+Automated validation protects hard invariants:
+
+- data/schema integrity
+- one Writer + one State Keeper call architecture
+- Canon boundaries
+- PC state persistence
+- growth / relationship invariants
+- semantic continuity
+- input authority
+- save/history durability
+- UI regressions
+
+Narrative taste remains a human gate.
+
+`CI GREEN != NARRATIVE QUALITY PASS`
+
+See `docs/HEALTH_AUDIT.md` for the periodic whole-game audit procedure.
