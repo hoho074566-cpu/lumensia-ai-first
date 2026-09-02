@@ -58,3 +58,5 @@ jobs:
         run: node scripts/procedural-interrogation-boundary.test.mjs
       - name: Run exceptional PC premise normalization invariants
         run: node scripts/pc-premise-normalization.test.mjs
+      - name: Run Writer context balance invariants
+        run: node scripts/writer-context-balance.test.mjs
