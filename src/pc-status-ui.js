@@ -111,6 +111,45 @@ function relationshipSection(raw = {}) {
   </section>`;
 }
 
+function npcAppearanceStats(run = {}, maxTurns = 50) {
+  const history = (Array.isArray(run.history) ? run.history : []).slice(-maxTurns);
+  const counts = new Map(Object.keys(CHARACTER_NAMES).map((key) => [key, 0]));
+  const names = Object.entries(CHARACTER_NAMES);
+
+  for (const turn of history) {
+    const seen = new Set();
+    for (const key of turn?.persistedSceneState?.present_character_keys || []) if (counts.has(key)) seen.add(key);
+    for (const key of turn?.continuity?.present_character_keys || []) if (counts.has(key)) seen.add(key);
+    for (const beat of Array.isArray(turn?.scene) ? turn.scene : []) {
+      if (counts.has(beat?.speaker_key)) seen.add(beat.speaker_key);
+      const text = String(beat?.text || '');
+      for (const [key, name] of names) if (text.includes(name)) seen.add(key);
+    }
+    for (const key of seen) counts.set(key, (counts.get(key) || 0) + 1);
+  }
+
+  const rows = [...counts.entries()]
+    .filter(([, count]) => count > 0)
+    .map(([key, count]) => ({ key, name: CHARACTER_NAMES[key] || key, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'ko'));
+  return { sampleTurns: history.length, rows };
+}
+
+function npcAppearanceSection(run = {}) {
+  const stats = npcAppearanceStats(run);
+  return `<section class="status-list-section status-relationship-section">
+    <div class="status-section-title">NPC APPEARANCE DIAGNOSTIC</div>
+    <div class="status-empty">최근 ${stats.sampleTurns}턴의 등장/언급 턴 수 · 읽기 전용이며 Writer 입력에는 사용하지 않음</div>
+    ${stats.rows.length
+      ? `<div class="status-relationship-list">${stats.rows.slice(0, 20).map((row) => `
+        <article class="status-relationship-row">
+          <span>${escapeHtml(row.name)}</span>
+          <strong>${row.count}턴</strong>
+        </article>`).join('')}</div>`
+      : '<div class="status-empty">아직 집계할 Named NPC가 없음</div>'}
+  </section>`;
+}
+
 function renderStatusSummary(run = loadRun()) {
   if (!run) {
     statusSummary.innerHTML = '<div class="status-empty status-empty-large">현재 PC 세이브가 없습니다.</div>';
@@ -151,6 +190,7 @@ function renderStatusSummary(run = loadRun()) {
     </section>
 
     ${relationshipSection(run.relationships)}
+    ${npcAppearanceSection(run)}
     ${listSection('SKILL', pc.skills)}
     ${listSection('TRAIT', pc.traits)}
     ${listSection('AUTHORITY', pc.authorities)}
@@ -278,4 +318,4 @@ pcForm?.addEventListener('submit', () => {
   }, 0);
 });
 
-export { normalizeStats, splitEditorLines, relationshipSection };
+export { normalizeStats, splitEditorLines, relationshipSection, npcAppearanceStats };
