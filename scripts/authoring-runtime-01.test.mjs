@@ -53,7 +53,7 @@ const requiredOrder = [
 ];
 let cursor = -1;
 for (const [index, label] of requiredOrder.entries()) {
-  const heading = index === 0 ? `${label}\n` : `\n\n${label}\n`;
+  const heading = index === 0 ? `${label}\n` : (label === 'RECENT CHAT' ? `\n\n${label}` : `\n\n${label}\n`);
   const next = opening.input.indexOf(heading);
   assert.ok(next > cursor, `simple Creator Pack assembly order broken at ${label}`);
   cursor = next;

@@ -1,0 +1,9 @@
+CONTINUITY-PERSIST-01 verification note
+
+Current functional/doc health-fix head before this note: 4ed812b43496f9aaaa553b0dee7d848142195433
+GitHub Actions: run #416 — PASS, including periodic runtime health audit invariants.
+Vercel exact-head status: SUCCESS.
+
+The branch remains Draft / DO NOT MERGE until human fresh-save gameplay accepts narrative quality, cast flow, emotional range, procedure pacing, continuity and factual PC-state behavior.
+
+Always refetch PR #42 for the newest head; this note commit itself advances the branch SHA.

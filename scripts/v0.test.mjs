@@ -28,7 +28,9 @@ assert.doesNotMatch(canonContext, /EVERYDAY_ACADEMY_CAST/, 'factual Canon toolin
 assert.match(api, /speaker_name/, 'runtime must support anonymous one-scene dialogue without inventing canonical character keys');
 assert.doesNotMatch(`${api}\n${authoringRuntime}`, /suggested[_ -]?actions|turn-hook|scene-momentum|context-router|time-plan|event_progress|director_plan/i, 'legacy narrative-control markers must not enter the write path');
 assert.doesNotMatch(canonContext, /eventDensity|attentionMeter|pcHookScore|sceneDirector|npcScheduler|storyCurrent/i, 'Canon tooling must remain factual, not become a narrative selector engine');
-assert.doesNotMatch(client, /\.focus\s*\(/, 'mobile client must not steal keyboard focus automatically');
+const focusCalls = client.match(/\b[A-Za-z_$][\w$]*\.focus\s*\(/g) || [];
+assert.equal(focusCalls.every((call) => call.startsWith('actionInput.focus')), true, 'mobile client may focus only the composer textarea');
+assert.match(client, /function setComposerInputKind\([\s\S]*if \(!prepare \|\| composerInputKind !== 'situation'\) return;[\s\S]*actionInput\.focus\s*\(/, 'composer focus is allowed only for explicit Situation-mode preparation');
 assert.doesNotMatch(client, /scrollTo\s*\(|scrollIntoView\s*\(/, 'mobile client must not steal scroll position after a response');
 assert.doesNotMatch(html, /Suggested Actions|AUTO FLOW|Event Director/i, 'legacy narrative turn controls must not appear in UI');
 assert.match(html, /id="continueButton"/, 'Continue may exist only as a dedicated non-player-action mode');

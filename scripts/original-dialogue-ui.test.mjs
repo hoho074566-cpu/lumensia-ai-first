@@ -14,7 +14,9 @@ assert.match(index, /client\.js[\s\S]*original-dialogue-ui\.js/, 'dialogue enhan
 
 assert.match(ui, /CHARACTER_ASSETS, CHARACTER_NAMES/, 'dialogue UI must use the existing canonical asset manifest');
 assert.match(ui, /function splitKnownSpeaker\(/, 'raw prose must be presentation-parsed only for known speaker prefixes');
-assert.match(ui, /NAME_TO_KEY\.get\(speakerName\)/, 'only registered character names can trigger character art');
+assert.match(ui, /function resolveSpeakerKey\(/, 'speaker labels must resolve through registered character names');
+assert.match(ui, /const exact = NAME_TO_KEY\.get\(value\)/, 'exact registered names must remain the primary art trigger');
+assert.match(ui, /value\.startsWith\(`\$\{shortName\} `\)/, 'canonical full names beginning with the registered short name must also resolve to the same art');
 assert.match(ui, /function inferExpression\(/, 'RAW expression inference must stay in the presentation layer');
 assert.match(ui, /EXPRESSION_HINTS/, 'RAW expression inference must use bounded visual hints');
 assert.match(ui, /assets\.portrait\?\.\[normalized\]/, 'expression-specific portrait must be preferred when available');
@@ -29,6 +31,8 @@ assert.doesNotMatch(ui, /fetch\(['"]\/api\/write/, 'presentation layer must not 
 assert.doesNotMatch(ui, /authoring-runtime|lumensia-academy\.json|prompt_template/, 'presentation layer must not touch Writer authoring inputs');
 
 assert.match(css, /\.original-character-image\s*\{[\s\S]*width:\s*100%/, 'character art must render large/full width');
+assert.match(css, /\.original-character-image\s*\{[\s\S]*opacity:\s*1/, 'character art must be visible without waiting for a load-event class');
+assert.doesNotMatch(css, /\.original-character-image\s*\{[\s\S]{0,500}?opacity:\s*0\s*;/, 'base portrait style must never hide successfully loaded art behind opacity zero');
 assert.match(css, /object-fit:\s*cover/, 'portrait art must crop like a large scene image');
 assert.match(css, /\.original-dialogue-copy/, 'dialogue copy must live below character art');
 assert.match(css, /\.original-dialogue-continuation/, 'same-expression continuation must avoid another large image');

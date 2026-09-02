@@ -56,7 +56,7 @@ function splitEditorLines(value, maxItems = 24, maxChars = 220) {
 
 function splitInitialList(value, maxItems = 24, maxChars = 220) {
   return String(value || '')
-    .split(/[\n,]/)
+    .split(/\n+/)
     .map((item) => item.trim().slice(0, maxChars))
     .filter(Boolean)
     .slice(0, maxItems);
