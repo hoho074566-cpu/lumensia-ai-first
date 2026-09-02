@@ -123,6 +123,7 @@ function readPcForm() {
     authorities: splitList(data.get('authorities')).slice(0, 16),
     skills: splitList(data.get('skills')),
     equipment: splitList(data.get('equipment')),
+    conditions: splitList(data.get('conditions')).slice(0, 16),
   };
 }
 
