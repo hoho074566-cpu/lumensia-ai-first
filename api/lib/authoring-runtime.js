@@ -72,7 +72,7 @@ function characterSourcebookEntry(key) {
   if (voice.avoid?.length) parts.push(`피해야 할 붕괴: ${plainValue(voice.avoid)}`);
   if (row.refined_characterization?.length) parts.push(`세부 묘사: ${plainValue(row.refined_characterization)}`);
   if (Object.keys(presentation).length) parts.push(`외형/표현: ${plainValue(presentation)}`);
-  if (Object.keys(state).length) parts.push(`1285-03-01 현재 상태: ${plainValue(state)}`);
+  if (Object.keys(state).length) parts.push(`1285-03-01 시작 상태(이후 run state가 우선): ${plainValue(state)}`);
   const relationships = relationshipFactsFor(key);
   if (relationships.length) parts.push(`현재 관계: ${plainValue(relationships)}`);
   const attitudes = groupAttitudesFor(key);
@@ -90,19 +90,37 @@ function compactWorldSourcebook() {
   return sections.map(([label, value]) => `[WORLD: ${label}]\n${cleanText(plainValue(value), 10000)}`).join('\n\n');
 }
 
-function scenarioSourcebook() {
-  return `[DATED SCENARIO: academy-1285-03-01]\n${cleanText(plainValue(scenarioData), 16000)}`;
+function scenarioSourcebook(scene = {}, includeOpening = false) {
+  const snapshot = { ...scenarioData };
+  const startDate = cleanText(scenarioData?.start?.date, 10);
+  const sceneDate = cleanText(scene?.date, 10);
+  const sceneTime = cleanText(scene?.time, 5);
+
+  if (!includeOpening) delete snapshot.start;
+
+  if (Array.isArray(scenarioData?.dated_world_facts)) {
+    if (includeOpening) snapshot.dated_world_facts = scenarioData.dated_world_facts;
+    else if (sceneDate === startDate) {
+      snapshot.dated_world_facts = scenarioData.dated_world_facts.filter((row) => {
+        const factTime = cleanText(row?.time, 5);
+        return !sceneTime || !factTime || factTime > sceneTime;
+      });
+      if (!snapshot.dated_world_facts.length) delete snapshot.dated_world_facts;
+    } else if (sceneDate && startDate && sceneDate > startDate) delete snapshot.dated_world_facts;
+  }
+
+  return `[DATED SCENARIO: academy-1285-03-01]\n${cleanText(plainValue(snapshot), 16000)}`;
 }
 
 function academyCharacterKeys() {
   return Object.entries(CHARACTER_STATE).filter(([key, state]) => CHARACTERS[key] && ACADEMY_PRESENCE.has(state?.presence)).map(([key]) => key);
 }
 
-function knowledgeBase(contextMode = 'full') {
+function knowledgeBase(contextMode = 'full', scene = {}, includeOpening = false) {
   const compact = contextMode === 'compact';
   const characterKeys = compact ? academyCharacterKeys() : Object.keys(CHARACTERS);
   const characterEntries = characterKeys.map((key) => characterSourcebookEntry(key)).filter(Boolean).join('\n\n');
-  const text = [compact ? compactWorldSourcebook() : fullWorldSourcebook(), scenarioSourcebook(), characterEntries].filter(Boolean).join('\n\n');
+  const text = [compact ? compactWorldSourcebook() : fullWorldSourcebook(), scenarioSourcebook(scene, includeOpening), characterEntries].filter(Boolean).join('\n\n');
   return { text, characterKeys };
 }
 
@@ -182,8 +200,8 @@ function currentRuntimeState(pc = {}, scene = {}, relationships = {}, continuity
     pc.socialStatus ? `신분: ${cleanText(pc.socialStatus, 140)}.` : '',
     pc.admission ? `입학 방식: ${cleanText(pc.admission, 180)}.` : '',
     pc.appearance ? `외형: ${cleanText(pc.appearance, 700)}.` : '',
-    pc.background ? `배경: ${cleanText(pc.background, 1000)}.` : '',
-    pc.characterProfile ? `성격/행동 프로필: ${cleanText(pc.characterProfile, 1000)}.` : '',
+    pc.background ? `배경: ${cleanText(pc.background, 1400)}.` : '',
+    pc.characterProfile ? `성격/행동 프로필: ${cleanText(pc.characterProfile, 1600)}.` : '',
     pc.traits?.length ? `Trait: ${pc.traits.map((item) => cleanText(item, 240)).join(' / ')}.` : '',
     pc.authorities?.length ? `Authority: ${pc.authorities.map((item) => cleanText(item, 240)).join(' / ')}.` : '',
     pc.skills?.length ? `현재 스킬: ${pc.skills.map((item) => cleanText(item, 160)).join(' / ')}.` : '',
@@ -236,7 +254,7 @@ function exactUserEnvelope(mode, action, inputKind = 'intent') {
 export function assembleAuthoring({ action = '', pc = {}, scene = {}, relationships = {}, continuityMemory = {}, history = [], mode = 'action', inputKind = 'intent', contextMode = 'full' } = {}) {
   const normalizedContextMode = contextMode === 'compact' ? 'compact' : 'full';
   const start = startSettings(scene, history, mode);
-  const sourcebook = knowledgeBase(normalizedContextMode);
+  const sourcebook = knowledgeBase(normalizedContextMode, scene, Boolean(start));
   const sections = [
     `STORY SETTINGS\n${authoringData.story_settings}`,
     `KNOWLEDGE BASE\n${sourcebook.text}`,
@@ -258,6 +276,7 @@ export function assembleAuthoring({ action = '', pc = {}, scene = {}, relationsh
       writer_runtime: 'chat-parity-01',
       context_mode: normalizedContextMode,
       start_settings_active: Boolean(start),
+      scenario_opening_facts_active: Boolean(start),
       knowledge_base_character_count: sourcebook.characterKeys.length,
       knowledge_base_sections: knowledgeSections,
       knowledge_base_chars: sourcebook.text.length,
