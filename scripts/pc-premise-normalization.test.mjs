@@ -25,11 +25,11 @@ const input = assembleAuthoring({
   relationships: {}, continuityMemory: {}, history: [], mode: 'action', contextMode: 'compact',
 }).input;
 
-assert.match(input, /시작 전제이지, 자동으로 장기 수사·격리·검증 서사의 주제가 아니다/, 'exceptional PC setup must be framed as a playable premise, not an automatic investigation arc');
-assert.match(input, /수업·훈련·식사·기숙사·친교·교내 이동/, 'runtime must allow ordinary academy-life access after minimal safety handling');
-assert.match(input, /학과나 신분이 미정이라는 이유만으로 생활 진입을 무기한 보류하지 않는다/, 'unknown department/status must not stall play indefinitely');
-assert.match(input, /실제 범죄·공격·명백한 위협이 발생했다면 그에 필요한 대응은 유지한다/, 'real current threats must still permit proportionate consequences');
+assert.match(input, /PC의 설정·능력·출신·현재까지 실제로 드러난 행동은 세계가 존중해야 할 사실/, 'exceptional PC setup must remain a respected world fact');
+assert.match(input, /서사를 자동으로 특정 방향으로 끌고 가라는 명령이 아니다/, 'exceptional premise must not become an automatic mystery/investigation route');
+assert.match(input, /NPC와 세계는 관찰 가능한 사실과 자신의 지식·경험·성격에 맞게 자연스럽게 반응/, 'NPC reaction must depend on observable facts and their own competence/personality');
+assert.match(input, /새로운 증거가 생기면 기존 판단·거리감·역할 관계를 실제로 갱신한다/, 'demonstrated competence must be allowed to change stale role assumptions');
 assert.doesNotMatch(runtime, /premiseScore|mysteryScore|investigationStage|intakeStage|admissionStage|threatTier/i, 'premise normalization must not become a deterministic state machine');
 assert.equal(AUTHORING_DATA.prompt_template, authoringJson.prompt_template, 'Golden3 Writer prompt source must remain unchanged');
 
-console.log('PASS exceptional PC premise -> ordinary playable-life boundary');
+console.log('PASS consolidated exceptional-PC premise / perception boundary');
