@@ -37,6 +37,39 @@
   letter-spacing: .1em;
 }
 
+.state-retry-button {
+  display: block;
+  width: min(720px, calc(100% - 32px));
+  margin: -2px auto 10px;
+  min-height: 40px;
+  border: 1px solid #725455;
+  border-radius: 10px;
+  background: #2c2022;
+  color: #edc7c7;
+  font-weight: 800;
+}
+
+.state-retry-button[hidden] {
+  display: none;
+}
+
+.history-more-shell {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 28px;
+}
+
+.history-more-button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid #403945;
+  border-radius: 999px;
+  background: #1c1920;
+  color: #aaa0ad;
+  font-size: 12px;
+  font-weight: 750;
+}
+
 .growth-traces {
   display: grid;
   gap: 7px;
@@ -140,6 +173,15 @@
   .situation-context,
   .growth-traces {
     margin-inline: 0;
+  }
+
+  .state-retry-button {
+    width: calc(100% - 20px);
+  }
+
+  .history-more-button {
+    width: 100%;
+    border-radius: 10px;
   }
 
   .pc-paste-shell {
