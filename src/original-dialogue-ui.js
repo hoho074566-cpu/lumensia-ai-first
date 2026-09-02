@@ -3,6 +3,7 @@ import { CHARACTER_ASSETS, CHARACTER_NAMES } from '/assets/manifest.js';
 const NAME_TO_KEY = new Map(
   Object.entries(CHARACTER_NAMES).map(([key, name]) => [String(name).trim(), key]),
 );
+const NAME_ENTRIES = [...NAME_TO_KEY.entries()].sort((a, b) => b[0].length - a[0].length);
 
 const SUPPORTED_EXPRESSIONS = new Set([
   'default', 'smile', 'blush', 'serious', 'angry', 'sad', 'shock',
@@ -29,18 +30,28 @@ function containsAny(text, hints) {
   return hints.some((hint) => value.includes(hint));
 }
 
+function resolveSpeakerKey(label = '') {
+  const value = String(label || '').trim();
+  const exact = NAME_TO_KEY.get(value);
+  if (exact) return exact;
+  for (const [shortName, key] of NAME_ENTRIES) {
+    if (value.startsWith(`${shortName} `)) return key;
+  }
+  return null;
+}
+
 function splitKnownSpeaker(text) {
   const value = String(text || '').trim();
   if (!value) return null;
 
   const asciiColon = value.indexOf(':');
   const wideColon = value.indexOf('：');
-  const colonIndexes = [asciiColon, wideColon].filter((index) => index > 0 && index <= 40);
+  const colonIndexes = [asciiColon, wideColon].filter((index) => index > 0 && index <= 80);
   if (!colonIndexes.length) return null;
 
   const colonIndex = Math.min(...colonIndexes);
   const speakerName = value.slice(0, colonIndex).trim();
-  const key = NAME_TO_KEY.get(speakerName);
+  const key = resolveSpeakerKey(speakerName);
   if (!key) return null;
 
   const dialogue = value.slice(colonIndex + 1).trim();
@@ -219,7 +230,7 @@ function upgradeStructuredDialogue(card, state, { debug = false } = {}) {
   if (!speakerElement || !dialogueElement) return false;
 
   const speakerName = String(speakerElement.textContent || '').trim();
-  const key = NAME_TO_KEY.get(speakerName);
+  const key = resolveSpeakerKey(speakerName);
   if (!key) return false;
 
   const preferredSrc = card.querySelector('.portrait')?.getAttribute('src') || '';
@@ -306,4 +317,4 @@ function observeRoot(root) {
 observeRoot(document.getElementById('story'));
 observeRoot(document.getElementById('adminPreviewBody'));
 
-export { splitKnownSpeaker, inferExpression, expressionFromPortraitSrc };
+export { splitKnownSpeaker, inferExpression, expressionFromPortraitSrc, resolveSpeakerKey };
