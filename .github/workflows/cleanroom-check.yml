@@ -64,3 +64,5 @@ jobs:
         run: node scripts/runtime-health-audit.test.mjs
       - name: Run CANON-LIVING-01 invariants
         run: node scripts/canon-living-01.test.mjs
+      - name: Run read-only NPC frequency diagnostic invariants
+        run: node scripts/npc-frequency-diagnostic.test.mjs
