@@ -12,7 +12,7 @@ import characterStateData from '../../data/scenarios/academy-1285-03-01/characte
 import relationshipsData from '../../data/scenarios/academy-1285-03-01/relationships.json' with { type: 'json' };
 import groupAttitudesData from '../../data/scenarios/academy-1285-03-01/group-attitudes.json' with { type: 'json' };
 
-const MAX_HISTORY_TURNS = 8;
+const MAX_HISTORY_TURNS = 5;
 const CHARACTERS = charactersData.characters || {};
 const PRESENTATION = presentationData.characters || {};
 const CHARACTER_STATE = characterStateData.characters || {};
@@ -165,22 +165,25 @@ function currentRuntimeState(pc = {}, scene = {}, relationships = {}, continuity
   const stats = pcStatsLine(pc.stats);
   const relationState = playerRelationshipState(relationships);
   const continuityState = continuityWriterState(continuityMemory);
+  const pcCore = [
+    `player: ${cleanText(pc.name, 80)}, ${Number.isFinite(Number(pc.age)) ? `${Number(pc.age)}세` : '나이 미상'}${pc.gender ? `, ${cleanText(pc.gender, 40)}` : ''}${pc.department ? `, ${cleanText(pc.department, 80)}` : ''}.`,
+    pc.realm ? `무의 경지: ${cleanText(pc.realm, 140)}.` : '',
+    pc.magicCircle != null && pc.magicCircle !== '' ? `마법 써클: ${pc.magicCircle}.` : '',
+    pc.talents && Object.keys(pc.talents).length ? `재능: ${plainValue(pc.talents)}.` : '',
+    stats ? `스탯: ${stats}.` : '',
+  ].filter(Boolean).join('\n');
   const lines = [
     `현재 날짜와 시각: ${cleanText(scene.date, 10)} ${cleanText(scene.time, 5)}.`,
     `현재 장소: ${cleanText(scene.location, 220)}.`,
     scene.situation ? `현재 상황: ${cleanText(scene.situation, 700)}.` : '',
-    'PC의 설정·능력·출신·현재까지 실제로 드러난 행동은 세계가 존중해야 할 사실이지, 서사를 자동으로 특정 방향으로 끌고 가라는 명령이 아니다. NPC와 세계는 관찰 가능한 사실과 자신의 지식·경험·성격에 맞게 자연스럽게 반응하고, 새로운 증거가 생기면 기존 판단·거리감·역할 관계를 실제로 갱신한다. 그러나 PC가 강하거나 이질적이라는 이유만으로 사건의 강도, 조사, 격리, 취조, 연구 같은 흐름을 자동 확대하지 않는다. 필요한 절차가 충분히 목적을 달성했다면 압축하고 현재 생활과 이야기 흐름으로 돌아간다.',
-    `player: ${cleanText(pc.name, 80)}, ${Number.isFinite(Number(pc.age)) ? `${Number(pc.age)}세` : '나이 미상'}${pc.gender ? `, ${cleanText(pc.gender, 40)}` : ''}${pc.department ? `, ${cleanText(pc.department, 80)}` : ''}.`,
+    pcCore ? `PC 핵심 현재 사실:\n${pcCore}` : '',
+    'PC의 설정·능력·출신·현재까지 실제로 드러난 행동은 세계가 존중해야 할 사실이지, 서사를 자동으로 특정 방향으로 끌고 가라는 명령이 아니다. NPC와 세계는 관찰 가능한 사실과 자신의 지식·경험·성격에 맞게 자연스럽게 반응하고, 새로운 증거가 생기면 기존 판단·거리감·역할 관계를 실제로 갱신한다. 그러나 PC가 강하거나 이질적이라는 이유만으로 사건의 강도, 조사, 격리, 취조, 연구 같은 흐름을 자동 확대하지 않는다. 이 제한은 관찰한 사실에 대한 인물 고유의 감정 반응까지 약하게 만들라는 뜻이 아니다. 필요한 절차가 충분히 목적을 달성했다면 압축하고 현재 생활과 이야기 흐름으로 돌아간다.',
     pc.origin ? `출신: ${cleanText(pc.origin, 220)}.` : '',
     pc.socialStatus ? `신분: ${cleanText(pc.socialStatus, 140)}.` : '',
     pc.admission ? `입학 방식: ${cleanText(pc.admission, 180)}.` : '',
-    pc.realm ? `무의 경지: ${cleanText(pc.realm, 140)}.` : '',
-    pc.magicCircle != null && pc.magicCircle !== '' ? `마법 써클: ${pc.magicCircle}.` : '',
     pc.appearance ? `외형: ${cleanText(pc.appearance, 700)}.` : '',
     pc.background ? `배경: ${cleanText(pc.background, 1000)}.` : '',
     pc.characterProfile ? `성격/행동 프로필: ${cleanText(pc.characterProfile, 1000)}.` : '',
-    pc.talents && Object.keys(pc.talents).length ? `재능: ${plainValue(pc.talents)}.` : '',
-    stats ? `스탯: ${stats}.` : '',
     pc.traits?.length ? `Trait: ${pc.traits.map((item) => cleanText(item, 240)).join(' / ')}.` : '',
     pc.authorities?.length ? `Authority: ${pc.authorities.map((item) => cleanText(item, 240)).join(' / ')}.` : '',
     pc.skills?.length ? `현재 스킬: ${pc.skills.map((item) => cleanText(item, 160)).join(' / ')}.` : '',
@@ -189,7 +192,7 @@ function currentRuntimeState(pc = {}, scene = {}, relationships = {}, continuity
     Number.isFinite(Number(pc.startingGold)) ? `현재 기준 금화: ${Math.max(0, Number(pc.startingGold))}.` : '',
     relationState,
     continuityState,
-    scene.presentCharacterKeys?.length ? `현재 장면에 이어져 있는 등록 인물 key: ${scene.presentCharacterKeys.join(', ')}.` : '',
+    scene.presentCharacterKeys?.length ? `직전 장면 끝에 실제로 함께 있던 등록 인물 key: ${scene.presentCharacterKeys.join(', ')}. 이는 연속성을 위한 사실이지 다음 장면의 고정 캐스트가 아니다. 장소·시간·각자의 행동이 달라지면 자연스럽게 흩어질 수 있다.` : '',
   ];
   return lines.filter(Boolean).join('\n');
 }
@@ -240,7 +243,7 @@ export function assembleAuthoring({ action = '', pc = {}, scene = {}, relationsh
     start ? `START SETTINGS\n${start}` : '',
     `DEVELOPMENT EXAMPLES\n${developmentExamples()}`,
     `RUNTIME STATE\n${currentRuntimeState(pc, scene, relationships, continuityMemory)}`,
-    `RECENT CHAT\n${recentChat(history)}`,
+    `RECENT CHAT (latest ${MAX_HISTORY_TURNS} turns; older durable facts are in continuity memory)\n${recentChat(history)}`,
     exactUserEnvelope(mode, action, inputKind),
   ].filter(Boolean);
   const input = sections.join('\n\n');
