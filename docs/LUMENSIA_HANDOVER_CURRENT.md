@@ -4,176 +4,195 @@
 >
 > Repository: `hoho074566-cpu/lumensia-ai-first`
 >
-> The previous Canon-reconciliation handover is obsolete. The project has moved forward through human narrative testing and Golden3 is now the accepted Writer baseline.
+> Always refetch `main`, PR #42 and exact remote heads before acting. Do not assume a SHA written in an older conversation is still current.
 
 ---
 
-## 1. Current production status
+## 1. Accepted production baseline
 
-Golden3 has been formally promoted to `main` through PR #35.
+Golden3 is the human-accepted Writer regression floor and is already on `main`.
 
-- PR #35: **MERGED**
-- Accepted source head: `29c9ab29d1e051bd468cd90cf163d79a3ac41343`
-- Promotion merge commit: `05d4765a1f4e0eb1e8c956f5260606a51ee8ddc0`
-- Post-merge GitHub Actions: PASS
-- Post-merge Vercel: PASS
+- Promotion PR #35: MERGED
+- Production-default PR #36: MERGED
 - Production Writer mode: **COMPACT / RAW**
-
-Always refetch current `main` before doing new work; do not assume the promotion merge commit remains latest forever.
+- Accepted Writer principle: world-driven progression, routine compression, important-scene depth, natural Named Cast use, PC autonomy, Canon-compatible minor inference, natural handoff
 
 Detailed accepted contract: `docs/GOLDEN3_BASELINE.md`.
 
 ---
 
-## 2. What Golden3 means
+## 2. Active stack
 
-Golden3 is the human-accepted regression floor for Writer behavior.
+Active top PR:
 
-The accepted behavior is:
+**PR #42 — CONTINUITY-PERSIST-01**
 
-- the world does not freeze merely because the next scheduled event has not started;
-- routine movement, waiting, setup and ordinary procedure may compress through single-outcome stretches;
-- important conversation, relationship change, discovery, conflict and combat receive depth;
-- plausible Named Canon characters remain broadly available instead of being hidden by cast caps or selectors;
-- Named characters act for their own character-consistent reasons rather than as tutorial devices;
-- the user retains important PC actions, dialogue, emotions and choices;
-- minor everyday/spatial/class/custom/extra details may be inferred when consistent with supplied Canon;
-- major binding Canon facts are not invented without grounding;
-- the turn returns through a live reaction/decision point instead of a fake natural-language choice menu.
+- branch: `codex/continuity-persist-01`
+- base: `codex/relationship-01`
+- status: Draft / unmerged
+- merge only after human gameplay acceptance
 
-Human blind/parity testing found COMPACT / RAW clearly stronger than COMPACT / STRUCTURED. The latter reproduced the rejected stall pattern such as treating “time remains before the event” as a reason to stop the scene.
+Stack underneath:
 
----
+- PR #37 — original-style dialogue/character image UI
+- PR #38 — PC status / INFO
+- PR #39 — AI-first semantic growth evidence
+- PR #40 — semantic relationships
+- PR #42 — continuity + situation input + context/state stabilization
 
-## 3. Human evidence that triggered acceptance
-
-The accepted test family included:
-
-- entrance/ceremony scenes that continued naturally instead of stopping before the bell;
-- broad progression through routine until meaningful human contact;
-- natural use of multiple Canon characters without an explicit cast quota;
-- a hostile `릴리아와 생사결` challenge where Lillia and Artemis reacted according to character, power gap, place and academy norms without stealing the PC's decision;
-- a user-requested large attack scene that scaled into deeper action rather than remaining procedural;
-- an underspecified/typo department input that the Writer interpreted into a setting-consistent path rather than halting for correction.
-
-Do not convert these examples into fixed choreography. They are behavioral evidence, not mandatory events.
+Do not separately re-implement these layers from `main`; PR #42 already contains the stacked work.
 
 ---
 
-## 4. Canon policy after Golden3
+## 3. Current architecture
 
-Canon is a foundation, not a cage.
+Normal gameplay turn:
 
-Allowed Writer freedom:
+1. fixed Canon/sourcebook material + current PC/scene/relationship facts + semantic continuity + latest 5 raw turns + exact user input
+2. **one Golden3 Writer narrative call**
+3. Writer prose is saved/rendered immediately
+4. **one unified State Keeper bookkeeping call**
+5. growth / relationships / factual PC state / scene state / semantic continuity are persisted
+6. next Writer reads the latest durable facts
 
-- ordinary room/interior details;
-- plausible class/course names;
-- minor customs and everyday academy logistics;
-- generic students/staff/extras;
-- other low-binding scene detail that fits supplied setting and current state.
+State Keeper does not rewrite narrative prose.
 
-Still grounded:
+If bookkeeping fails, the Writer scene stays saved and the latest failed bookkeeping turn can be retried without another Writer call.
 
-- major character history;
-- core relationships;
-- major offices/authority;
-- signature powers and hard power facts;
-- major political/world history;
-- facts whose invention would constrain later play as new Canon.
-
-Human testing exposed a factual-base miss: Serena's white hair was absent from `presentation.json`, so RAW generation filled the blank incorrectly. The correct fix was to supply the existing Canon fact (`백발`), not to restrict Writer inference generally. This correction and a regression guard are now included.
+See `docs/ARCHITECTURE.md`.
 
 ---
 
-## 5. Architecture that must stay protected
+## 4. CONTINUITY-PERSIST-01 current scope
 
-Core direction:
+Implemented on the active branch:
 
-- **System = Facts**
-- **User = New PC Intent**
-- **AI = Scene Composition**
-- **Less Engine, More AI**
-- **Less Prompt, More Signal**
+- durable semantic continuity memory
+- date / time / location / situation / present-cast persistence
+- Situation/Narration input distinct from PC intent
+- visible growth traces + one-step semantic growth
+- semantic PC-NPC relationships
+- PC creator paste-settings
+- character image visibility regression fix
+- recent Writer raw context reduced from 8 to 5 turns
+- high-salience PC core fact block for realm/circle/talents/stats
+- present-cast release instead of repeated cast anchoring
+- completed procedure/evaluation/reporting release
+- consolidated exceptional-PC semantic boundary
+- emotional-range few-shot balance without changing accepted Golden3 `prompt_template`
+- creator `conditions` persistence fix
+- factual equipment / condition / gold persistence from Writer-confirmed outcomes
+- long State Keeper scene packets preserve both beginning and ending
+- full play history is preserved; mobile UI pages older turns instead of deleting them at turn 40
+- State Keeper failure retry control
+- creator list fields use one line per item so commas inside descriptions survive
+- canonical full-name dialogue labels may resolve to registered character art
+- stale opening / already-past dated scenario facts are removed from later Writer context
+- accepted background/profile lengths reach Writer runtime instead of being cut early
 
-Current Writer-facing architecture remains one narrative model call.
+---
+
+## 5. Protected Writer boundary
 
 Do not reintroduce merely to supervise prose:
 
 - Event Director / Event Engine
-- Schedule Engine
+- prose-controlling Schedule Engine
 - NPC selector score
-- cast rotation scheduler
+- cast rotation/cooldown
+- threat scaler
+- emotion score
 - hook / attention / event-density meters
 - prose quotas
 - Korean semantic-regex narrative control
 - extra planning model calls merely to choose the next beat
 
-Old failed narrative PRs are historical evidence only. Do not resume them as active implementation bases.
+The accepted Golden3 `prompt_template` is a protected regression floor.
+
+Prefer fixing factual/context/persistence defects below the Writer over accumulating one-off prose rules.
 
 ---
 
-## 6. Production mode and diagnostic overrides
+## 6. PC premise / power semantics
 
-The production root defaults to:
+Current consolidated boundary:
 
-- `context=compact`
-- `output=raw`
+PC settings, abilities, origin and demonstrated actions are world facts, not plot commands. NPCs/world react according to observable facts and their own knowledge, experience and personality. New evidence can update judgment, distance and role assumptions.
 
-Explicit URL query parameters remain available for diagnostics, so FULL/STRUCTURED and other parity combinations can still be reproduced when needed.
+Strong/unusual PC does not automatically mean stronger threats, investigation, quarantine, interrogation or research. This anti-escalation boundary does not suppress natural character-specific emotion.
 
-Do not mistake diagnostic parity modes for the accepted production default.
+Routine procedure should stop occupying the story after it has achieved its purpose.
 
----
-
-## 7. Current known limitation
-
-RAW prose deliberately removes structured scene bookkeeping from the Writer request.
-
-The compatibility wrapper currently freezes structured continuity values such as:
-
-- date
-- time
-- location
-- situation
-- present-character keys
-
-This means Golden3 is accepted as the **Writer behavior/prose baseline**, but long-form durable runtime continuity still needs dedicated work.
-
-Do not “solve” this by casually putting the old strict JSON bookkeeping burden back into the Writer call; that exact output-contract difference was part of the qualitative test that produced the accepted mode.
+Do not hard-code `master vs master`, numeric reaction rules, question counters or threat tiers.
 
 ---
 
-## 8. EXACT NEXT ACTION
+## 7. Current human qualitative concerns / gate
 
-Start from fresh latest `main` and implement:
+Fresh-save gameplay must still verify that the newest context/state corrections improve behavior without degrading Golden3 prose.
 
-**CONTINUITY-PERSIST-01 — durable continuity for the Golden3 RAW Writer.**
+Primary probes:
 
-Acceptance requirements:
+1. a long/strong PC such as Valencina — realm and demonstrated competence materially affect informed NPC judgment
+2. quiet strong-PC daily life — no automatic threat/event escalation
+3. otherworld/unregistered setup — plausible minimum handling then ordinary life, not endless authority handoff
+4. Artemis interaction — no automatic novice tutorial loop after peer-level evidence
+5. cast flow — Sera/Lillia/Artemis or another trio does not remain merely because it was recently saved
+6. emotional range — Lillia/Emily/Elena/etc. show character-specific emotional movement rather than uniform calmness
+7. procedure pacing — completed evaluation/report/intake does not become another nested evaluation
+8. actual danger — still receives proportionate consequences
+9. continuity after >5 turns — important completed facts/questions remain remembered through semantic memory
+10. equipment / injuries / gold — Writer-confirmed changes appear in INFO and the next Writer context
+11. long scene — final outcome/location/injury/cast is retained by State Keeper
+12. long run — old story turns remain in save/export and can be opened in the UI
+13. State Keeper failure — retry works without a second Writer generation
 
-1. preserve Golden3 COMPACT / RAW narrative behavior;
-2. preserve one narrative Writer call;
-3. do not reintroduce Director/Event/Schedule/NPC-selection machinery;
-4. preserve PC authority;
-5. persist actual world consequences across turns;
-6. verify date/time/location progression, present cast, injury/equipment/consequence continuity, save/export/import and Continue;
-7. compare narrative quality against Golden3 before accepting the feature;
-8. if continuity work degrades Golden3 prose/pace/cast behavior, revert the continuity approach rather than compensating with more Writer rules.
+**DRAFT / DO NOT MERGE until this human gate passes.**
 
 ---
 
-## 9. New-session start order
+## 8. Known deferred item
 
-1. Refetch actual GitHub `main` and open PR state.
+A complete mutable NPC/world-state overlay for long-term changes such as:
+
+- academic year
+- office/role
+- NPC realm/circle
+- current long-term academy presence
+
+is **not implemented yet**.
+
+`character-state.json` is explicitly treated as the 1285-03-01 start snapshot, with later run truth intended to supersede it.
+
+Do not build a scheduler or deterministic NPC simulation to solve this. Revisit when real gameplay spans enough time or an NPC state actually changes.
+
+---
+
+## 9. Periodic health audit
+
+Read and use `docs/HEALTH_AUDIT.md` after major context/state changes and before large merges.
+
+Remember:
+
+`CI GREEN != NARRATIVE QUALITY PASS`
+
+Automated tests catch hard regressions; human gameplay catches tone, pacing, cast inertia, emotional flattening and original-feel degradation.
+
+---
+
+## 10. New-session start order
+
+1. Refetch actual `main` and PR #42.
 2. Read this file.
 3. Read `docs/GOLDEN3_BASELINE.md`.
 4. Read `docs/NEXT_ACTION.md`.
-5. Read `docs/ARCHITECTURE.md` only as needed for implementation boundaries.
-6. Do not reconstruct the old failed narrative experiment chain unless a specific historical comparison is required.
-7. Begin CONTINUITY-PERSIST-01 from latest `main` on a fresh branch.
+5. Read `docs/ARCHITECTURE.md`.
+6. Read `docs/HEALTH_AUDIT.md` if changing state/context/runtime behavior.
+7. Do not reconstruct or resume old failed narrative experiments unless a specific comparison requires it.
+8. Continue from the exact human gate / defect currently reported on PR #42.
 
 `GOLDEN3_BASELINE: ACCEPTED`
 
 `HANDOFF_READY: PASS`
 
-`NEXT_ACTION: CONTINUITY-PERSIST-01 — durable state continuity while preserving Golden3 COMPACT / RAW Writer behavior.`
+`NEXT_ACTION: finish automated health-fix verification -> human fresh-save qualitative acceptance on PR #42 -> only then consider merge.`
