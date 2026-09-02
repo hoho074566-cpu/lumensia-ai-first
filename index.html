@@ -38,6 +38,7 @@
 
   <main id="story" class="story" aria-live="polite"></main>
   <div id="errorBox" class="error-box" hidden></div>
+  <button id="retryStateButton" class="state-retry-button" type="button" hidden>상태 기록 재시도</button>
 
   <form id="composer" class="composer">
     <label class="sr-only" for="actionInput">행동 또는 상황 입력</label>
@@ -106,11 +107,11 @@
       <label>외형<textarea name="appearance" rows="2" maxlength="700" placeholder="외형"></textarea></label>
       <label>배경<textarea name="background" rows="4" maxlength="1400" placeholder="과거, 출신 배경, 중요한 사건"></textarea></label>
       <label>캐릭터 프로필<textarea name="characterProfile" rows="4" maxlength="1600" placeholder="성격 경향, 가치관, 행동 원칙, 능력 제약 등"></textarea></label>
-      <label>Trait<textarea name="traits" rows="3" maxlength="1800" placeholder="쉼표 또는 줄바꿈으로 구분. 이름과 효과/제약을 자유롭게 적을 수 있다."></textarea></label>
-      <label>Authority<textarea name="authorities" rows="3" maxlength="1800" placeholder="쉼표 또는 줄바꿈으로 구분. 없다면 비워 둔다."></textarea></label>
-      <label>초기 스킬<textarea name="skills" rows="3" maxlength="1800" placeholder="예: 대검술:A++, 오러 운용:A"></textarea></label>
-      <label>초기 장비<textarea name="equipment" rows="3" maxlength="1800" placeholder="쉼표 또는 줄바꿈으로 구분"></textarea></label>
-      <label>현재 상태<textarea name="conditions" rows="2" maxlength="1200" placeholder="부상·피로·저주 등. 없다면 비워 둔다."></textarea></label>
+      <label>Trait<textarea name="traits" rows="3" maxlength="1800" placeholder="한 줄에 하나. 이름과 효과/제약 문장 안의 쉼표는 그대로 보존된다."></textarea></label>
+      <label>Authority<textarea name="authorities" rows="3" maxlength="1800" placeholder="한 줄에 하나. 없다면 비워 둔다."></textarea></label>
+      <label>초기 스킬<textarea name="skills" rows="3" maxlength="1800" placeholder="한 줄에 하나. 예: 대검술:A++"></textarea></label>
+      <label>초기 장비<textarea name="equipment" rows="3" maxlength="1800" placeholder="한 줄에 하나"></textarea></label>
+      <label>현재 상태<textarea name="conditions" rows="2" maxlength="1200" placeholder="한 줄에 하나. 부상·피로·저주 등. 없다면 비워 둔다."></textarea></label>
       <button class="primary" type="submit">이 캐릭터로 시작</button>
     </form>
   </dialog>
