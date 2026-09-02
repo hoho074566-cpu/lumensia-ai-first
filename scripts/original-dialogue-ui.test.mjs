@@ -14,7 +14,9 @@ assert.match(index, /client\.js[\s\S]*original-dialogue-ui\.js/, 'dialogue enhan
 
 assert.match(ui, /CHARACTER_ASSETS, CHARACTER_NAMES/, 'dialogue UI must use the existing canonical asset manifest');
 assert.match(ui, /function splitKnownSpeaker\(/, 'raw prose must be presentation-parsed only for known speaker prefixes');
-assert.match(ui, /NAME_TO_KEY\.get\(speakerName\)/, 'only registered character names can trigger character art');
+assert.match(ui, /function resolveSpeakerKey\(/, 'speaker labels must resolve through registered character names');
+assert.match(ui, /const exact = NAME_TO_KEY\.get\(value\)/, 'exact registered names must remain the primary art trigger');
+assert.match(ui, /value\.startsWith\(`\$\{shortName\} `\)/, 'canonical full names beginning with the registered short name must also resolve to the same art');
 assert.match(ui, /function inferExpression\(/, 'RAW expression inference must stay in the presentation layer');
 assert.match(ui, /EXPRESSION_HINTS/, 'RAW expression inference must use bounded visual hints');
 assert.match(ui, /assets\.portrait\?\.\[normalized\]/, 'expression-specific portrait must be preferred when available');
