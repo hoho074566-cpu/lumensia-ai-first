@@ -1,15 +1,9 @@
-PR #42 current acceptance head
+CONTINUITY-PERSIST-01 verification note
 
-HEAD=378c795ac46e948436e6870168435903188ae5a4
+Current functional/doc health-fix head before this note: 4ed812b43496f9aaaa553b0dee7d848142195433
+GitHub Actions: run #416 — PASS, including periodic runtime health audit invariants.
+Vercel exact-head status: SUCCESS.
 
-Includes:
-- semantic continuity memory + scene state
-- situation/narration input
-- visible growth traces
-- PC intensity boundary
-- local character-creator paste-settings (text + JSON/exported pc)
+The branch remains Draft / DO NOT MERGE until human fresh-save gameplay accepts narrative quality, cast flow, emotional range, procedure pacing, continuity and factual PC-state behavior.
 
-Validation:
-- GitHub Actions run #336 PASS
-- Vercel exact-head PASS
-- Draft / human gameplay gate required
+Always refetch PR #42 for the newest head; this note commit itself advances the branch SHA.
