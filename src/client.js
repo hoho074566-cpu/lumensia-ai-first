@@ -2,6 +2,7 @@ import { CHARACTER_ASSETS, CHARACTER_NAMES } from '/assets/manifest.js';
 
 const SAVE_KEY = 'lumensia.ai-first.v0.save.1';
 const SETTINGS_KEY = 'lumensia.ai-first.v0.settings.1';
+const HISTORY_RENDER_CHUNK = 40;
 const PARITY_QUERY = new URLSearchParams(window.location.search);
 const WRITER_OUTPUT_MODE = PARITY_QUERY.get('output') === 'raw' ? 'raw' : 'structured';
 const WRITER_CONTEXT_MODE = PARITY_QUERY.get('context') === 'compact' ? 'compact' : 'full';
@@ -23,6 +24,7 @@ const actionInput = el('actionInput');
 const sendButton = el('sendButton');
 const continueButton = el('continueButton');
 const situationButton = el('situationButton');
+const retryStateButton = el('retryStateButton');
 const statusText = el('statusText');
 const errorBox = el('errorBox');
 const pcDialog = el('pcDialog');
@@ -41,6 +43,7 @@ let runState = null;
 let sending = false;
 let adminPreview = null;
 let composerInputKind = 'intent';
+let historyVisibleLimit = HISTORY_RENDER_CHUNK;
 
 function emptyContinuityMemory() {
   return { version: 1, facts: [], exchanges: [], openThreads: [], updatedAt: '' };
@@ -94,7 +97,7 @@ function makeRunState(pc) {
 }
 
 function splitList(value) {
-  return String(value || '').split(/[\n,]/).map((x) => x.trim()).filter(Boolean).slice(0, 24);
+  return String(value || '').split(/\n+/).map((x) => x.trim()).filter(Boolean).slice(0, 24);
 }
 
 function readPcForm() {
@@ -159,7 +162,7 @@ function scenePlainText(scene = []) {
     if (!text) return '';
     if (beat?.kind !== 'dialogue') return text;
     const name = CHARACTER_NAMES[beat?.speaker_key] || beat?.speaker_name || beat?.speaker_key || 'NPC';
-    return `${name}\n${text}`;
+    return `${name}\n\n${text}`;
   }).filter(Boolean).join('\n\n');
 }
 
@@ -206,17 +209,31 @@ function stripSituationMarkers(value) {
   return text;
 }
 
+function updateRetryButton() {
+  if (!retryStateButton) return;
+  const last = runState?.history?.[runState.history.length - 1];
+  retryStateButton.hidden = !(last?.stateKeeper?.status === 'failed');
+  retryStateButton.disabled = sending;
+}
+
 function render() {
   if (!runState) {
     story.innerHTML = '<div class="empty-state">캐릭터를 생성하면 시작합니다.</div>';
     statusText.textContent = `새 게임 · ${PARITY_LABEL}`;
     continueButton.disabled = true;
+    updateRetryButton();
     return;
   }
   const scene = runState.scene;
   statusText.textContent = `${scene.date} · ${scene.time} · ${scene.location} · ${PARITY_LABEL}`;
   const chunks = [`<section class="opening-state"><div class="opening-kicker">${escapeHtml(scene.date)} · ${escapeHtml(scene.time)}</div><h2>${escapeHtml(scene.location)}</h2><p>${escapeHtml(runState.history.length ? '' : scene.situation)}</p></section>`];
-  runState.history.forEach((turn, index) => {
+  const totalTurns = runState.history.length;
+  const firstVisibleIndex = Math.max(0, totalTurns - historyVisibleLimit);
+  if (firstVisibleIndex > 0) {
+    chunks.push(`<div class="history-more-shell"><button type="button" class="history-more-button">이전 기록 ${Math.min(HISTORY_RENDER_CHUNK, firstVisibleIndex)}턴 더 보기 · 전체 ${totalTurns}턴 보존됨</button></div>`);
+  }
+  runState.history.slice(firstVisibleIndex).forEach((turn, offset) => {
+    const index = firstVisibleIndex + offset;
     if (turn.mode !== 'continue' && String(turn.action || '').trim()) {
       if (turn.inputKind === 'situation') chunks.push(`<section class="situation-context"><div class="situation-label">상황</div><div>${escapeHtml(stripSituationMarkers(turn.action))}</div></section>`);
       else chunks.push(`<section class="player-action"><div class="player-label">${escapeHtml(runState.pc.name)}</div><div>${escapeHtml(turn.action)}</div></section>`);
@@ -229,6 +246,7 @@ function render() {
   if (!runState.history.length) chunks.push('<p class="start-hint">세계는 이미 움직이고 있다. 무엇을 할지는 직접 입력하면 된다.</p>');
   story.innerHTML = chunks.join('');
   continueButton.disabled = sending || !runState || !runState.history.length;
+  updateRetryButton();
 }
 
 function renderAdminPreview() {
@@ -265,11 +283,13 @@ function setSending(value) {
   continueButton.disabled = value || !runState || !runState.history.length;
   actionInput.disabled = value || !runState;
   if (situationButton) situationButton.disabled = value || !runState;
+  if (retryStateButton) retryStateButton.disabled = value;
   composer.classList.toggle('is-sending', value);
   sendButton.textContent = value ? '생성 중…' : '보내기';
   continueButton.textContent = value ? '…' : '이어하기';
   el('adminPreviewButton').disabled = value || !runState;
   if (!value) updateSituationButton();
+  updateRetryButton();
 }
 
 function setStateKeeperBusy() {
@@ -336,6 +356,12 @@ async function handleCopyClick(button) {
 }
 
 story.addEventListener('click', (event) => {
+  const historyButton = event.target.closest('.history-more-button');
+  if (historyButton) {
+    historyVisibleLimit += HISTORY_RENDER_CHUNK;
+    render();
+    return;
+  }
   const button = event.target.closest('.copy-block-button');
   if (button) handleCopyClick(button);
 });
@@ -357,6 +383,62 @@ async function requestStateRecord({ action = '', turn, inputKind = 'intent' } = 
   catch { throw new Error(`State Keeper가 JSON이 아닌 응답을 반환했습니다. HTTP ${response.status}`); }
   if (!response.ok) throw new Error(payload.error || `State Keeper HTTP ${response.status}`);
   return payload;
+}
+
+function applyStatePayload(statePayload, turnRecord) {
+  if (!runState || !turnRecord) return;
+  if (statePayload?.pc_patch?.stats && typeof statePayload.pc_patch.stats === 'object') runState.pc.stats = statePayload.pc_patch.stats;
+  if (Array.isArray(statePayload?.pc_patch?.skills)) runState.pc.skills = statePayload.pc_patch.skills;
+  if (Array.isArray(statePayload?.pc_patch?.equipment)) runState.pc.equipment = statePayload.pc_patch.equipment;
+  if (Array.isArray(statePayload?.pc_patch?.conditions)) runState.pc.conditions = statePayload.pc_patch.conditions;
+  if (Number.isFinite(Number(statePayload?.pc_patch?.startingGold))) runState.pc.startingGold = Math.max(0, Number(statePayload.pc_patch.startingGold));
+  if (statePayload?.growth && typeof statePayload.growth === 'object') runState.growth = statePayload.growth;
+  if (statePayload?.relationships && typeof statePayload.relationships === 'object' && !Array.isArray(statePayload.relationships)) runState.relationships = statePayload.relationships;
+  if (statePayload?.continuity_memory && typeof statePayload.continuity_memory === 'object' && !Array.isArray(statePayload.continuity_memory)) runState.continuityMemory = statePayload.continuity_memory;
+  if (statePayload?.scene_state && typeof statePayload.scene_state === 'object') {
+    runState.scene = {
+      ...runState.scene,
+      date: statePayload.scene_state.date || runState.scene.date,
+      time: statePayload.scene_state.time || runState.scene.time,
+      location: statePayload.scene_state.location || runState.scene.location,
+      situation: statePayload.scene_state.situation || runState.scene.situation,
+      presentCharacterKeys: Array.isArray(statePayload.scene_state.present_character_keys) ? statePayload.scene_state.present_character_keys : runState.scene.presentCharacterKeys,
+    };
+  }
+  turnRecord.growthChanges = Array.isArray(statePayload?.changes) ? statePayload.changes : [];
+  turnRecord.growthObservations = Array.isArray(statePayload?.observations) ? statePayload.observations : [];
+  turnRecord.relationshipChanges = Array.isArray(statePayload?.relationship_changes) ? statePayload.relationship_changes : [];
+  turnRecord.relationshipObservations = Array.isArray(statePayload?.relationship_observations) ? statePayload.relationship_observations : [];
+  turnRecord.pcStateChanges = statePayload?.pc_state_changes || null;
+  turnRecord.persistedSceneState = statePayload?.scene_state || null;
+  turnRecord.stateKeeper = { status: 'ok', model: statePayload?.model || null, requestId: statePayload?.request_id || null };
+  runState.updatedAt = new Date().toISOString();
+  saveJson(SAVE_KEY, runState);
+  showError('');
+  render();
+}
+
+async function retryLastStateRecord() {
+  if (sending || !runState?.history?.length) return;
+  const turnRecord = runState.history[runState.history.length - 1];
+  if (turnRecord?.stateKeeper?.status !== 'failed') return;
+  setSending(true);
+  setStateKeeperBusy();
+  showError('상태 기록을 다시 시도하는 중…');
+  try {
+    const turn = { scene: turnRecord.scene, continuity: turnRecord.continuity };
+    const action = turnRecord.mode === 'continue' ? '(이어하기)' : turnRecord.action;
+    const inputKind = turnRecord.inputKind === 'situation' ? 'situation' : 'intent';
+    const statePayload = await requestStateRecord({ action, turn, inputKind });
+    applyStatePayload(statePayload, turnRecord);
+  } catch (error) {
+    turnRecord.stateKeeper = { status: 'failed', error: error?.message || 'State Keeper 오류' };
+    saveJson(SAVE_KEY, runState);
+    showError(`상태 기록 재시도에 실패했습니다. ${error?.message || ''}`.trim());
+  } finally {
+    setSending(false);
+    render();
+  }
 }
 
 async function requestScene({ mode = 'action', action = '', adminRequest = '', inputKind = 'intent' } = {}) {
@@ -415,7 +497,6 @@ async function requestScene({ mode = 'action', action = '', adminRequest = '', i
       createdAt: new Date().toISOString(),
     };
     runState.history.push(turnRecord);
-    runState.history = runState.history.slice(-40);
     runState.scene = {
       ...runState.scene,
       date: continuity.date,
@@ -434,34 +515,12 @@ async function requestScene({ mode = 'action', action = '', adminRequest = '', i
     setStateKeeperBusy();
     try {
       const statePayload = await requestStateRecord({ action: isContinue ? '(이어하기)' : submittedAction, turn, inputKind: submittedInputKind });
-      if (statePayload?.pc_patch?.stats && typeof statePayload.pc_patch.stats === 'object') runState.pc.stats = statePayload.pc_patch.stats;
-      if (Array.isArray(statePayload?.pc_patch?.skills)) runState.pc.skills = statePayload.pc_patch.skills;
-      if (statePayload?.growth && typeof statePayload.growth === 'object') runState.growth = statePayload.growth;
-      if (statePayload?.relationships && typeof statePayload.relationships === 'object' && !Array.isArray(statePayload.relationships)) runState.relationships = statePayload.relationships;
-      if (statePayload?.continuity_memory && typeof statePayload.continuity_memory === 'object' && !Array.isArray(statePayload.continuity_memory)) runState.continuityMemory = statePayload.continuity_memory;
-      if (statePayload?.scene_state && typeof statePayload.scene_state === 'object') {
-        runState.scene = {
-          ...runState.scene,
-          date: statePayload.scene_state.date || runState.scene.date,
-          time: statePayload.scene_state.time || runState.scene.time,
-          location: statePayload.scene_state.location || runState.scene.location,
-          situation: statePayload.scene_state.situation || runState.scene.situation,
-          presentCharacterKeys: Array.isArray(statePayload.scene_state.present_character_keys) ? statePayload.scene_state.present_character_keys : runState.scene.presentCharacterKeys,
-        };
-      }
-      turnRecord.growthChanges = Array.isArray(statePayload?.changes) ? statePayload.changes : [];
-      turnRecord.growthObservations = Array.isArray(statePayload?.observations) ? statePayload.observations : [];
-      turnRecord.relationshipChanges = Array.isArray(statePayload?.relationship_changes) ? statePayload.relationship_changes : [];
-      turnRecord.relationshipObservations = Array.isArray(statePayload?.relationship_observations) ? statePayload.relationship_observations : [];
-      turnRecord.persistedSceneState = statePayload?.scene_state || null;
-      turnRecord.stateKeeper = { status: 'ok', model: statePayload?.model || null, requestId: statePayload?.request_id || null };
-      runState.updatedAt = new Date().toISOString();
-      saveJson(SAVE_KEY, runState);
-      render();
+      applyStatePayload(statePayload, turnRecord);
     } catch (stateError) {
       turnRecord.stateKeeper = { status: 'failed', error: stateError?.message || 'State Keeper 오류' };
       saveJson(SAVE_KEY, runState);
-      showError(`장면은 저장됐지만 상태 기록에 실패했습니다. ${stateError?.message || ''}`.trim());
+      showError(`장면은 저장됐지만 상태 기록에 실패했습니다. 아래 '상태 기록 재시도'로 복구할 수 있습니다. ${stateError?.message || ''}`.trim());
+      render();
     }
   } catch (error) {
     showError(error?.message || '장면 생성에 실패했습니다.');
@@ -490,6 +549,7 @@ pcForm.addEventListener('submit', (event) => {
   if (!pc.name) return;
   if (!Number.isFinite(pc.age) || pc.age < 1) return;
   runState = makeRunState(pc);
+  historyVisibleLimit = HISTORY_RENDER_CHUNK;
   adminPreview = null;
   saveJson(SAVE_KEY, runState);
   pcDialog.close();
@@ -502,6 +562,7 @@ pcForm.addEventListener('submit', (event) => {
 
 composer.addEventListener('submit', (event) => { event.preventDefault(); sendAction(); });
 continueButton.addEventListener('click', continueScene);
+retryStateButton?.addEventListener('click', retryLastStateRecord);
 situationButton?.addEventListener('click', () => {
   if (sending || !runState) return;
   if (composerInputKind === 'situation') {
@@ -518,6 +579,7 @@ el('newGameButton').addEventListener('click', () => {
   if (runState && !confirm('현재 세이브를 지우고 새 캐릭터를 만들까요?')) return;
   localStorage.removeItem(SAVE_KEY);
   runState = null;
+  historyVisibleLimit = HISTORY_RENDER_CHUNK;
   adminPreview = null;
   setComposerInputKind('intent');
   render();
@@ -565,6 +627,7 @@ importInput.addEventListener('change', async () => {
     if (!runState.growth || typeof runState.growth !== 'object') runState.growth = { version: 1, evidence: [], changes: [] };
     if (!runState.relationships || typeof runState.relationships !== 'object' || Array.isArray(runState.relationships)) runState.relationships = {};
     if (!runState.continuityMemory || typeof runState.continuityMemory !== 'object' || Array.isArray(runState.continuityMemory)) runState.continuityMemory = emptyContinuityMemory();
+    historyVisibleLimit = HISTORY_RENDER_CHUNK;
     adminPreview = null;
     saveJson(SAVE_KEY, runState);
     showError('');
@@ -584,6 +647,7 @@ async function boot() {
   if (runState && (!runState.relationships || typeof runState.relationships !== 'object' || Array.isArray(runState.relationships))) { runState.relationships = {}; migrated = true; }
   if (runState && (!runState.continuityMemory || typeof runState.continuityMemory !== 'object' || Array.isArray(runState.continuityMemory))) { runState.continuityMemory = emptyContinuityMemory(); migrated = true; }
   if (migrated) saveJson(SAVE_KEY, runState);
+  historyVisibleLimit = HISTORY_RENDER_CHUNK;
   adminPreview = null;
   setComposerInputKind('intent');
   setSending(false);
