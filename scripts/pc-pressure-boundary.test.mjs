@@ -40,14 +40,14 @@ const weak = assembleAuthoring({
 });
 
 for (const authoring of [strong, weak]) {
-  assert.match(authoring.input, /강한 능력·비범한 과거·희귀 장비는 PC의 현재 가능성과 과거를 판정하기 위한 사실/, 'PC facts must be framed as capability/history facts, not event pressure');
-  assert.match(authoring.input, /그에 비례하는 적·추적자·재앙·운명적 사건을 현재 장면에 즉시 생성하라는 지시가 아니다/, 'Writer must not scale scene danger merely to PC strength');
-  assert.match(authoring.input, /실제 근거가 없다면 평범한 일상과 기존 흐름을 그대로 존중/, 'quiet scenes must remain allowed for exceptional PCs');
+  assert.match(authoring.input, /PC의 설정·능력·출신·현재까지 실제로 드러난 행동은 세계가 존중해야 할 사실/, 'PC facts must be treated as world facts');
+  assert.match(authoring.input, /서사를 자동으로 특정 방향으로 끌고 가라는 명령이 아니다/, 'PC facts must not become automatic plot pressure');
+  assert.match(authoring.input, /사건의 강도, 조사, 격리, 취조, 연구 같은 흐름을 자동 확대하지 않는다/, 'exceptional PC facts must not auto-scale conflict or investigation');
 }
 
 assert.match(strong.input, /다른 세계의 전쟁에서 괴물 군주와 싸우다 심장을 관통당한 뒤 이곳에서 깨어났다/, 'strong backstory must still reach the Writer unchanged');
 assert.match(strong.input, /탄약 추진식 사복검/, 'unusual equipment must still reach the Writer unchanged');
-assert.equal(AUTHORING_DATA.prompt_template, authoringJson.prompt_template, 'PC pressure correction must not rewrite the accepted Golden3 Writer prompt');
+assert.equal(AUTHORING_DATA.prompt_template, authoringJson.prompt_template, 'consolidation must not rewrite the accepted Golden3 Writer prompt');
 assert.doesNotMatch(runtimeSource, /pcPowerScore|threatScale|eventTier|strengthClass|dangerQuota|eventScheduler/i, 'do not replace semantic boundary with deterministic strength-to-event machinery');
 
-console.log('PASS PC pressure boundary — exceptional PC facts do not imply immediate escalated events');
+console.log('PASS consolidated PC premise pressure boundary');
