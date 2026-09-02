@@ -22,10 +22,10 @@ const authoring = assembleAuthoring({
   relationships: {}, continuityMemory: {}, history: [], mode: 'action', contextMode: 'compact',
 });
 
-assert.match(authoring.input, /신원 확인·등록·보고·취조처럼 사실을 확인하기 위한 절차성 대화/, 'runtime must recognize procedural interrogation as compressible procedure');
-assert.match(authoring.input, /세부 질문을 한 턴씩 연쇄하지 않는다/, 'runtime must not encourage one-question-per-turn interrogation loops');
-assert.match(authoring.input, /실제 갈등·관계 변화·중대한 선택을 만드는 핵심 질문이면 그 장면의 깊이는 유지/, 'important consequential dialogue must still retain scene depth');
+assert.match(authoring.input, /조사, 격리, 취조, 연구 같은 흐름을 자동 확대하지 않는다/, 'procedural interrogation must not auto-expand into a self-sustaining arc');
+assert.match(authoring.input, /필요한 절차가 충분히 목적을 달성했다면 압축하고 현재 생활과 이야기 흐름으로 돌아간다/, 'routine procedure must compress once its purpose is satisfied');
+assert.match(authoring.input, /새로운 증거가 생기면 기존 판단·거리감·역할 관계를 실제로 갱신한다/, 'new evidence must update the scene rather than preserve a stale intake frame');
 assert.doesNotMatch(runtime, /interrogationCount|questionCount|maxQuestions|questionQuota|interrogationStage/i, 'no deterministic interrogation counter/stage may be introduced');
-assert.equal(AUTHORING_DATA.prompt_template, authoringJson.prompt_template, 'procedural compression boundary must not fork the accepted Golden3 prompt');
+assert.equal(AUTHORING_DATA.prompt_template, authoringJson.prompt_template, 'procedural consolidation must not fork the accepted Golden3 prompt');
 
-console.log('PASS procedural interrogation compression boundary');
+console.log('PASS consolidated procedural interrogation boundary');
