@@ -44,8 +44,8 @@ const OUTPUT_SCHEMA = {
       properties: {
         date: { type: 'string', minLength: 10, maxLength: 10 },
         time: { type: 'string', minLength: 5, maxLength: 5 },
-        location: { type: 'string', minLength: 1, maxLength: 200 },
-        situation: { type: 'string', minLength: 1, maxLength: 500 },
+        location: { type: 'string', minLength: 1, maxLength: 220 },
+        situation: { type: 'string', minLength: 1, maxLength: 700 },
         present_character_keys: { type: 'array', maxItems: 8, items: { type: 'string', maxLength: 64 } },
       },
       required: ['date', 'time', 'location', 'situation', 'present_character_keys'],
@@ -115,8 +115,8 @@ function safeScene(raw = {}) {
   return {
     date: /^\d{4}-\d{2}-\d{2}$/.test(String(raw.date || '')) ? String(raw.date) : scenarioData.start.date,
     time: /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(raw.time || '')) ? String(raw.time) : scenarioData.start.time,
-    location: cleanText(raw.location || scenarioData.start.location, 200),
-    situation: cleanText(raw.situation || scenarioData.start.situation, 500),
+    location: cleanText(raw.location || scenarioData.start.location, 220),
+    situation: cleanText(raw.situation || scenarioData.start.situation, 700),
     presentCharacterKeys: Array.isArray(raw.presentCharacterKeys) ? [...new Set(raw.presentCharacterKeys.filter((key) => CHARACTER_KEYS.has(key)))].slice(0, 8) : [],
   };
 }
@@ -196,7 +196,7 @@ export function validateTurn(turn, pc, fallbackScene) {
   const continuity = {
     date: /^\d{4}-\d{2}-\d{2}$/.test(String(raw.date || '')) ? String(raw.date) : fallbackScene.date,
     time: /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(raw.time || '')) ? String(raw.time) : fallbackScene.time,
-    location: cleanText(raw.location || fallbackScene.location, 200), situation: cleanText(raw.situation || fallbackScene.situation, 500),
+    location: cleanText(raw.location || fallbackScene.location, 220), situation: cleanText(raw.situation || fallbackScene.situation, 700),
     present_character_keys: Array.isArray(raw.present_character_keys) ? [...new Set(raw.present_character_keys.filter((key) => CHARACTER_KEYS.has(key)))].slice(0, 8) : [],
   };
   return { scene, continuity };
