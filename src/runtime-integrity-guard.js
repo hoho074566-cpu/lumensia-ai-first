@@ -45,7 +45,9 @@ function markLastTurnPending() {
 }
 
 function requestPath(input) {
-  if (typeof input === 'string') return input;
+  if (typeof input === 'string') {
+    try { return new URL(input, location.href).pathname; } catch { return input; }
+  }
   if (input instanceof URL) return input.pathname;
   if (typeof Request !== 'undefined' && input instanceof Request) {
     try { return new URL(input.url, location.href).pathname; } catch { return input.url; }
@@ -63,15 +65,35 @@ function withJsonBody(init = {}, body) {
   return { ...init, body: JSON.stringify(body) };
 }
 
+function safeResponseHeaders(headers) {
+  const copy = new Headers(headers || {});
+  copy.delete('content-length');
+  copy.delete('content-encoding');
+  return copy;
+}
+
+function recoverImportedPending() {
+  if (!recoverInterruptedBookkeeping()) return false;
+  window.location.reload();
+  return true;
+}
+
 recoverInterruptedBookkeeping();
+window.addEventListener('pageshow', recoverInterruptedBookkeeping);
+const importInput = document.getElementById('importInput');
+importInput?.addEventListener('change', () => {
+  for (const delay of [100, 500, 1500]) window.setTimeout(recoverImportedPending, delay);
+});
 
 const originalFetch = window.fetch.bind(window);
 window.fetch = async function guardedFetch(input, init = {}) {
   const path = requestPath(input);
 
   if (path === '/api/write') {
-    if (bookkeepingBlocked()) throw new Error('이전 장면의 상태 기록을 먼저 복구해야 다음 장면을 생성할 수 있습니다.');
     const body = parseJsonBody(init);
+    if (bookkeepingBlocked() && body?.adminScenePreview !== true) {
+      throw new Error('이전 장면의 상태 기록을 먼저 복구해야 다음 장면을 생성할 수 있습니다.');
+    }
     if (body) init = withJsonBody(init, prepareWriterBody(body));
     return originalFetch(input, init);
   }
@@ -87,12 +109,18 @@ window.fetch = async function guardedFetch(input, init = {}) {
     const raw = await response.text();
     let payload;
     try { payload = raw ? JSON.parse(raw) : {}; }
-    catch { return new Response(raw, { status: response.status, statusText: response.statusText, headers: response.headers }); }
+    catch {
+      return new Response(raw, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: safeResponseHeaders(response.headers),
+      });
+    }
     const restored = restoreKeeperPayload(payload, originalRunState);
     return new Response(JSON.stringify(restored), {
       status: response.status,
       statusText: response.statusText,
-      headers: response.headers,
+      headers: safeResponseHeaders(response.headers),
     });
   }
 
