@@ -109,13 +109,15 @@ The accepted Golden3 Writer prompt template is unchanged.
 
 ## Validation
 
-Exact head: `c1b787d485219c3a943a60b1b701efe70a0ebb76`
+Validation baseline after Character Depth:
 
-- GitHub Actions run #445: **PASS**
+- GitHub Actions run #451: **PASS**
 - Vercel exact-head: **PASS**
 - Golden3 / Canon / runtime / UI / growth / relationship / continuity / health audit: PASS
 - broadened cast / procedure compression / NPC frequency diagnostic: PASS
 - compact two-axis Character Depth regression gate: PASS
+
+The exact branch head may advance through documentation-only commits; always refetch PR #43 before merge or human acceptance.
 
 ## Human gate
 
