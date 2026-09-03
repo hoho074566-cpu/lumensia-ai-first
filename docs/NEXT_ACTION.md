@@ -8,59 +8,97 @@ Golden3 is the human-accepted Writer regression floor.
 
 - production Writer mode: **COMPACT / RAW**
 - one narrative Writer call
+- one unified State Keeper bookkeeping call
 - no narrative Director / selector / scheduler machinery
 
-Active top stack: **PR #42 — CONTINUITY-PERSIST-01** (`codex/continuity-persist-01`), Draft / unmerged.
+## Current active human test
 
-## Current implementation state
+**PR #45 — WORLD-STIMULUS-01** (`codex/world-stimulus-01`), Draft / unmerged.
 
-PR #42 now contains the continuity feature plus the health-fix pass discovered during live testing:
+Human-test exact head when the whole-runtime audit started:
 
-- semantic continuity memory and current scene state
-- latest-5-turn Writer context diet
-- PC core-fact salience
-- present-cast release / completed-procedure release
-- situation input
-- growth + relationship State Keeper bookkeeping
-- factual equipment / condition / gold persistence
-- long-scene beginning+ending State Keeper input
-- full saved play history with paged mobile rendering
-- State Keeper failure retry
-- stale opening/schedule fact removal
-- full accepted PC background/profile feed
-- comma-safe line-based PC list fields
-- canonical full-name character-art resolution
-- periodic runtime health audit regression
+`4a97e04928c62307cb7f38f7fdfc10dfd6e62353`
 
-The accepted Golden3 `prompt_template` remains protected.
+Do not mutate that exact playtest head while the current qualitative session is being evaluated.
+
+PR #45 is stacked on:
+
+- PR #42 continuity/factual-state/runtime fixes
+- PR #43 CANON-LIVING + Character Depth + broad cast
+- PR #44 LIVING-CONSEQUENCE
+
+## Parallel audit candidate
+
+`codex/full-health-audit-01` is stacked on exact PR #45 and is a **hard-integrity candidate**, not a new Writer-tuning experiment.
+
+It currently addresses:
+
+- crash-safe / retryable State Keeper bookkeeping
+- no gameplay advance while latest bookkeeping is pending/failed
+- late async Writer/Keeper result rejection after new-game/import run replacement
+- recent-history-only Writer transport and no-history Keeper transport
+- rich `Skill:Grade — description` growth compatibility
+- lossless transport of legal long Writer beat tails into Keeper
+- preservation of unchanged long equipment descriptions
+- Writer PC-list sanitizer length alignment
+- accurate read-only NPC frequency diagnostic (`세레나` no longer counts `레나`)
+- later-run truth overriding stale WORLD-STIMULUS start facts
+- current stack/handover documentation repair
+
+See `docs/FULL_HEALTH_AUDIT_01.md`.
+
+The accepted Golden3 `prompt_template` remains unchanged.
 
 ## Exact next action
 
-1. Finish full automated verification on the exact latest PR #42 head.
-2. Confirm Vercel exact-head success.
-3. Run fresh-save human qualitative gameplay using the gate below.
-4. If a repeatable defect appears, fix the smallest factual/context/state cause and rerun the full suite.
-5. If the gate passes, report PR #42 ready for human merge decision. Do not merge merely because CI is green.
+1. Finish full CI and Vercel verification on the exact latest `codex/full-health-audit-01` head.
+2. Compare audit branch against PR #45 and confirm no accidental narrative-policy / Writer-prompt change.
+3. Open the audit work as a Draft PR based on `codex/world-stimulus-01`; do **not** merge it while PR #45 human qualitative testing is still active.
+4. Collect the human verdict on PR #45:
+   - stimulus / pacing
+   - cast diversity
+   - NPC knowledge boundary
+   - Character Depth
+   - Living Consequence
+   - Golden3 prose quality.
+5. If PR #45 passes, separately sanity-test the audit candidate for gameplay equivalence plus integrity fixes.
+6. Merge decisions only after human acceptance; CI green alone is insufficient.
 
-## Human gate
+## Human PR #45 gate
 
 Verify:
 
-- strong/long PC facts materially affect plausible judgment
-- quiet strong-PC life remains possible without automatic escalation
-- unusual origin does not become endless institutional intake
-- demonstrated expert competence changes stale assumptions when warranted
-- Artemis does not default to novice tutorial behavior against proven expertise
-- same Named NPCs do not repeat merely due to saved present cast/history inertia
-- emotional range remains character-specific rather than uniformly calm/flat
-- routine evaluation/intake ends when its purpose is satisfied
-- actual present danger still gets natural consequences
-- important continuity survives beyond the 5-turn raw window
-- Writer-confirmed equipment/injury/gold changes persist into INFO and next turn
-- long-scene final consequences are retained
-- >40-turn history is preserved and older turns can be opened
-- bookkeeping retry works without regenerating Writer prose
-- Golden3 prose quality remains at the accepted level
+- ordinary life no longer stays sleepy for long stretches;
+- real world pressures can surface through natural information/location/person paths;
+- opportunities and social competition create excitement without requiring attacks;
+- other NPCs can pursue opportunities without waiting for the PC;
+- mystery does not automatically become Abyss/cult/conspiracy;
+- secret pressure does not leak as universal public knowledge;
+- NPCs do not know undemonstrated PC techniques as facts;
+- Named NPC use broadens without deterministic rotation;
+- real promises/favors/rumors/aftermath persist without forced callback;
+- Character Depth does not become a repeated gimmick;
+- Golden3 prose quality / PC authority remain strong.
+
+## Audit-specific follow-up gate
+
+After PR #45 verdict, verify on the audit candidate:
+
+- reload/app close during bookkeeping becomes retryable instead of silently losing state;
+- failed bookkeeping cannot be skipped by generating another gameplay turn;
+- old async response cannot contaminate a new/imported run;
+- rich graded skills can accumulate/promote while retaining description text;
+- long Writer beat ending consequences reach Keeper;
+- long campaign request payload does not scale with the full transcript every turn;
+- INFO NPC count does not false-count nested names;
+- existing equipment descriptions are not shortened merely by Keeper normalization.
+
+## Deferred / human operational checks
+
+- Very long campaigns may eventually hit `localStorage` quota. Future fix should be IndexedDB/segmented history, not deleting old turns.
+- Confirm `LUMENSIA_ACCESS_TOKEN` is configured in deployment if Vercel API endpoints are not intentionally public.
+- Full mutable NPC long-term state overlay remains deferred; no scheduler/NPC simulation.
+- `canon-context.js` retrieval tests are support/data tests; production Writer facts must also be validated through `authoring-runtime.js` when relevant.
 
 ## Do not do
 
@@ -68,21 +106,16 @@ Do not reintroduce:
 
 - Event Director / Event Engine
 - prose-controlling Schedule Engine
-- NPC selector scores / cast rotation/cooldown
-- threat scaler / emotion score
-- hook / attention / event-density meters
+- random event / encounter tables
+- NPC selector scores / cast rotation / cooldown
+- threat / emotion / pressure / scene-temperature scores
+- hook / attention / density meters
 - prose quotas
 - Korean semantic-regex narrative control
-- extra planning model calls merely to choose the next beat
-
-## Deferred
-
-A complete mutable NPC long-term state overlay (year/office/realm/presence changes) is deferred until actual long-duration gameplay requires it. Do not solve it with an NPC simulation or schedule engine.
-
-Read `docs/HEALTH_AUDIT.md` for periodic whole-game verification.
+- extra planning calls merely to choose the next beat
 
 `GOLDEN3_BASELINE: ACCEPTED`
 
 `HANDOFF_READY: PASS`
 
-`NEXT_ACTION: exact-head automated verification -> fresh-save human PR #42 acceptance -> merge decision only after qualitative PASS.`
+`NEXT_ACTION: exact-head audit CI/Vercel + diff verification -> keep PR #45 frozen for human verdict -> audit Draft PR only -> human acceptance before any merge.`
