@@ -104,6 +104,10 @@ assert.match(guard, /body\?\.adminScenePreview !== true/, 'read-only Admin Previ
 assert.match(guard, /turn\.stateKeeper = \{ status: 'pending'/, 'Keeper call must durably mark the turn pending before network completion');
 assert.match(guard, /recoverInterruptedBookkeeping\(\)/, 'boot must convert interrupted pending bookkeeping into a retryable failure');
 assert.match(guard, /importInput\?\.addEventListener\('change'/, 'imported pending saves must also become retryable instead of deadlocking');
+assert.match(guard, /function assertSameDurableRun/, 'late async responses must be checked against the durable run identity');
+assert.match(guard, /String\(current\.id \|\| ''\) !== requestId/, 'a replacement run id must reject the old result');
+assert.match(guard, /current\.history\) \? current\.history\.length : 0\) !== expectedHistoryLength/, 'unexpected durable history movement must reject a stale result');
+assert.ok((guard.match(/assertSameDurableRun\(/g) || []).length >= 3, 'both Writer and Keeper response paths must enforce stale-run rejection');
 assert.match(guard, /content-length/, 'rewritten Keeper responses must not preserve stale transport length headers');
 assert.match(guard, /prepareWriterBody/, 'Writer request transport must be compacted below the Writer');
 assert.match(guard, /prepareKeeperBody/, 'Keeper request transport must be compacted below the Keeper');
@@ -114,4 +118,4 @@ assert.equal((writer.match(/https:\/\/api\.openai\.com\/v1\/responses/g) || []).
 assert.equal((keeper.match(/https:\/\/api\.openai\.com\/v1\/responses/g) || []).length, 1, 'audit fixes must preserve one State Keeper call');
 assert.match(authoring, /세계는 player의 다음 입력을 기다리며 정지하지 않는다/, 'Golden3 prompt source must remain intact');
 
-console.log('PASS FULL-HEALTH-AUDIT-01 transaction safety + payload diet + rich state preservation + stimulus precedence + diagnostic accuracy');
+console.log('PASS FULL-HEALTH-AUDIT-01 transaction safety + stale-run rejection + payload diet + rich state preservation + stimulus precedence + diagnostic accuracy');
