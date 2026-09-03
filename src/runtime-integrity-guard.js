@@ -2,6 +2,7 @@ import { prepareKeeperBody, prepareWriterBody, restoreKeeperPayload } from './ru
 
 const SAVE_KEY = 'lumensia.ai-first.v0.save.1';
 const INTERRUPTED_MESSAGE = '이전 장면의 상태 기록이 완료되기 전에 앱이 종료되거나 새로고침되었습니다. 상태 기록 재시도를 먼저 실행해 주세요.';
+const STALE_RESULT_MESSAGE = '요청 중 세이브가 교체되어 이전 run의 늦은 응답을 폐기했습니다.';
 
 function loadSave() {
   try {
@@ -42,6 +43,15 @@ function markLastTurnPending() {
   turn.stateKeeper = { status: 'pending', error: '' };
   run.updatedAt = new Date().toISOString();
   saveRun(run);
+}
+
+function assertSameDurableRun(requestRunState = {}, expectedHistoryLength = null) {
+  const current = loadSave();
+  const requestId = String(requestRunState?.id || '');
+  if (!current || !requestId || String(current.id || '') !== requestId) throw new Error(STALE_RESULT_MESSAGE);
+  if (Number.isInteger(expectedHistoryLength) && (Array.isArray(current.history) ? current.history.length : 0) !== expectedHistoryLength) {
+    throw new Error(STALE_RESULT_MESSAGE);
+  }
 }
 
 function requestPath(input) {
@@ -94,16 +104,22 @@ window.fetch = async function guardedFetch(input, init = {}) {
     if (bookkeepingBlocked() && body?.adminScenePreview !== true) {
       throw new Error('이전 장면의 상태 기록을 먼저 복구해야 다음 장면을 생성할 수 있습니다.');
     }
+    const requestRunState = body?.runState || null;
+    const expectedHistoryLength = Array.isArray(requestRunState?.history) ? requestRunState.history.length : 0;
     if (body) init = withJsonBody(init, prepareWriterBody(body));
-    return originalFetch(input, init);
+    const response = await originalFetch(input, init);
+    if (requestRunState) assertSameDurableRun(requestRunState, expectedHistoryLength);
+    return response;
   }
 
   if (path === '/api/state-keeper') {
     const body = parseJsonBody(init);
     if (!body) return originalFetch(input, init);
     const originalRunState = body.runState || {};
+    const expectedHistoryLength = Array.isArray(originalRunState.history) ? originalRunState.history.length : 0;
     markLastTurnPending();
     const response = await originalFetch(input, withJsonBody(init, prepareKeeperBody(body)));
+    assertSameDurableRun(originalRunState, expectedHistoryLength);
     if (!response.ok) return response;
 
     const raw = await response.text();
@@ -127,4 +143,4 @@ window.fetch = async function guardedFetch(input, init = {}) {
   return originalFetch(input, init);
 };
 
-export { bookkeepingBlocked, recoverInterruptedBookkeeping };
+export { assertSameDurableRun, bookkeepingBlocked, recoverInterruptedBookkeeping };
