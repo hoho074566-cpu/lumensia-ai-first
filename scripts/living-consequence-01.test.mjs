@@ -63,7 +63,7 @@ const authoring = assembleAuthoring({
   scene: { date: '1285-03-02', time: '14:20', location: '도서관', situation: '도서관에서 자료를 찾는 중.', presentCharacterKeys: [] },
   relationships: {}, continuityMemory: applied.continuity_memory, history: [], mode: 'action', contextMode: 'compact',
 });
-assert.match(authoring.input, /지속 연속성 메모[\s\S]*현재 미해결 흐름[\s\S]*\[약속\].*릴리아/, 'next Writer must receive active promises as current facts');
+assert.match(authoring.input, /지속 연속성 메모[\s\S]*아직 미해결인 현재 흐름[\s\S]*\[약속\].*릴리아/, 'next Writer must receive active promises as current facts');
 assert.match(authoring.input, /미래를 계획하는 지시가 아니라 과거\/현재 사실 기록이다/, 'Writer must already receive the non-directive continuity boundary');
 assert.equal(AUTHORING_DATA.prompt_template, authoringJson.prompt_template, 'Living Consequence must not edit the accepted Golden3 Writer prompt');
 
