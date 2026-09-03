@@ -1,16 +1,83 @@
 {
-  "version": 2,
+  "version": 3,
   "as_of": "1285-03-01",
+  "stimulus_kinds": {
+    "danger": "실제 위험·피해 가능성이 있는 진행 중 문제",
+    "mystery": "원인이 아직 확정되지 않은 이상·의문",
+    "opportunity": "PC 전용이 아니며 다른 사람도 잡을 수 있는 희소한 기회",
+    "social_heat": "사람·조직·평판·경쟁 때문에 생기는 비전투 긴장"
+  },
   "situations": [
     {
       "id": "gray_wolf_forest",
+      "kind": "danger",
+      "scope": "academy_outskirts",
       "visibility": 2,
       "horizon": "2-3_weeks",
       "fact": "회색 늑대의 숲에서 트윈헤드 울프가 증가해 2학년 이상 대상 토벌 의뢰가 나와 있다. PC가 개입하지 않으면 상급생 파티가 해결할 가능성이 높으며 실패할 경우 외곽 활동 제한과 이후 실습장 변경으로 이어질 수 있다.",
       "fixed": false
     },
     {
+      "id": "wisdom_forest_spirit_avoidance",
+      "kind": "mystery",
+      "scope": "academy_outskirts",
+      "visibility": 2,
+      "horizon": "days_to_weeks",
+      "fact": "최근 며칠 동안 지혜의 숲 북서쪽에서 하급 정령들이 특정 구역을 우회하는 현상이 관찰되고 있다. 시아처럼 정령 반응을 직접 읽는 사람은 이상함을 느낄 수 있지만 원인은 아직 확인되지 않았다.",
+      "fixed": false,
+      "detail_policy": "정령의 회피 원인을 자동으로 어비스·저주·범죄와 연결하지 않는다. 실제 장면과 추가 증거가 생기기 전에는 원인 미상이다."
+    },
+    {
+      "id": "magic_lab_ward_instability",
+      "kind": "mystery",
+      "scope": "academy",
+      "visibility": 2,
+      "horizon": "days",
+      "fact": "마법과의 한 공용 실습실에서 보호결계 출력이 간헐적으로 흔들리는 현상이 반복되어 일부 실습이 다른 방으로 옮겨졌다. 인명피해는 없고 원인은 아직 확정되지 않았으며 교수와 관심 있는 학생들이 원인을 비교하고 있다.",
+      "fixed": false,
+      "detail_policy": "사고나 적대행위가 확인된 상태가 아니다. 단순 결함·환경 문제·실험 간섭 등 여러 가능성이 열려 있다."
+    },
+    {
+      "id": "cross_year_sparring_open_slot",
+      "kind": "opportunity",
+      "scope": "academy",
+      "visibility": 1,
+      "horizon": "current_week",
+      "fact": "기사과에서 상급생과 하급생의 실전감각 교류를 위한 감독 대련 상대 모집이 게시되어 있다. 좋은 모습을 보이면 외부 실습 추천이나 교관의 평가에 참고될 수 있지만 참가 자리는 PC 전용이 아니며 관심 있는 다른 학생이 먼저 잡을 수 있다.",
+      "fixed": false
+    },
+    {
+      "id": "magic_research_assistant_opening",
+      "kind": "opportunity",
+      "scope": "academy",
+      "visibility": 2,
+      "horizon": "current_week",
+      "fact": "마법과에서 예상 밖 결과를 다루는 단기 연구 보조 자리가 하나 비어 있다. 엘레나가 반드시 특정 학생을 지명한 것은 아니며, 레나·세레나를 포함해 마법 구조를 제대로 이해하는 학생이라면 관심을 가질 수 있다. 자리는 희소하지만 강제 퀘스트나 PC 전용 보상이 아니다.",
+      "fixed": false
+    },
+    {
+      "id": "student_honor_duel_tension",
+      "kind": "social_heat",
+      "scope": "academy",
+      "visibility": 2,
+      "horizon": "days",
+      "fact": "기사과 학생 두 명 사이의 자존심 싸움이 공식 명예결투 신청 직전까지 올라와 학생회와 기사과 교관들이 상황을 알고 있다. 아직 결투가 확정된 것은 아니며 주변 친구들의 말과 체면 때문에 긴장만 커지는 중이다.",
+      "fixed": false,
+      "detail_policy": "당사자 이름이나 결투 원인을 필요 없이 invent하지 않는다. 현재 장면에서 자연스럽게 필요할 때만 구체화한다."
+    },
+    {
+      "id": "caldwyn_academic_delegation",
+      "kind": "social_heat",
+      "scope": "academy",
+      "visibility": 2,
+      "horizon": "current_week",
+      "fact": "칼드윈 공작가 측에서 봄학기 학술기금과 후원 연구를 논의하기 위한 서신과 실무 사절을 보내 학생회와 백장미회가 응대 준비를 하고 있다. 루시아와 세레나의 가족 관계 때문에 개인적 긴장이 생길 수 있지만 세레나가 자동으로 호출되거나 공개적으로 압박받는다고 정해진 것은 아니다.",
+      "fixed": false
+    },
+    {
       "id": "silent_expansion",
+      "kind": "danger",
+      "scope": "empire_external",
       "visibility": 4,
       "horizon": "long",
       "fact": "동부 어비스 영향권이 최근 3개월간 미세하게 확장되고 있으며 마기 농도와 생태계 변이가 관측되어 제국군과 마탑이 비밀 감시 중이다.",
@@ -18,6 +85,8 @@
     },
     {
       "id": "prima_glacie_missing_team",
+      "kind": "danger",
+      "scope": "empire_external",
       "visibility": 4,
       "horizon": "short_to_mid",
       "fact": "프리마 글라시에 방면에서 연구팀 실종과 관련된 제한 정보가 존재한다.",
@@ -26,6 +95,8 @@
     },
     {
       "id": "orpheum_disappearances",
+      "kind": "danger",
+      "scope": "empire_external",
       "visibility": 4,
       "horizon": "short_to_mid",
       "fact": "오르페룸 상인 실종 사건과 아리스 연루 의심에 대한 제한 수사가 존재한다.",
@@ -33,5 +104,5 @@
       "detail_policy": "의심은 확정 유죄가 아니다."
     }
   ],
-  "runtime_rule": "이 파일에는 해결되지 않은 세계 상황만 둔다. 입학식·오리엔테이션·기량평가 같은 일정은 Scenario/Academic Calendar, 황위계승 같은 장기 정치 baseline은 World Canon, 현재 체류·직책은 Dated State에 둔다. 이 목록은 Writer용 이벤트 큐나 발생 순서가 아니며 현재 장면과 무관한 상황을 자동 노출하지 않는다."
+  "runtime_rule": "이 파일은 Writer가 세계를 정지시키지 않도록 참고하는 현재의 unresolved pressure/opportunity/social facts다. 이벤트 큐·발생 순서·랜덤 테이블이 아니며 모든 항목을 한 장면에 노출하지 않는다. visibility는 정보 접근성이다. 작가는 authorial fact를 볼 수 있어도 PC와 NPC가 그 정보를 자동으로 아는 것은 아니며 공개 정보, 직접 관찰, 전달, 역할상 접근 같은 자연스러운 정보 경로가 있어야 한다. 현재 장소·인물·행동과 연결되지 않는 상황을 자극을 위해 억지로 끼워 넣지 않는다. PC가 개입하지 않아도 다른 사람의 선택과 기존 조직의 역할로 진행되거나 기회가 다른 사람에게 넘어갈 수 있다."
 }
