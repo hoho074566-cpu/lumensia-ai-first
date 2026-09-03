@@ -9,7 +9,7 @@ const characterState = JSON.parse(readFileSync('data/scenarios/academy-1285-03-0
 const relationships = JSON.parse(readFileSync('data/scenarios/academy-1285-03-01/relationships.json', 'utf8'));
 const authoring = JSON.parse(readFileSync('data/authoring/lumensia-academy.json', 'utf8'));
 
-assert.equal(academy.version, 3);
+assert.equal(academy.version, 4);
 assert.equal(characterState.version, 3);
 assert.match(academy.living_culture?.baseline || '', /큰 사건이 없어도.*각자의 목적 때문에 움직인다/);
 assert.match(academy.living_culture?.training_spaces || '', /모든 만남이 공식 평가로 이어지지는 않는다/);
