@@ -33,7 +33,7 @@ These are background Canon, not an event table or encounter scheduler.
 
 `data/scenarios/academy-1285-03-01/character-state.json`
 
-Current academy-life portrayal notes now cover the ordinary academy-living cast rather than only the initial high-frequency cluster.
+Current academy-life portrayal notes cover the ordinary academy-living cast rather than only the initial high-frequency cluster.
 
 First cluster:
 - Artemis
@@ -56,6 +56,33 @@ Broadened cast signals:
 - Elise — White Rose logistics, social networking and independent schedule
 
 This layer gives Writer more plausible reasons to use the wider cast. It is not a rotation directive and does not penalize recently used characters.
+
+## Compact character depth pass
+
+Every ordinary academy-living Named NPC now has exactly **two** `depth_notes` axes.
+
+The purpose is not to add secret-tragedy twists or longer personality manuals. Each pair gives the Writer a compact contradiction / alternate face so characters can behave in surprising-but-believable ways depending on context.
+
+Examples:
+
+- Anastasia — ambition mixed with duty; flawless public control versus private fatigue and ordinary-life blind spots.
+- Isabel — freedom versus wanting recognition independent of her sister; playful defiance versus sudden imperial decisiveness when choice is genuinely threatened.
+- Lucia — meritocratic self-image versus inherited hierarchy; harshness toward Serena partly tangled with the belief that she herself endured the same pressure.
+- Elena — curiosity versus ethical limits; playful researcher versus immediate practical seriousness when safety becomes real.
+- Artemis — rules/basic form versus battlefield pragmatism; protecting students versus deliberately allowing useful failure.
+- Sera — self-interest/survival versus willingly taking a loss for someone she has accepted as her own; money as safety and choice rather than noble aspiration.
+- Sia — fascination with human society versus fear of losing her forest/spirit roots; bright curiosity versus stubbornness on matters she directly understands through spirits.
+- Lillia — chivalric fair-play ideals versus the reality that ugly tactics can save lives; admiration for strength can coexist with envy or anxiety without becoming spite.
+- Lena — low-energy indifference versus obsessive focus/responsibility when something truly matters; quiet attachment can erase the sleepy mask.
+- Emily — respecting student freedom versus using authority to stop a choice when protection genuinely requires it; playfulness does not erase private responsibility.
+- Laris — wanting to defeat Lillia without wanting her ruined; restrained rivalry versus a soft spot for precise recognition of his own work.
+- Mirabelle — resistance to religious formality versus sincere faith; teasing versus direct solidarity when someone exposes genuine fear or conviction.
+- Serena — social timidity versus stubborn confidence in her own magical judgment; trusted private company can reveal dry wit and firmness.
+- Chloe — calculating value versus placing exceptional value on earned trust; soft negotiation face versus direct anger when trust is broken.
+- Aria — saintly symbolic duty versus wanting ordinary personhood; gentleness versus a firm boundary when faith or goodwill is used to consume people.
+- Elise — social/information calculation versus real loyalty to her network; polished public composure versus private fatigue and competitiveness.
+
+`depth_notes` are writer-facing depth axes, not mandatory beats. They are not required to appear every scene, are not twist triggers, and do not force any character to behave against current evidence or relationship state.
 
 ### Artemis target
 
@@ -96,7 +123,7 @@ The existing runtime PC-premise principle was refined rather than adding a separ
 
 ## Read-only NPC appearance diagnostic
 
-`INFO` now shows **NPC APPEARANCE DIAGNOSTIC** using up to the latest 50 saved turns.
+`INFO` shows **NPC APPEARANCE DIAGNOSTIC** using up to the latest 50 saved turns.
 
 It counts turns in which registered Named NPCs appear or are mentioned using saved scene text/speaker/presence facts. This is a diagnostic thermometer, not a cast controller.
 
@@ -121,6 +148,7 @@ CANON-LIVING-01 does not add:
 - automatic threat escalation
 - forced daily event list
 - extra narrative model calls
+- mandatory character-conflict/twist machinery
 
 The accepted Golden3 Writer prompt template is unchanged.
 
@@ -135,13 +163,14 @@ Use fresh-save ordinary play and look for:
 5. Elena looks genuinely delighted by interesting magic rather than clinically analyzing everything.
 6. Anastasia/Isabel feel like sisters as well as political rivals.
 7. Lucia/Sia/Lena/Laris/Mirabelle/Serena/Chloe/Aria/Elise have plausible independent daily-life entry points.
-8. NPCs interact naturally with one another without needing PC initiation.
-9. Same four characters do not dominate simply because previous turns contained them.
-10. Nearby NPCs may stay silent or leave when they have no reason to participate.
-11. PC settings already supplied are not turned into repeated procedural questions.
-12. Quiet academy scenes contain ordinary life but do not manufacture drama just to stay busy.
-13. Small friction stays small when nothing warrants escalation.
-14. NPC frequency diagnostic remains read-only and never affects generation.
-15. Golden3 prose quality, PC authority, continuity, growth and relationship behavior remain intact.
+8. Characters can show a different but believable face when their values conflict, without depth notes becoming repeated gimmicks.
+9. NPCs interact naturally with one another without needing PC initiation.
+10. Same four characters do not dominate simply because previous turns contained them.
+11. Nearby NPCs may stay silent or leave when they have no reason to participate.
+12. PC settings already supplied are not turned into repeated procedural questions.
+13. Quiet academy scenes contain ordinary life but do not manufacture drama just to stay busy.
+14. Small friction stays small when nothing warrants escalation.
+15. NPC frequency diagnostic remains read-only and never affects generation.
+16. Golden3 prose quality, PC authority, continuity, growth and relationship behavior remain intact.
 
 `STATUS: DRAFT / HUMAN QUALITATIVE GATE`
