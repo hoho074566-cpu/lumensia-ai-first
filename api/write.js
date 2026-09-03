@@ -102,8 +102,8 @@ export function safePc(raw = {}) {
     origin: cleanText(raw.origin, 180), socialStatus: cleanText(raw.socialStatus, 120), admission: cleanText(raw.admission, 160),
     appearance: cleanText(raw.appearance, 700), background: cleanText(raw.background, 1400), characterProfile: cleanText(raw.characterProfile, 1600),
     realm: cleanText(raw.realm, 120), magicCircle: boundedInteger(raw.magicCircle, 0, 9, 'PC 마법 써클', { nullable: true }),
-    talents: safeTalents(raw.talents), stats: safeStats(raw.stats), traits: cleanList(raw.traits, 16, 220), authorities: cleanList(raw.authorities, 16, 220),
-    skills: cleanList(raw.skills, 24, 120), equipment: cleanList(raw.equipment, 24, 160), conditions: cleanList(raw.conditions, 16, 180),
+    talents: safeTalents(raw.talents), stats: safeStats(raw.stats), traits: cleanList(raw.traits, 16, 240), authorities: cleanList(raw.authorities, 16, 240),
+    skills: cleanList(raw.skills, 24, 160), equipment: cleanList(raw.equipment, 24, 180), conditions: cleanList(raw.conditions, 16, 180),
     startingGold: Number.isFinite(startingGoldNumber) ? Math.max(0, startingGoldNumber) : 0,
   };
   if (!pc.name) throw new Error('PC 이름이 없습니다.');
