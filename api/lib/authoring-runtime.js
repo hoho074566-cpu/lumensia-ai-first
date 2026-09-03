@@ -8,6 +8,7 @@ import geographyData from '../../data/canon/world/geography.json' with { type: '
 import societyData from '../../data/canon/world/society.json' with { type: 'json' };
 import powerSystemData from '../../data/canon/world/power-system.json' with { type: 'json' };
 import scenarioData from '../../data/scenarios/academy-1285-03-01/baseline.json' with { type: 'json' };
+import openSituationsData from '../../data/scenarios/academy-1285-03-01/open-situations.json' with { type: 'json' };
 import characterStateData from '../../data/scenarios/academy-1285-03-01/character-state.json' with { type: 'json' };
 import relationshipsData from '../../data/scenarios/academy-1285-03-01/relationships.json' with { type: 'json' };
 import groupAttitudesData from '../../data/scenarios/academy-1285-03-01/group-attitudes.json' with { type: 'json' };
@@ -112,6 +113,10 @@ function scenarioSourcebook(scene = {}, includeOpening = false) {
   return `[DATED SCENARIO: academy-1285-03-01]\n${cleanText(plainValue(snapshot), 16000)}`;
 }
 
+function openSituationsSourcebook() {
+  return `[OPEN WORLD STIMULI — AUTHORIAL FACTS, NOT EVENT QUEUE]\n${cleanText(plainValue(openSituationsData), 10000)}`;
+}
+
 function academyCharacterKeys() {
   return Object.entries(CHARACTER_STATE).filter(([key, state]) => CHARACTERS[key] && ACADEMY_PRESENCE.has(state?.presence)).map(([key]) => key);
 }
@@ -120,7 +125,7 @@ function knowledgeBase(contextMode = 'full', scene = {}, includeOpening = false)
   const compact = contextMode === 'compact';
   const characterKeys = compact ? academyCharacterKeys() : Object.keys(CHARACTERS);
   const characterEntries = characterKeys.map((key) => characterSourcebookEntry(key)).filter(Boolean).join('\n\n');
-  const text = [compact ? compactWorldSourcebook() : fullWorldSourcebook(), scenarioSourcebook(scene, includeOpening), characterEntries].filter(Boolean).join('\n\n');
+  const text = [compact ? compactWorldSourcebook() : fullWorldSourcebook(), scenarioSourcebook(scene, includeOpening), openSituationsSourcebook(), characterEntries].filter(Boolean).join('\n\n');
   return { text, characterKeys };
 }
 
@@ -266,8 +271,8 @@ export function assembleAuthoring({ action = '', pc = {}, scene = {}, relationsh
   ].filter(Boolean);
   const input = sections.join('\n\n');
   const knowledgeSections = normalizedContextMode === 'compact'
-    ? ['academy', 'academy-layout', 'power-system', 'empire', 'dated-scenario', 'academy-characters']
-    : ['academy', 'academic-calendar', 'cosmology', 'geography', 'power-system', 'society', 'dated-scenario', 'characters'];
+    ? ['academy', 'academy-layout', 'power-system', 'empire', 'dated-scenario', 'open-world-situations', 'academy-characters']
+    : ['academy', 'academic-calendar', 'cosmology', 'geography', 'power-system', 'society', 'dated-scenario', 'open-world-situations', 'characters'];
   return {
     instructions: authoringData.prompt_template,
     input,
