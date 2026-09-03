@@ -2,6 +2,7 @@
 
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { safePc } from '../api/write.js';
 import {
   compactKeeperRunState,
   keeperSkillShadow,
@@ -19,6 +20,7 @@ const client = readFileSync('src/client.js', 'utf8');
 const writer = readFileSync('api/write.js', 'utf8');
 const keeper = readFileSync('api/state-keeper.js', 'utf8');
 const authoring = readFileSync('data/authoring/lumensia-academy.json', 'utf8');
+const openSituations = JSON.parse(readFileSync('data/scenarios/academy-1285-03-01/open-situations.json', 'utf8'));
 
 const history = Array.from({ length: 120 }, (_, index) => ({ action: `turn-${index}`, scene: [{ text: `scene-${index}` }] }));
 const runState = {
@@ -72,6 +74,17 @@ const preparedKeeper = prepareKeeperBody({ action: '테스트', turn: { scene: [
 assert.equal(Object.hasOwn(preparedKeeper.runState, 'history'), false);
 assert.match(preparedKeeper.turn.scene.map((beat) => beat.text).join(''), /END_MARKER$/);
 
+const sanitizedPc = safePc({
+  name: 'LimitTest', age: 20, magicCircle: 0,
+  talents: {}, stats: {}, startingGold: 0,
+  traits: ['T'.repeat(250)], authorities: ['A'.repeat(250)], skills: ['S'.repeat(170)], equipment: ['E'.repeat(190)], conditions: ['C'.repeat(190)],
+});
+assert.equal(sanitizedPc.traits[0].length, 240, 'Writer must accept the same Trait item length as the status/runtime layer');
+assert.equal(sanitizedPc.authorities[0].length, 240, 'Writer must accept the same Authority item length as the status/runtime layer');
+assert.equal(sanitizedPc.skills[0].length, 160, 'Writer must accept the same skill item length as the status/runtime layer');
+assert.equal(sanitizedPc.equipment[0].length, 180, 'Writer must accept the same equipment item length as the status/runtime layer');
+assert.equal(sanitizedPc.conditions[0].length, 180);
+
 const names = { lena: '레나', serena: '세레나', sera: '세라' };
 const npcStats = npcAppearanceStatsAccurate({ history: [{
   scene: [{ text: '세레나가 조용히 책을 덮었다.' }],
@@ -80,12 +93,18 @@ const npcStats = npcAppearanceStatsAccurate({ history: [{
 }] }, names);
 assert.deepEqual(npcStats.rows.map((row) => [row.key, row.count]), [['serena', 1]], '세레나 mention must not false-count 레나 and persisted cast must override stale RAW fallback cast');
 
+assert.match(openSituations.runtime_rule, /run 사실이 이 시작 snapshot보다 항상 우선/, 'resolved/changed run truth must override the starting stimulus snapshot');
+assert.match(openSituations.runtime_rule, /horizon이 현재 run 날짜에 비해 명백히 지난 항목/, 'expired starting opportunities must not remain immortal active facts');
+
 const guardIndex = index.indexOf('/src/runtime-integrity-guard.js');
 const clientIndex = index.indexOf('/src/client.js');
 assert.ok(guardIndex >= 0 && clientIndex >= 0 && guardIndex < clientIndex, 'integrity guard must load before the gameplay client');
 assert.match(guard, /status === 'pending' \|\| status === 'failed'/, 'pending/failed bookkeeping must block another Writer turn');
+assert.match(guard, /body\?\.adminScenePreview !== true/, 'read-only Admin Preview may remain available while gameplay bookkeeping is blocked');
 assert.match(guard, /turn\.stateKeeper = \{ status: 'pending'/, 'Keeper call must durably mark the turn pending before network completion');
 assert.match(guard, /recoverInterruptedBookkeeping\(\)/, 'boot must convert interrupted pending bookkeeping into a retryable failure');
+assert.match(guard, /importInput\?\.addEventListener\('change'/, 'imported pending saves must also become retryable instead of deadlocking');
+assert.match(guard, /content-length/, 'rewritten Keeper responses must not preserve stale transport length headers');
 assert.match(guard, /prepareWriterBody/, 'Writer request transport must be compacted below the Writer');
 assert.match(guard, /prepareKeeperBody/, 'Keeper request transport must be compacted below the Keeper');
 assert.doesNotMatch(guard, /prompt_template|authoring-runtime|OPENAI|eventStage|scheduler|cast rotation/i, 'integrity transport guard must not become narrative machinery');
@@ -95,4 +114,4 @@ assert.equal((writer.match(/https:\/\/api\.openai\.com\/v1\/responses/g) || []).
 assert.equal((keeper.match(/https:\/\/api\.openai\.com\/v1\/responses/g) || []).length, 1, 'audit fixes must preserve one State Keeper call');
 assert.match(authoring, /세계는 player의 다음 입력을 기다리며 정지하지 않는다/, 'Golden3 prompt source must remain intact');
 
-console.log('PASS FULL-HEALTH-AUDIT-01 transaction safety + payload diet + rich skill preservation + diagnostic accuracy');
+console.log('PASS FULL-HEALTH-AUDIT-01 transaction safety + payload diet + rich state preservation + stimulus precedence + diagnostic accuracy');
