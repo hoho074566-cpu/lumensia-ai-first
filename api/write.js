@@ -44,8 +44,8 @@ const OUTPUT_SCHEMA = {
       properties: {
         date: { type: 'string', minLength: 10, maxLength: 10 },
         time: { type: 'string', minLength: 5, maxLength: 5 },
-        location: { type: 'string', minLength: 1, maxLength: 200 },
-        situation: { type: 'string', minLength: 1, maxLength: 500 },
+        location: { type: 'string', minLength: 1, maxLength: 220 },
+        situation: { type: 'string', minLength: 1, maxLength: 700 },
         present_character_keys: { type: 'array', maxItems: 8, items: { type: 'string', maxLength: 64 } },
       },
       required: ['date', 'time', 'location', 'situation', 'present_character_keys'],
@@ -102,8 +102,8 @@ export function safePc(raw = {}) {
     origin: cleanText(raw.origin, 180), socialStatus: cleanText(raw.socialStatus, 120), admission: cleanText(raw.admission, 160),
     appearance: cleanText(raw.appearance, 700), background: cleanText(raw.background, 1400), characterProfile: cleanText(raw.characterProfile, 1600),
     realm: cleanText(raw.realm, 120), magicCircle: boundedInteger(raw.magicCircle, 0, 9, 'PC 마법 써클', { nullable: true }),
-    talents: safeTalents(raw.talents), stats: safeStats(raw.stats), traits: cleanList(raw.traits, 16, 220), authorities: cleanList(raw.authorities, 16, 220),
-    skills: cleanList(raw.skills, 24, 120), equipment: cleanList(raw.equipment, 24, 160), conditions: cleanList(raw.conditions, 16, 180),
+    talents: safeTalents(raw.talents), stats: safeStats(raw.stats), traits: cleanList(raw.traits, 16, 240), authorities: cleanList(raw.authorities, 16, 240),
+    skills: cleanList(raw.skills, 24, 160), equipment: cleanList(raw.equipment, 24, 180), conditions: cleanList(raw.conditions, 16, 180),
     startingGold: Number.isFinite(startingGoldNumber) ? Math.max(0, startingGoldNumber) : 0,
   };
   if (!pc.name) throw new Error('PC 이름이 없습니다.');
@@ -115,8 +115,8 @@ function safeScene(raw = {}) {
   return {
     date: /^\d{4}-\d{2}-\d{2}$/.test(String(raw.date || '')) ? String(raw.date) : scenarioData.start.date,
     time: /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(raw.time || '')) ? String(raw.time) : scenarioData.start.time,
-    location: cleanText(raw.location || scenarioData.start.location, 200),
-    situation: cleanText(raw.situation || scenarioData.start.situation, 500),
+    location: cleanText(raw.location || scenarioData.start.location, 220),
+    situation: cleanText(raw.situation || scenarioData.start.situation, 700),
     presentCharacterKeys: Array.isArray(raw.presentCharacterKeys) ? [...new Set(raw.presentCharacterKeys.filter((key) => CHARACTER_KEYS.has(key)))].slice(0, 8) : [],
   };
 }
@@ -196,7 +196,7 @@ export function validateTurn(turn, pc, fallbackScene) {
   const continuity = {
     date: /^\d{4}-\d{2}-\d{2}$/.test(String(raw.date || '')) ? String(raw.date) : fallbackScene.date,
     time: /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(raw.time || '')) ? String(raw.time) : fallbackScene.time,
-    location: cleanText(raw.location || fallbackScene.location, 200), situation: cleanText(raw.situation || fallbackScene.situation, 500),
+    location: cleanText(raw.location || fallbackScene.location, 220), situation: cleanText(raw.situation || fallbackScene.situation, 700),
     present_character_keys: Array.isArray(raw.present_character_keys) ? [...new Set(raw.present_character_keys.filter((key) => CHARACTER_KEYS.has(key)))].slice(0, 8) : [],
   };
   return { scene, continuity };
